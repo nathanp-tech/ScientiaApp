@@ -1,0 +1,198 @@
+[
+    {
+        "studentUsername": "scientia",
+        "projectName": "Schedule for scientia",
+        "config": {
+            "curriculumId": "1",
+            "languageId": "1",
+            "subjects": [
+                {
+                    "localId": 0,
+                    "pk": "1",
+                    "name": "Maths AA (SL)",
+                    "examDate": "2025-05-20",
+                    "weight": 56,
+                    "color": "#a2d2ff"
+                },
+                {
+                    "localId": 1,
+                    "pk": "1",
+                    "name": "Maths AA (SL)",
+                    "examDate": "2025-05-27",
+                    "weight": 11,
+                    "color": "#ffafcc"
+                },
+                {
+                    "localId": 2,
+                    "pk": "1",
+                    "name": "Maths AA (SL)",
+                    "examDate": "2025-05-28",
+                    "weight": 11,
+                    "color": "#bde0fe"
+                },
+                {
+                    "localId": 3,
+                    "pk": "2",
+                    "name": "Maths AA (HL)",
+                    "examDate": "2025-05-23",
+                    "weight": 11,
+                    "color": "#ffc8dd"
+                },
+                {
+                    "localId": 4,
+                    "pk": "1",
+                    "name": "Maths AA (SL)",
+                    "examDate": "2025-05-28",
+                    "weight": 11,
+                    "color": "#cdb4db"
+                }
+            ],
+            "availability": {
+                "Monday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": false,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": false,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                },
+                "Tuesday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": true,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": true,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                },
+                "Wednesday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": false,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": false,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                },
+                "Thursday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": false,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": false,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                },
+                "Friday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": false,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": false,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                },
+                "Saturday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": false,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": false,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                },
+                "Sunday": {
+                    "07:00": false,
+                    "08:00": false,
+                    "09:00": false,
+                    "10:00": false,
+                    "11:00": false,
+                    "12:00": false,
+                    "13:00": false,
+                    "14:00": false,
+                    "15:00": false,
+                    "16:00": false,
+                    "17:00": false,
+                    "18:00": false,
+                    "19:00": false,
+                    "20:00": false,
+                    "21:00": false,
+                    "22:00": false
+                }
+            }
+        },
+        "schedule": [
+            {
+                "date": "2025-05-12",
+                "time": "16:00",
+                "subjectId": 0,
+                "subjectName": "Maths AA (SL)",
+                "color": "#a2d2ff"
+            },
+            {
+                "date": "2025-05-19",
+                "time": "09:00",
+                "subjectId": 0,
+                "subjectName": "Maths AA (SL)",
+                "color": "#a2d2ff"
+            }
+        ],
+        "lastModified": "2025-05-12T17:27:38.934Z",
+        "pk": 1
+    }
+]

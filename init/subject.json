@@ -1,0 +1,51 @@
+[
+    {
+      "model": "subjects.subject",
+      "pk": 1,
+      "fields": {
+        "name": "Maths AA",
+        "curriculum": 1,
+        "language": 1,
+        "grouping": 1,
+        "level": 1,
+        "end_date": "2028-12-31"
+      }
+    },
+    {
+        "model": "subjects.subject",
+        "pk": 2,
+        "fields": {
+          "name": "Maths AA",
+          "curriculum": 1,
+          "language": 1,
+          "grouping": 1,
+          "level": 2,
+          "end_date": "2028-12-31"
+        }
+    },
+    {
+        "model": "subjects.subject",
+        "pk": 3,
+        "fields": {
+          "name": "Maths AI",
+          "curriculum": 1,
+          "language": 1,
+          "grouping": 1,
+          "level": 1,
+          "end_date": "2028-12-31"
+        }
+      },
+      {
+          "model": "subjects.subject",
+          "pk": 4,
+          "fields": {
+            "name": "Maths AI",
+            "curriculum": 1,
+            "language": 1,
+            "grouping": 1,
+            "level": 2,
+            "end_date": "2028-12-31"
+          }
+      }
+      
+]

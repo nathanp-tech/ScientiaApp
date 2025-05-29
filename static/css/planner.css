@@ -1,0 +1,84 @@
+/* --- Availability Grid Styles --- */
+
+/* Basic table setup for the weekly availability grid */
+.availability-grid-table {
+    border-collapse: separate; /* Allows for border-spacing */
+    border-spacing: 0;
+    width: 100%;
+}
+
+/* Styles for cells in the availability grid */
+.availability-grid-table th,
+.availability-grid-table td {
+    border: 1px solid #e0e0e0; /* Light grey border */
+    text-align: center;
+    cursor: pointer; /* Indicates that cells are clickable */
+    height: 40px; /* Fixed height for each cell */
+}
+
+/* Style for cells marked as 'available' */
+.availability-grid-table td.available {
+    background-color: #d1e7dd; /* A light green color */
+}
+
+/* Hover effect for cells that are NOT available, to show they can be clicked */
+.availability-grid-table td:not(.available):not(:first-child):hover {
+    background-color: #e9ecef; /* A light grey hover effect */
+}
+
+
+/* --- Generated Schedule Calendar Styles --- */
+
+/* Basic table setup for the generated schedule calendar */
+.schedule-calendar-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    table-layout: fixed; /* Ensures columns have a fixed width */
+}
+
+/* Styles for cells in the schedule calendar */
+.schedule-calendar-table th,
+.schedule-calendar-table td {
+    border: 1px solid #e9edf0; /* A very light grey border */
+    text-align: center;
+    height: 55px;
+}
+
+/* Style for cells that have a scheduled study session */
+.schedule-calendar-table td.scheduled {
+    font-size: 0.75em; /* Smaller font to fit subject names */
+    word-break: break-all; /* Breaks long words to prevent overflow */
+    color: #fff; /* White text for contrast against colored backgrounds */
+    font-weight: 500; /* Medium font weight */
+    cursor: pointer; /* Indicates that the slot can be edited */
+}
+
+/* Style for cells that are available for study but currently empty */
+.schedule-calendar-table td.available-empty {
+    background-color: #fff; /* White background */
+    cursor: pointer; /* Indicates the slot can be clicked to be assigned a subject */
+}
+
+/* Style for cells that are not available for study */
+.schedule-calendar-table td.unavailable {
+    background-color: #f0f2f5; /* A slightly darker grey to indicate unavailability */
+    cursor: not-allowed; /* Shows a 'not allowed' cursor on hover */
+}
+
+
+/* --- Loading Overlay --- */
+
+/* Styles the full-screen overlay shown during long operations (e.g., API calls) */
+.loading-overlay {
+    position: fixed; /* Covers the entire viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
+    display: flex; /* Used to center the spinner */
+    justify-content: center;
+    align-items: center;
+    z-index: 1056; /* Ensures it's on top of other content, including Bootstrap modals (z-index 1055) */
+}

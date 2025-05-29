@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Recipe Browser{% endblock %}
+
+{% block extra_css %}
+    {# Link to a new CSS file specific to this page for consistent styling #}
+    <link rel="stylesheet" href="{% static 'css/recipe_browser.css' %}">
+    {# If recipes had specific styles for list items, you might include another CSS like slide_styles.css #}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 recipe-browser-page"> {# Added 'recipe-browser-page' class for specific styling #}
+    <header class="browser-header mb-4">
+        <h1>Recipe Browser</h1>
+        <p>Filter and select recipes to view.</p>
+    </header>
+
+    <section class="filter-section card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filter Recipes</h5>
+            <div class="row g-3">
+                {# Filters now use col-md-3 for a 4-column layout if all are active #}
+                <div class="col-md-3">
+                    <label for="curriculum-select" class="form-label">Curriculum</label>
+                    <select id="curriculum-select" class="form-select form-select-sm">
+                        <option value="">All Curriculums</option>
+                        {% for curriculum in initial_data.curriculums %}
+                            <option value="{{ curriculum.id }}">{{ curriculum.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="language-select" class="form-label">Language</label>
+                    <select id="language-select" class="form-select form-select-sm">
+                        <option value="">All Languages</option>
+                         {% for lang in initial_data.languages %}
+                            <option value="{{ lang.id }}">{{ lang.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="subject-select" class="form-label">Subject</label>
+                    <select id="subject-select" class="form-select form-select-sm" disabled>
+                        <option value="">Select Curriculum & Language</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="topic-select" class="form-label">Topic</label>
+                    <select id="topic-select" class="form-select form-select-sm" disabled>
+                        <option value="">Select Subject First</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row">
+        <aside class="col-lg-12 recipe-list-column mb-4"> {# Changed to col-lg-12 as there's no right-side player #}
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Found Recipes</span>
+                    <span id="loading-spinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;">
+                        <span class="visually-hidden">Loading...</span>
+                    </span>
+                </div>
+                <div id="recipe-list-container" class="list-group list-group-flush">
+                    <p class="text-muted p-3">Adjust filters to see recipes.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 
+            The right-hand column for a "player" is omitted for recipes, 
+            as clicking a recipe navigates to its detail page.
+            If you wanted an inline preview, this structure would be different.
+        -->
+    </div>
+</div>
+
+{# Pass data from Django view to JavaScript #}
+{# Ensure your view context for recipe_browser_view provides 'initial_data' and 'api_urls' #}
+{{ initial_data|json_script:"initial-data-json" }} 
+{{ api_urls|json_script:"api-urls-json" }}
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/recipe_browser.js' %}"></script>
+{% endblock %}

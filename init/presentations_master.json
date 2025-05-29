@@ -1,0 +1,23 @@
+[
+  {
+    "pk": 1,
+    "metadata": {
+      "title": "Test Nathan",
+      "curriculum": "1",
+      "language": "1",
+      "subject": "1",
+      "subjectText": "Maths AA - SL",
+      "topic": "",
+      "writer": "scientia",
+      "pk": 1,
+      "lastModified": "2025-05-08T12:52:50.928Z"
+    },
+    "slides": [
+      {
+        "id": 1,
+        "template": "basic",
+        "htmlContent": "\n    <div class=\"slide basic-slide\">\n        <div class=\"logo\">\n            <img src=\"/static/img/logo.png\" alt=\"Logo\">\n        </div>\n        <div class=\"container-fluid\">\n            <h1>Slide Title</h1>\n            <div class=\"line\"></div>\n            <ul>\n                <li>List item 123</li>\n                <li>List item 2</li>\n                <li>List item 3</li>\n            </ul>\n        </div>\n    </div>"
+      }
+    ]
+  }
+]

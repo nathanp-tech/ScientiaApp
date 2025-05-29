@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ recipe.title }} - Recipe Detail{% endblock %}
+
+{% block extra_css %}
+    {# Link to the CSS file for styling the recipe display page #}
+    <link rel="stylesheet" href="{% static 'css/creator.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="recipe-display-container my-5">
+    
+    <header class="recipe-header text-center mb-4">
+        <h1 class="recipe-title display-4">{{ recipe.title }}</h1>
+        <p class="recipe-meta text-muted">
+            <strong>Author:</strong> {{ recipe.author.username|default:"N/A" }} | 
+            <strong>Subject:</strong> {{ recipe.subject.name|default:"N/A" }} 
+            {% if recipe.topic %}| <strong>Topic:</strong> {{ recipe.topic.description|default:"N/A" }}{% endif %}
+            <br>
+            <strong>Curriculum:</strong> {{ recipe.curriculum.name|default:"N/A" }} |
+            <strong>Language:</strong> {{ recipe.language.name|default:"N/A" }}
+            <br>
+            <strong>Last Updated:</strong> {{ recipe.updated_at|date:"F j, Y, P" }}
+        </p>
+    </header>
+
+    <div class="recipe-body">
+        {# Loop through each block associated with the recipe #}
+        {# Assumes 'blocks' is the related_name from RecipeBlock to Recipe #}
+        {% for block in recipe.blocks.all %}
+            <div class="recipe-block-display card shadow-sm mb-4">
+                <div class="card-body">
+                    {# The 'safe' filter is crucial here to render the stored HTML #}
+                    {{ block.content_html|safe }}
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-center text-muted">This recipe currently has no content blocks.</p>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'recipes:browser' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Back to Recipe Browser
+        </a>
+        {% if user.is_staff %}
+        <a href="{% url 'recipes:creator' %}" class="btn btn-outline-primary ms-2">
+            <i class="bi bi-pencil-square"></i> Edit in Creator 
+        </a>
+        {% endif %}
+    </div>
+
+</div>
+
+{# Ensure MathJax is loaded if your recipe content uses LaTeX #}
+{# This might already be in your base.html; if so, it's not strictly needed here #}
+{% if recipe.blocks.all %} {# Only load MathJax if there's content #}
+<script>
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+        window.MathJax.typesetPromise();
+    } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+        window.MathJax.startup.promise.then(() => {
+            if (typeof window.MathJax.typesetPromise === 'function') {
+                window.MathJax.typesetPromise();
+            }
+        });
+    }
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,16 @@
+[
+    {
+      "model": "subjects.Curriculum",
+      "pk": 1,
+      "fields": {
+        "name": "IB"
+      }
+    },
+    {
+      "model": "subjects.Curriculum",
+      "pk": 2,
+      "fields": {
+        "name": "Swiss Maturité"
+      }
+    }
+]

@@ -1,0 +1,23 @@
+[
+    {
+      "model": "subjects.Language",
+      "pk": 1,
+      "fields": {
+        "name": "English"
+      }
+    },
+    {
+        "model": "subjects.Language",
+        "pk": 2,
+        "fields": {
+          "name": "French"
+        }
+      },   
+      {
+        "model": "subjects.Language",
+        "pk": 3,
+        "fields": {
+          "name": "Spanish"
+        }
+      }
+]

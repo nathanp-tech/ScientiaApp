@@ -1,0 +1,93 @@
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel"><i class="bi bi-book-half me-2"></i>User Guide: Recipe Creator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Welcome to the Recipe Creator! This tool lets you build structured educational content, called "recipes," which can be composed of text, lists, and even complex mathematical formulas.</p>
+                
+                <hr>
+
+                <h4><i class="bi bi-layout-text-window-reverse me-2"></i>The Workspace</h4>
+                <p>Your workspace is divided into two main areas:</p>
+                <ul>
+                    <li><strong>The Code Editor (left):</strong> This is where you will edit the content of each block using simple HTML.</li>
+                    <li><strong>The Live Preview (right):</strong> Instantly displays a visual rendering of what you type in the editor.</li>
+                </ul>
+
+                <hr>
+
+                <h4><i class="bi bi-card-list me-2"></i>Step-by-Step Guide</h4>
+
+                <h5>Step 1: Define Metadata (Crucial First Step!)</h5>
+                <p>Before anything else, it's crucial to define your recipe's metadata. This helps categorize and find your work later.</p>
+                <ol>
+                    <li>Click the floating "Metadata" button <button class="btn btn-sm btn-secondary disabled mx-1"><i class="bi bi-tags-fill"></i></button>.</li>
+                    <li>Fill in the fields:
+                        <ul>
+                            <li><strong>Title:</strong> A clear, descriptive name for your recipe.</li>
+                            <li><strong>Curriculum, Language, Subject, Topic:</strong> Select the appropriate options to organize your content.</li>
+                        </ul>
+                    </li>
+                    <li>Click <kbd>Save</kbd> to close the window.</li>
+                </ol>
+
+                <h5>Step 2: Add Content Blocks</h5>
+                <p>A recipe is made of one or more blocks. To add one:</p>
+                <ol>
+                    <li>Click the floating "Add" button <button class="btn btn-sm btn-success disabled mx-1"><i class="bi bi-plus-lg"></i></button>.</li>
+                    <li>A window will appear offering block templates. Choose one that fits your needs (e.g., "Statement" for a title or introduction, "Step" for a numbered step).</li>
+                </ol>
+                
+                <h5>Step 3: Edit Block Content</h5>
+                <p>This is where the magic happens!</p>
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb-fill me-2"></i><strong>Understanding the Colors:</strong> In the editor, the text is colored to guide you.
+                    <ul>
+                        <li><strong style="color: #A6E22E; background-color:#272822; padding: 0 3px;">The green, italic, bold text</strong> is your content. This is the only part you should need to change.</li>
+                        <li>The rest of the code (in pink, grey, etc.) is the HTML structure (e.g., <code>&lt;p&gt;</code>, <code>&lt;h2&gt;</code>). <strong>It's best to leave the structure unchanged</strong> to ensure correct display.</li>
+                    </ul>
+                </div>
+                
+                <h6>Writing Mathematical Formulas (LaTeX)</h6>
+                <p>You can embed professional-quality mathematics using LaTeX.</p>
+                <ul>
+                    <li><strong>Inline Formulas:</strong> Surround your formula with single dollar signs. Example: <code>$E=mc^2$</code> will render as $E=mc^2$.</li>
+                    <li><strong>Block Formulas:</strong> Surround your formula with double dollar signs to center it on its own line. Example: <code>$$ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} $$</code> will render as: 
+                    <div class="text-center my-2">$$ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} $$</div>
+                    </li>
+                </ul>
+
+                <h5>Step 4: Manage Your Blocks</h5>
+                <p>Each block has its own controls at the top right:</p>
+                <ul>
+                    <li><i class="bi bi-arrow-up text-primary"></i>: Moves the block up.</li>
+                    <li><i class="bi bi-arrow-down text-primary"></i>: Moves the block down.</li>
+                    <li><i class="bi bi-trash text-danger"></i>: Deletes the block (you will be asked to confirm).</li>
+                </ul>
+                
+                <h5>Step 5: Save Your Recipe</h5>
+                <p>Don't forget to save your work regularly!</p>
+                <ol>
+                    <li>Click the large <kbd><i class="bi bi-save-fill"></i> Save Recipe</kbd> button at the bottom of the page.</li>
+                    <li>Your recipe is now saved to the server.</li>
+                </ol>
+
+                <hr>
+
+                <h4><i class="bi bi-folder2-open me-2"></i>Loading an Existing Recipe</h4>
+                <p>To continue working on a previously saved recipe:</p>
+                <ol>
+                    <li>Click the <kbd><i class="bi bi-folder2-open"></i> Load Recipe</kbd> button.</li>
+                    <li>Select your recipe from the dropdown list.</li>
+                    <li>Click <kbd>Load</kbd>. The content will appear in your workspace.</li>
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+            </div>
+        </div>
+    </div>
+</div>

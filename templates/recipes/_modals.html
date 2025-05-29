@@ -1,0 +1,115 @@
+<div class="modal fade" id="recipeTemplateSelectionModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateModalLabel">Choose a Block Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row row-cols-1 row-cols-sm-2 g-3">
+                    <div class="col">
+                        <div class="card template-card h-100" data-template="statement">
+                            <div class="card-body text-center">
+                                <i class="bi bi-card-heading fs-1 mb-2"></i>
+                                <h6 class="card-title fw-bold">Statement</h6>
+                                <p class="card-text small">Main problem, description, or list of ingredients.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card template-card h-100" data-template="step">
+                            <div class="card-body text-center">
+                                <i class="bi bi-list-ol fs-1 mb-2"></i>
+                                <h6 class="card-title fw-bold">Step</h6>
+                                <p class="card-text small">A single step in the recipe or procedure.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-template-btn" disabled>Create Block</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="metadataSelectionModal" tabindex="-1" aria-labelledby="metadataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="metadataModalLabel">Edit Metadata</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="projectTitle" class="form-label">Project Title:</label>
+                    <input type="text" class="form-control" id="projectTitle" placeholder="Enter a title">
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="curriculum" class="form-label">Curriculum:</label>
+                            <select id="curriculum" class="form-select">
+                                <option value="">-- Select --</option>
+                                {% for curr in curriculums %}
+                                <option value="{{ curr.pk }}">{{ curr.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="language" class="form-label">Language:</label>
+                            <select id="language" class="form-select">
+                                <option value="">-- Select --</option>
+                                {% for lang in languages %}
+                                <option value="{{ lang.pk }}">{{ lang.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject:</label>
+                            <select id="subject" class="form-select" disabled>
+                                <option value="">-- First choose curriculum/language --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="topic" class="form-label">Topic/Label:</label>
+                            <select id="topic" class="form-select" disabled>
+                                <option value="">-- First choose a subject --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-metadata-btn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadProjectModal" tabindex="-1" aria-labelledby="loadProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loadProjectModalLabel">Load a Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select the project you wish to load:</p>
+                <select class="form-select" id="projectSelector">
+                    <option selected>-- Choose a project --</option>
+                </select>
+                <div id="load-error-message" class="alert alert-danger mt-3 d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-load-btn">Load Project</button>
+            </div>
+        </div>
+    </div>
+</div>

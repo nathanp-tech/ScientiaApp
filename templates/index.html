@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home - Scientia{% endblock %}
+
+{% block content %}
+
+{% comment %}
+This block checks if the user is both logged in AND a staff member.
+If they are, it shows the "Admin Dashboard" view.
+Otherwise, it shows the public-facing landing page.
+{% endcomment %}
+
+{% if user.is_authenticated and user.is_staff %}
+
+    {# ================================================================= #}
+    {# VIEW FOR STAFF MEMBERS                                            #}
+    {# A direct dashboard with quick access to all tools.                #}
+    {# ================================================================= #}
+    <div class="px-4 py-5 my-5 text-center">
+        <h1 class="display-5 fw-bold">Admin Dashboard</h1>
+        <div class="col-lg-8 mx-auto">
+            <p class="lead mb-4">Welcome back! As a staff member, you can create content or manage student plans. Choose a tool to get started.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="{% url 'recipes:creator' %}" class="btn btn-primary btn-lg px-4 gap-3">
+                    <i class="bi bi-journal-text"></i> Recipe Creator
+                </a>
+                <a href="{% url 'slides:creator' %}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="bi bi-file-earmark-slides"></i> Slide Creator
+                </a>
+                <a href="{% url 'planner:main' %}" class="btn btn-outline-success btn-lg px-4">
+                    <i class="bi bi-calendar-week"></i> Student Planner
+                </a>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+
+    {# ================================================================= #}
+    {# VIEW FOR REGULAR USERS & VISITORS                                 #}
+    {# A public landing page that showcases the platform's features.    #}
+    {# ================================================================= #}
+    <div class="px-4 py-5 my-5 text-center">
+        <h1 class="display-5 fw-bold">Welcome to Scientia App</h1>
+        <div class="col-lg-8 mx-auto">
+            <p class="lead mb-4">Your centralized platform for creating dynamic educational content and intelligent study planning. Explore our features below or log in to access your personal planner.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                {# This link only shows to logged-in, non-staff users #}
+                {% if user.is_authenticated %}
+                    <a href="{% url 'planner:main' %}" class="btn btn-success btn-lg px-4">
+                        <i class="bi bi-calendar-week"></i> Go to Your Planner
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container marketing">
+        <hr class="featurette-divider">
+        <div class="row featurette align-items-center">
+            <div class="col-md-7">
+                <h2 class="featurette-heading fw-normal lh-1">From Complex Formulas to Structured Lessons. <span class="text-muted">With the Recipe Creator.</span></h2>
+                <p class="lead">Use our block-based editor to build step-by-step exercises, detailed lessons, or study guides. With integrated HTML editing and MathJax support, rendering complex equations like $E=mc^2$ is simple and seamless. Every recipe is saved and easily accessible.</p>
+            </div>
+            <div class="col-md-5">
+                <div class="featurette-icon-placeholder">
+                    <i class="bi bi-journal-richtext"></i>
+                </div>
+            </div>
+        </div>
+
+        <hr class="featurette-divider">
+        <div class="row featurette align-items-center">
+            <div class="col-md-7 order-md-2">
+                <h2 class="featurette-heading fw-normal lh-1">Craft Engaging Presentations. <span class="text-muted">Go beyond static slides.</span></h2>
+                <p class="lead">Bring your lessons to life with the Slide Creator. Choose from a variety of templates, including two-column layouts, info cards, and even interactive multiple-choice quizzes to test comprehension in real-time. All slides are fully customizable and can be saved to your account.</p>
+            </div>
+            <div class="col-md-5 order-md-1">
+                <div class="featurette-icon-placeholder">
+                    <i class="bi bi-easel2"></i>
+                </div>
+            </div>
+        </div>
+
+        <hr class="featurette-divider">
+        <div class="row featurette align-items-center">
+            <div class="col-md-7">
+                <h2 class="featurette-heading fw-normal lh-1">Intelligent Study Planning. <span class="text-muted">Automated for you.</span></h2>
+                <p class="lead">Take control of your study schedule. Input your subjects, exam dates, and weekly availability. Our planner's algorithm will automatically generate a balanced and prioritized study plan, helping you prepare effectively and reduce stress. You can save, load, and manually edit your plan at any time.</p>
+            </div>
+            <div class="col-md-5">
+                <div class="featurette-icon-placeholder">
+                </div>
+            </div>
+        </div>
+        <hr class="featurette-divider">
+    </div>
+
+{% endif %}
+
+{% endblock %}
+
+{# NOTE: The custom footer that was previously here has been removed #}
+{# because the main `base.html` template now provides a consistent footer for all pages. #}

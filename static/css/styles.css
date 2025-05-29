@@ -1,0 +1,203 @@
+/* General Body Style */
+body {
+    background-color: #f4f7f9; /* Light gray background */
+}
+
+/* --- Banner Section --- */
+.banner {
+    display: flex; /* Horizontal layout */
+    align-items: center; /* Vertically center items */
+    justify-content: space-between; /* Space between elements */
+    background-color: #050350; /* Blue background */
+    color: white; /* White text */
+    padding: 20px; /* Internal spacing */
+    border-radius: 10px; /* Rounded corners */
+    text-align: center;
+}
+
+/* Banner Text Style */
+.banner-text {
+    font-size: 2rem; /* Font size */
+    text-align: right; /* Align to the right */
+    margin-right: 450px; /* Large right margin to position text */
+    font-family: "Georgia", serif; /* Font to imitate the style */
+}
+
+/* Banner Logo */
+.banner-logo img {
+    height: 100px; /* Adjust the logo size */
+    margin-right: 20px; /* Spacing on the right */
+}
+
+/* --- General Content & Layout --- */
+.content-container {
+    padding: 20px;
+    padding-bottom: 50px; /* Adds 50px space at the bottom */
+}
+
+.banner-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2rem; /* Consistent font size for section titles */
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.button-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow to cards */
+    border: none;
+}
+
+.frame {
+    border: 1px solid #000; /* Black border */
+    padding: 15px; /* Space between content and border */
+    margin: 10px; /* Space outside the frame */
+    background-color: #f0f8ff; /* Light background color */
+}
+
+.img-fluid {
+    width: 300px;
+    height: auto;
+    padding: auto;
+    margin-top: 10px;
+}
+
+/* --- Warning Section --- */
+.warning {
+    display: flex;
+    align-items: top; /* Aligns items to the top */
+    margin-top: 10px;
+}
+
+.warning-icon {
+    width: 100px;
+    height: 100px;
+    margin-right: 10px;
+}
+
+
+/* --- Footer --- */
+.footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: 0px;
+    width: 200px;
+    height: auto;
+    z-index: 100;
+    line-height: 0.2;
+    font-size: 0.85em;
+}
+
+.footer a {
+    color: #063c8f;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* --- Custom Components & Overrides --- */
+
+/* Custom button style */
+.custom-button {
+    background-color: #050350; /* Custom blue color */
+    color: white; /* Text color */
+    border: none; /* Remove border */
+    padding: 10px 20px; /* Adjust padding */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 1rem; /* Adjust font size */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Overrides Bootstrap's primary button color */
+.btn-primary {
+    background-color: #050350;
+    border-color: #050350;
+}
+
+p {
+    margin: 20px; /* Adjust the margin size for paragraphs */
+}
+
+b {
+    font-weight: bold;
+}
+
+img.icon {
+    width: 20px;
+    height: 20px;
+}
+
+.mb-4 {
+    margin: 10px 20px; /* Adjust the value as needed */
+}
+
+/* Custom numbered list group */
+.list-group-numbered {
+    counter-reset: list-item 1; /* Starts the counter at 1 */
+}
+
+.list-group-numbered > .list-group-item::before {
+    content: "Step " counter(list-item) ".";
+    counter-increment: list-item;
+}
+
+.list-group-item {
+    padding: 30px 10px; /* 30px vertical padding, 10px horizontal */
+}
+
+/* --- Navbar Customizations --- */
+.navbar {
+    font-size: 1rem; /* Adjust the font size for the entire navbar */
+    padding: 5px; /* Add padding to make it taller */
+}
+
+/* Adds horizontal margin to top-level nav items */
+.navbar-nav .nav-item {
+    margin: 0 100px; /* Adds 100px of margin on the left and right */
+}
+
+/* Adjust the main navigation links specifically */
+.navbar-nav .nav-link {
+    font-size: 1.5rem; /* Larger font for the nav links */
+    padding: 10px 15px; /* Add padding for a larger clickable area */
+}
+
+/* Make dropdown items larger */
+.dropdown-menu .dropdown-item {
+    font-size: 0.75rem; /* Increase font size for dropdown items */
+    padding: 10px 20px; /* Add padding for dropdown items */
+}
+
+/* Adjust the navbar toggler (hamburger icon) for mobile view */
+.navbar-toggler {
+    font-size: 1.5rem; /* Larger icon size */
+    padding: 10px; /* Larger clickable area */
+}
+
+/* --- Dropdown Hover Behavior --- */
+
+/* Makes the dropdown menu appear on hover */
+.nav-item.dropdown:hover .dropdown-menu {
+   display: block; /* Shows the menu on hover */
+   margin-top: 0; /* Corrects the default spacing */
+}
+
+/* Prevents the top-level dropdown link from being clickable */
+.nav-item.dropdown > .nav-link {
+    cursor: default;
+}

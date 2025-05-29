@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Recipe Creator{% endblock %}
+
+{% block extra_css %}
+    {# Stylesheets for CodeMirror editor #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    
+    {# Shared stylesheet for creator pages #}
+    <link rel="stylesheet" href="{% static 'css/creator.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid main-container">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="my-4 display-4">Recipe Creator</h1>
+        {# You can add a status indicator here if needed #}
+        <div id="recipe-status" class="text-muted">New Recipe</div>
+    </div>
+    
+    {# This container will hold all the content blocks #}
+    <div id="blocks-container" class="empty"></div>
+
+    {# Container for the main action buttons #}
+    <div id="export-load-container" class="my-4 text-center">
+        <button id="save-recipe-server-btn" class="btn btn-primary btn-lg">
+            <i class="bi bi-save-fill"></i> Save Recipe
+        </button>
+        <button id="load-recipe-server-btn" class="btn btn-secondary btn-lg">
+            <i class="bi bi-folder2-open"></i> Load a Recipe
+        </button>
+    </div>
+</div>
+
+{# Floating Action Buttons (FABs) #}
+<button id="help-btn" class="floating-btn" title="Help" style="bottom: 30px; background-color: #0d6efd;"><i class="bi bi-question-circle-fill"></i></button>
+<button id="add-block-floating-btn" class="floating-btn" title="Add a Block" style="bottom: 105px; background-color: #198754;"><i class="bi bi-plus-lg"></i></button>
+<button id="metadata-btn" class="floating-btn" title="Edit Metadata" style="bottom: 180px; background-color: #6c757d;"><i class="bi bi-tags-fill"></i></button>
+<button id="scroll-to-top-btn" class="floating-btn" title="Scroll to Top" style="bottom: 250px; display: none; background-color: #ffc107;"><i class="bi bi-arrow-up"></i></button>
+
+{# Include the modals needed for this page #}
+{% include "recipes/_modals.html" %}  {# This file will contain the modals for metadata, loading, etc. #}
+{% include "recipes/help.html" %}      {# This includes your newly created help guide #}
+
+{% endblock %}
+
+{% block extra_js %}
+    {# Scripts for MathJax and CodeMirror #}
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.js"></script>
+
+    {# Data passed from the Django view to JavaScript #}
+    {{ initial_data|json_script:"initial-data-json" }}
+    {{ api_config|json_script:"api-config-json" }}
+
+    {# Page-specific JavaScript file #}
+    <script src="{% static 'js/recipe_creator.js' %}"></script>
+{% endblock %}

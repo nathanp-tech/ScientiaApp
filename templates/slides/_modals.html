@@ -1,0 +1,127 @@
+<div class="modal fade" id="slideTemplateSelectionModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
+   <div class="modal-dialog modal-xl"> <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateModalLabel">Choose a Slide Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                   <div class="col"> <div class="card template-card h-100" data-template="basic"> <div class="card-body"> <h6 class="card-title fw-bold">Basic Slide</h6> <p class="card-text small">Title and simple bullet points.</p> </div> </div> </div>
+                   <div class="col"> <div class="card template-card h-100" data-template="two-column"> <div class="card-body"> <h6 class="card-title fw-bold">Two Column</h6> <p class="card-text small">Content in two columns.</p> </div> </div> </div>
+                   <div class="col"> <div class="card template-card h-100" data-template="quiz"> <div class="card-body"> <h6 class="card-title fw-bold">Quiz Slide</h6> <p class="card-text small">Interactive multiple-choice quiz.</p> </div> </div> </div>
+                   <div class="col"> <div class="card template-card h-100" data-template="math"> <div class="card-body"> <h6 class="card-title fw-bold">Math Equations</h6> <p class="card-text small">Display complex mathematical notations.</p> </div> </div> </div>
+                   <div class="col"> <div class="card template-card h-100" data-template="front"> <div class="card-body"> <h6 class="card-title fw-bold">Front Page</h6> <p class="card-text small">Title slide format with a subtitle.</p> </div> </div> </div>
+                   <div class="col"> <div class="card template-card h-100" data-template="cards"> <div class="card-body"> <h6 class="card-title fw-bold">Info Cards</h6> <p class="card-text small">Grid layout with multiple text cards.</p> </div> </div> </div>
+                   <div class="col"> <div class="card template-card h-100" data-template="two-column-basic"> <div class="card-body"> <h6 class="card-title fw-bold">Two Column Basic</h6> <p class="card-text small">Side-by-side text blocks (e.g., statement/explanation).</p> </div> </div> </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-template-btn" disabled>Create Slide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="metadataSelectionModal" tabindex="-1" aria-labelledby="metadataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="metadataModalLabel">Edit Slideshow Metadata</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="slideshowTitle" class="form-label">Slideshow Title:</label>
+                    <input type="text" class="form-control" id="slideshowTitle" placeholder="Enter a title">
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="curriculum" class="form-label">Curriculum:</label>
+                            <select id="curriculum" class="form-select">
+                                <option value="">-- Select --</option>
+                                {% for curr in curriculums %}
+                                <option value="{{ curr.pk }}">{{ curr.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="language" class="form-label">Language:</label>
+                            <select id="language" class="form-select">
+                                <option value="">-- Select --</option>
+                                {% for lang in languages %}
+                                <option value="{{ lang.pk }}">{{ lang.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject:</label>
+                            <select id="subject" class="form-select" disabled>
+                                <option value="">-- First choose curriculum/language --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="topic" class="form-label">Topic/Label:</label>
+                            <select id="topic" class="form-select" disabled>
+                                <option value="">-- First choose a subject --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-metadata-btn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadSlideshowModal" tabindex="-1" aria-labelledby="loadSlideshowModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loadSlideshowModalLabel">Load a Slideshow</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select the slideshow you wish to load:</p>
+                <select class="form-select" id="slideshowSelector">
+                    <option selected value="">-- Choose a slideshow --</option>
+                </select>
+                <div id="load-error-message" class="alert alert-danger mt-3 d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-load-slideshow-btn">Load Slideshow</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">User Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4>Step 1: Metadata</h4>
+                <p>Click the <i class="bi bi-tags-fill"></i> button to set the title, subject, and other information for the slideshow.</p>
+                
+                <h4>Step 2: Add Slides</h4>
+                <p>Click the <i class="bi bi-plus-lg"></i> button to add a new slide to your presentation.</p>
+
+                <h4>Step 3: Save</h4>
+                <p>Don't forget to save your work regularly by clicking the "Save Slideshow" button.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+            </div>
+        </div>
+    </div>
+</div>

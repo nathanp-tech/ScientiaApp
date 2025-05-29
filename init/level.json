@@ -1,0 +1,18 @@
+[
+    {
+      "model": "subjects.Level",
+      "pk": 1,
+      "fields": {
+        "name": "SL",
+        "curriculum": 1
+      }
+    },
+    {
+        "model": "subjects.Level",
+        "pk": 2,
+        "fields": {
+          "name": "HL",
+          "curriculum": 1
+        }
+    }
+]

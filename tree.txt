@@ -1,0 +1,292 @@
+.
+├── .DS_Store
+├── .codegpt
+│   └── head
+├── .gitignore
+├── .vscode
+│   └── settings.json
+├── README.txt
+├── calculator
+│   ├── .DS_Store
+│   └── TI-Nspire
+│       ├── .DS_Store
+│       └── html_files
+│           ├── amortization.html
+│           ├── arithmetic_sequences.html
+│           ├── binomial_distribution.html
+│           ├── cartesian_polar.html
+│           ├── chrome.py
+│           ├── complex_numbers.html
+│           ├── composite_functions.html
+│           ├── compound_interests.html
+│           ├── definite_integrals.html
+│           ├── degrees_radians.html
+│           ├── derivative_function.html
+│           ├── eigenvalues.html
+│           ├── euler_method.html
+│           ├── geometric_sequences.html
+│           ├── geometric_transformations.html
+│           ├── graph_function.html
+│           ├── key_features_graph.html
+│           ├── laws_of_exponents.html
+│           ├── laws_of_logarithms.html
+│           ├── line_best_fit.html
+│           ├── local_min_max.html
+│           ├── matrices.html
+│           ├── normal_distribution.html
+│           ├── poisson_distribution.html
+│           ├── reliability.html
+│           ├── scalar_vector.html
+│           ├── scientific_notation.html
+│           ├── second_derivative.html
+│           ├── spearman_rank.html
+│           ├── statistical_measures.html
+│           ├── statistical_tests.html
+│           ├── systems_linear.html
+│           ├── tangents_normals.html
+│           ├── test_retest.html
+│           ├── transformations_graphs.html
+│           ├── transition_matrices.html
+│           └── unit_circle.html
+├── central
+│   ├── .DS_Store
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── settings.cpython-310.pyc
+│   │   ├── settings.cpython-38.pyc
+│   │   ├── urls.cpython-310.pyc
+│   │   ├── urls.cpython-38.pyc
+│   │   ├── wsgi.cpython-310.pyc
+│   │   └── wsgi.cpython-38.pyc
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── core
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── admin.cpython-38.pyc
+│   │   ├── apps.cpython-38.pyc
+│   │   ├── models.cpython-38.pyc
+│   │   ├── serializers.cpython-38.pyc
+│   │   ├── urls_api.cpython-38.pyc
+│   │   ├── views.cpython-38.pyc
+│   │   └── views_api.cpython-38.pyc
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_load_core_data.py
+│   │   ├── 0003_label_numbering.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-38.pyc
+│   │       ├── 0002_load_core_data.cpython-38.pyc
+│   │       ├── 0003_label_numbering.cpython-38.pyc
+│   │       └── __init__.cpython-38.pyc
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls_api.py
+│   ├── views.py
+│   └── views_api.py
+├── db.sqlite3
+├── init
+│   ├── .DS_Store
+│   ├── curriculum.json
+│   ├── grouping.json
+│   ├── label.json
+│   ├── label_original.json
+│   ├── language.json
+│   ├── level.json
+│   ├── presentations_master.json
+│   ├── recipe.json
+│   ├── schedule_projects_master.json
+│   ├── subject.json
+│   └── tag.json
+├── manage.py
+├── planner
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── admin.cpython-38.pyc
+│   │   ├── apps.cpython-38.pyc
+│   │   ├── models.cpython-38.pyc
+│   │   ├── serializers.cpython-38.pyc
+│   │   ├── services.cpython-38.pyc
+│   │   ├── urls_api.cpython-38.pyc
+│   │   ├── urls_pages.cpython-38.pyc
+│   │   └── views.cpython-38.pyc
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_alter_scheduledsession_options_and_more.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-38.pyc
+│   │       ├── 0002_alter_scheduledsession_options_and_more.cpython-38.pyc
+│   │       └── __init__.cpython-38.pyc
+│   ├── models.py
+│   ├── serializers.py
+│   ├── services.py
+│   ├── tests.py
+│   ├── urls_api.py
+│   ├── urls_pages.py
+│   └── views.py
+├── recipes
+│   ├── .DS_Store
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── admin.cpython-310.pyc
+│   │   ├── admin.cpython-38.pyc
+│   │   ├── apps.cpython-310.pyc
+│   │   ├── apps.cpython-38.pyc
+│   │   ├── models.cpython-310.pyc
+│   │   ├── models.cpython-38.pyc
+│   │   ├── print_recipe.cpython-310.pyc
+│   │   ├── print_recipe.cpython-38.pyc
+│   │   ├── serializers.cpython-38.pyc
+│   │   ├── urls.cpython-310.pyc
+│   │   ├── urls.cpython-38.pyc
+│   │   ├── urls_api.cpython-38.pyc
+│   │   ├── urls_pages.cpython-38.pyc
+│   │   ├── views.cpython-310.pyc
+│   │   └── views.cpython-38.pyc
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   ├── 0001_load_recipe_data.py
+│   │   ├── 0002_initial.py
+│   │   ├── 0003_alter_recipe_unique_together.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_load_recipe_data.cpython-38.pyc
+│   │       ├── 0002_initial.cpython-38.pyc
+│   │       ├── 0003_alter_recipe_unique_together.cpython-38.pyc
+│   │       └── __init__.cpython-38.pyc
+│   ├── models.py
+│   ├── print_recipe.py
+│   ├── serializers.py
+│   ├── urls_api.py
+│   ├── urls_pages.py
+│   └── views.py
+├── slides
+│   ├── .DS_Store
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── admin.cpython-38.pyc
+│   │   ├── apps.cpython-38.pyc
+│   │   ├── models.cpython-38.pyc
+│   │   ├── serializers.cpython-38.pyc
+│   │   ├── urls_api.cpython-38.pyc
+│   │   ├── urls_pages.cpython-38.pyc
+│   │   └── views.cpython-38.pyc
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   ├── .DS_Store
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_alter_slide_options_alter_slide_unique_together_and_more.py
+│   │   ├── 0003_alter_slide_unique_together.py
+│   │   ├── 0004_alter_slide_options_alter_slideblock_options_and_more.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-38.pyc
+│   │       ├── 0002_alter_slide_options_alter_slide_unique_together_and_more.cpython-38.pyc
+│   │       ├── 0003_alter_slide_unique_together.cpython-38.pyc
+│   │       ├── 0004_alter_slide_options_alter_slideblock_options_and_more.cpython-38.pyc
+│   │       └── __init__.cpython-38.pyc
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls_api.py
+│   ├── urls_pages.py
+│   └── views.py
+├── static
+│   ├── .DS_Store
+│   ├── css
+│   │   ├── .DS_Store
+│   │   ├── base.css
+│   │   ├── creator.css
+│   │   ├── planner.css
+│   │   ├── recipe_browser.css
+│   │   ├── slide_browser.css
+│   │   ├── slide_styles.css
+│   │   └── styles.css
+│   ├── img
+│   │   ├── logo.png
+│   │   └── logo_black.png
+│   └── js
+│       ├── .DS_Store
+│       ├── recipe_browser.js
+│       ├── recipe_creator.js
+│       ├── slide_browser.js
+│       ├── slide_creator.js
+│       └── student_planner.js
+├── subjects
+│   ├── .DS_Store
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── admin.cpython-310.pyc
+│   │   ├── admin.cpython-38.pyc
+│   │   ├── apps.cpython-310.pyc
+│   │   ├── apps.cpython-38.pyc
+│   │   ├── models.cpython-310.pyc
+│   │   └── models.cpython-38.pyc
+│   ├── admin.py
+│   ├── apps.py
+│   ├── fixtures
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_subject_level.py
+│   │   ├── 0003_subject_end_date.py
+│   │   ├── 0004_label.py
+│   │   ├── 0005_rename_level_label_parent.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-310.pyc
+│   │       ├── 0001_initial.cpython-38.pyc
+│   │       ├── 0002_subject_level.cpython-310.pyc
+│   │       ├── 0002_subject_level.cpython-38.pyc
+│   │       ├── 0003_subject_end_date.cpython-310.pyc
+│   │       ├── 0003_subject_end_date.cpython-38.pyc
+│   │       ├── 0004_label.cpython-310.pyc
+│   │       ├── 0004_label.cpython-38.pyc
+│   │       ├── 0005_rename_level_label_parent.cpython-310.pyc
+│   │       ├── 0005_rename_level_label_parent.cpython-38.pyc
+│   │       ├── __init__.cpython-310.pyc
+│   │       └── __init__.cpython-38.pyc
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+├── templates
+│   ├── .DS_Store
+│   ├── base.html
+│   ├── index.html
+│   ├── planner
+│   │   └── student_planner.html
+│   ├── recipes
+│   │   ├── .DS_Store
+│   │   ├── _modals.html
+│   │   ├── help.html
+│   │   ├── recipe_browser.html
+│   │   ├── recipe_creator.html
+│   │   └── recipe_detail.html
+│   ├── registration
+│   │   └── login.html
+│   └── slides
+│       ├── _modals.html
+│       ├── slide_browser.html
+│       └── slide_creator.html
+└── tree.txt
+
+39 directories, 251 files

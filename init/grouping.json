@@ -1,0 +1,18 @@
+[
+    {
+      "model": "subjects.grouping",
+      "pk": 1,
+      "fields": {
+        "name": "Group 5 - Mathematics",
+        "curriculum": 1
+      }
+    },
+    {
+      "model": "subjects.grouping",
+      "pk": 2,
+      "fields": {
+        "name": "Group 4 - Sciences",
+        "curriculum": 1
+      }
+    }
+]
