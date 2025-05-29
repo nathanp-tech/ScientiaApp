@@ -1,0 +1,147 @@
+/* static/css/calculator.css */
+
+/* Styles for the secondary calculator navigation bar (calculator_interactive_index.html) */
+.calculator-sub-nav {
+    background-color: #123456; /* Bleu foncé, similaire à la navbar principale */
+    padding: 0.75rem 0; /* Augmentation du padding vertical pour plus de hauteur */
+    margin-bottom: 2rem; /* Plus d'espace en dessous */
+    border-radius: 0.25rem; /* Coins légèrement arrondis, ou 0 pour un look plus plat */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Ombre plus prononcée pour la profondeur */
+    /* Pour que la barre de navigation s'étende sur toute la largeur de son conteneur parent (ex: .container ou .container-fluid) */
+    /* Si elle est dans un .container, elle ne sera pas sur toute la largeur de la fenêtre. */
+    /* Pour une pleine largeur de la fenêtre, la structure HTML devrait la placer en dehors d'un .container fixe. */
+}
+
+
+
+.calculator-sub-nav .nav-item .nav-link {
+    font-weight: 500; 
+    text-align: center;
+    color: #ffffff; /* Texte blanc pour contraster avec le fond bleu foncé */
+    font-size: 1.1rem; /* Taille de police augmentée pour les éléments principaux */
+    padding: 0.8rem 1.2rem; /* Padding augmenté pour une zone cliquable plus grande */
+    border-radius: 0.375rem; /* Coins arrondis pour les liens */
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    margin: 0 0.25rem; /* Petit espace entre les éléments de la navbar */
+}
+
+.calculator-sub-nav .nav-item .nav-link:hover,
+.calculator-sub-nav .nav-item .nav-link:focus {
+    color: #ffffff; 
+    background-color: rgba(255, 255, 255, 0.15); /* Surbrillance subtile au survol */
+}
+
+/* Style pour le bouton de menu déroulant actif/ouvert */
+.calculator-sub-nav .nav-item .dropdown-toggle[aria-expanded="true"] {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.2); /* Indication visuelle plus claire */
+}
+
+.calculator-sub-nav .dropdown-menu {
+    max-height: 450px; /* Un peu plus de hauteur pour les listes longues */
+    overflow-y: auto;
+    border-radius: 0.375rem; 
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175); 
+    border: none; /* Supprimer la bordure si l'ombre est suffisante */
+    background-color: #1a4a7c; /* Fond bleu plus foncé pour les menus déroulants */
+    margin-top: 0.25rem; /* Petit espace par rapport au bouton */
+}
+
+.calculator-sub-nav .dropdown-header {
+    background-color: rgba(0, 0, 0, 0.2); /* Fond d'en-tête semi-transparent sur le bleu */
+    color: #f8f9fa; /* Texte clair pour l'en-tête */
+    font-weight: bold;
+    font-size: 0.95rem; 
+    padding: 0.75rem 1.25rem; 
+    margin-top: 0; 
+}
+
+.calculator-sub-nav .dropdown-item + .dropdown-header {
+    margin-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Séparateur subtil */
+}
+
+.calculator-sub-nav .dropdown-item {
+    font-size: 0.95rem; /* Taille de police légèrement augmentée */
+    padding: 0.6rem 1.25rem; 
+    color: #e9ecef; /* Couleur de texte claire pour les éléments */
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.calculator-sub-nav .dropdown-item:hover,
+.calculator-sub-nav .dropdown-item:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.calculator-sub-nav .dropdown-item:active {
+    background-color: #0d6efd; /* Bleu primaire Bootstrap pour l'élément actif */
+    color: white;
+}
+
+.calculator-sub-nav .navbar-nav {
+    width: 100%; 
+    /* justify-content: center; /* Décommentez pour centrer les éléments si moins nombreux */
+}
+
+/* Styles pour le conteneur du contenu du calculateur injecté dynamiquement */
+#calculator-content-display {
+    border: 1px solid #e0e0e0; 
+    padding: 25px;
+    border-radius: 8px; 
+    background-color: #ffffff; 
+    overflow-x: auto; 
+    min-height: 400px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+}
+
+/* Masquer les éléments spécifiques des fichiers HTML importés LORSQU'ILS SONT DANS #calculator-content-display */
+#calculator-content-display .banner,
+#calculator-content-display .section-title,
+#calculator-content-display nav.navbar.navbar-expand-lg.navbar-light.bg-light,
+#calculator-content-display footer.footer {
+    display: none !important;
+}
+
+/* Styles pour assurer une bonne intégration du contenu injecté */
+#calculator-content-display body {
+    background-color: transparent !important; 
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: inherit !important; 
+    font-size: inherit !important; 
+    color: inherit !important; 
+}
+
+
+
+/* Ensure images within the injected content are responsive by default */
+#calculator-content-display img {
+    width: 300px;
+            height: auto;
+            padding: auto;
+            margin-top: 20px;
+            text-align: center; /* Center images */
+    display: block; /* Make images block-level for centering */
+    max-width: 100%; /* Ensure images do not overflow their container */
+    height: auto; /* Maintain aspect ratio */
+    margin: 0 auto; /* Center images horizontally */
+            
+}
+
+/* Specific style for small icon images, as seen in arithmetic_sequences.html */
+#calculator-content-display img.icon {
+    width: 30px !important; /* Use !important if other rules might override */
+    height: 30px !important;
+    display: inline-block !important; /* Icons are usually inline */
+    vertical-align: middle; /* Align with text */
+    margin: 0 2px !important; /* Small margin around icons */
+}
+
+
+#calculator-content-display img.specific-calc-image {
+       width: 300px;
+       max-width: 100%; 
+       height: auto;
+   }
+

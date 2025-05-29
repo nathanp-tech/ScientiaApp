@@ -1,74 +1,89 @@
-/*
- * base.css
- * This file combines your custom styles with the layout improvements
- * for a consistent header, body, and sticky footer structure.
- */
+/* static/css/base.css */
 
 /* --- Core Layout & Sticky Footer --- */
 html {
-    position: relative;
-    min-height: 100%;
+    height: 100%;
+    font-size: 16px; /* Base font size */
 }
 
 body {
-    /* This flexbox layout is key to the sticky footer */
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    background-color: #f8f9fa; /* Kept your preferred background color [cite: 1] */
+    min-height: 100vh; 
+    margin: 0; 
+    background-color: #f8f9fa; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Police système standard */
+    line-height: 1.6; /* Espacement de ligne confortable */
 }
 
-main {
-    /* This makes the main content area grow to push the footer down */
-    flex-grow: 1;
-}
-
-/* --- Custom Navbar Style --- */
-.navbar-perso {
-    background-color: #123456 !important; /* Kept your custom dark blue color [cite: 1] */
+/* Barre de navigation principale de base.html */
+body > nav.navbar.navbar-perso {
+    background-color: #123456 !important; /* Bleu foncé spécifique à votre marque */
     font-weight: 500;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Adding a subtle shadow for depth */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-shrink: 0; 
 }
 
-.dropdown-item {
+body > nav.navbar.navbar-perso .navbar-nav .nav-link,
+body > nav.navbar.navbar-perso .navbar-brand,
+body > nav.navbar.navbar-perso .dropdown-toggle {
+    color: white !important; 
+}
+body > nav.navbar.navbar-perso .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+main.container { /* Assurez-vous que votre balise main a la classe .container */
+    flex-grow: 1;
+    width: 100%;
+    padding-top: 1.5rem; /* Espace au-dessus du contenu principal */
+    padding-bottom: 1.5rem; /* Espace en dessous du contenu principal */
+}
+
+.dropdown-item { 
     font-size: 0.95rem;
 }
 
 /* --- Footer Styles --- */
 .footer {
     width: 100%;
-    background-color: #e9ecef; /* A light gray for the footer */
+    background-color: #e9ecef; 
     border-top: 1px solid #dee2e6;
     padding: 1rem 0;
+    flex-shrink: 0; 
+    margin-top: auto; /* Pousse le footer en bas */
+    text-align: center; /* Centre le texte du footer */
+}
+
+.footer .text-muted {
+    font-size: 0.9rem; /* Taille de police légèrement réduite pour le footer */
 }
 
 
 /* --- Floating Action Buttons (FABs) --- */
-/* Your existing styles for floating buttons are preserved below[cite: 1]. */
 .floating-btn {
-    position: fixed; /* Keeps the button in the same place even when scrolling */
-    right: 30px; /* Positions the button 30px from the right edge */
-    z-index: 1050; /* Ensures the button appears above most other content */
+    position: fixed; 
+    right: 30px; 
+    z-index: 1050; 
     width: 60px;
     height: 60px;
-    border-radius: 50%; /* Makes the button circular */
-    display: flex; /* Used to center the icon inside */
+    border-radius: 50%; 
+    display: flex; 
     justify-content: center;
     align-items: center;
-    color: white; /* Sets the icon color to white */
+    color: white; 
     border: none;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.2); /* Adds a subtle shadow for depth */
-    transition: all 0.3s ease; /* Smooth transition for hover effects */
-    font-size: 24px; /* Size of the icon inside the button */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2); 
+    transition: all 0.3s ease; 
+    font-size: 24px; 
 }
 
 .floating-btn:hover {
-    transform: translateY(-4px); /* Moves the button up slightly */
-    box-shadow: 0 12px 20px rgba(0,0,0,0.3); /* Makes the shadow more prominent */
+    transform: translateY(-4px); 
+    box-shadow: 0 12px 20px rgba(0,0,0,0.3); 
 }
 
-/* --- Featurette Styles --- */
-/* Your existing styles for featurettes are preserved below[cite: 1]. */
+/* --- Featurette Styles (si utilisées sur d'autres pages) --- */
 .featurette-icon-placeholder {
     width: 100%;
     height: 100%;
@@ -85,4 +100,7 @@ main {
     color: #6c757d;
 }
 
-/* Note: A stray closing brace '}' was removed from the end of the original file[cite: 1]. */
+/* Styles généraux pour les titres dans le contenu principal pour la cohérence */
+main h1, main h2, main h3, main h4, main h5, main h6 {
+    color: #343a40; /* Couleur de titre standard */
+}

@@ -1,0 +1,225 @@
+.
+├── .DS_Store
+├── calc_screen
+│   ├── .DS_Store
+│   ├── arithmetic_sequences_and_series
+│   │   ├── .DS_Store
+│   │   ├── Capture_01.png
+│   │   ├── Capture_02.png
+│   │   ├── Capture_03.png
+│   │   ├── Capture_04.png
+│   │   ├── Capture_05.png
+│   │   ├── Capture_06.png
+│   │   ├── Capture_07.png
+│   │   ├── Capture_08.png
+│   │   └── Capture_09.png
+│   ├── binomial_distribution
+│   │   ├── Capture_12.png
+│   │   ├── Capture_13.png
+│   │   ├── Capture_14.png
+│   │   ├── Capture_15.png
+│   │   └── Capture_16.png
+│   ├── complex_numbers
+│   │   ├── Capture_18.png
+│   │   ├── Capture_19.png
+│   │   └── Capture_20.png
+│   ├── complex_numbers_conversion
+│   │   └── Capture_17.png
+│   ├── composite_functions
+│   │   ├── Capture_21.png
+│   │   ├── Capture_22.png
+│   │   └── Capture_23.png
+│   ├── compound_interests
+│   │   ├── Capture_24.png
+│   │   ├── Capture_25.png
+│   │   ├── Capture_26.png
+│   │   └── Capture_27.png
+│   ├── confidence_intervals_for_the_mean_of_a_normal_population
+│   │   ├── Capture_28.png
+│   │   ├── Capture_29.png
+│   │   ├── Capture_30.png
+│   │   └── Capture_31.png
+│   ├── create_and_edit_lists
+│   │   └── Capture_32.png
+│   ├── definite_integrals
+│   │   ├── Capture_33.png
+│   │   ├── Capture_34.png
+│   │   └── Capture_35.png
+│   ├── degrees_and_radians
+│   │   ├── Capture_36.png
+│   │   └── Capture_37.png
+│   ├── derivative_of_a_function
+│   │   ├── Capture_38.png
+│   │   ├── Capture_39.png
+│   │   └── Capture_40.png
+│   ├── eigenvalues_and_eigenvectors
+│   │   ├── Capture_41.png
+│   │   └── Capture_42.png
+│   ├── euler_method
+│   │   ├── Capture_43.png
+│   │   └── Capture_44.png
+│   ├── general_tools
+│   │   ├── Capture 1.png
+│   │   └── Capture 2.png
+│   ├── geometric_sequences_and_series
+│   │   ├── Capture_45.png
+│   │   ├── Capture_46.png
+│   │   ├── Capture_47.png
+│   │   ├── Capture_48.png
+│   │   ├── Capture_49.png
+│   │   ├── Capture_50.png
+│   │   ├── Capture_51.png
+│   │   ├── Capture_52.png
+│   │   └── Capture_53.png
+│   ├── graph_a_function
+│   │   ├── Capture_54.png
+│   │   ├── Capture_55.png
+│   │   ├── Capture_56.png
+│   │   └── Capture_57.png
+│   ├── key_features_of_graphs
+│   │   ├── Capture_58.png
+│   │   ├── Capture_59.png
+│   │   ├── Capture_60.png
+│   │   ├── Capture_61.png
+│   │   ├── Capture_62.png
+│   │   ├── Capture_63.png
+│   │   ├── Capture_64.png
+│   │   ├── Capture_65.png
+│   │   ├── Capture_66.png
+│   │   ├── Capture_67.png
+│   │   ├── Capture_68.png
+│   │   ├── Capture_69.png
+│   │   └── Capture_70.png
+│   ├── line_of_best_fit
+│   │   ├── Capture_71.png
+│   │   ├── Capture_72.png
+│   │   ├── Capture_73.png
+│   │   ├── Capture_74.png
+│   │   ├── Capture_75.png
+│   │   └── Capture_76.png
+│   ├── local_minimum_and_local_maximum_of_a_function
+│   │   └── Capture_77.png
+│   ├── matrices
+│   │   ├── Capture_77.png
+│   │   ├── Capture_78.png
+│   │   ├── Capture_79.png
+│   │   ├── Capture_80.png
+│   │   ├── Capture_81.png
+│   │   └── Capture_82.png
+│   ├── normal_distribution
+│   │   ├── Capture_83.png
+│   │   ├── Capture_84.png
+│   │   ├── Capture_85.png
+│   │   ├── Capture_86.png
+│   │   ├── Capture_87.png
+│   │   └── Capture_88.png
+│   ├── poisson_distribution
+│   │   ├── Capture_89.png
+│   │   ├── Capture_90.png
+│   │   ├── Capture_91.png
+│   │   ├── Capture_92.png
+│   │   └── Capture_93.png
+│   ├── scientific_notation_and_rounding
+│   │   ├── Capture_94.png
+│   │   ├── Capture_95.png
+│   │   └── Capture_96.png
+│   ├── second_derivative
+│   │   └── Capture_97.png
+│   ├── spearman
+│   │   ├── Capture_100.png
+│   │   ├── Capture_101.png
+│   │   ├── Capture_102.png
+│   │   ├── Capture_103.png
+│   │   ├── Capture_104.png
+│   │   ├── Capture_105.png
+│   │   ├── Capture_98.png
+│   │   └── Capture_99.png
+│   ├── statistical_measures_on_one_variable_data
+│   │   ├── Capture_106.png
+│   │   ├── Capture_107.png
+│   │   ├── Capture_108.png
+│   │   ├── Capture_109.png
+│   │   ├── Capture_110.png
+│   │   └── Capture_111.png
+│   ├── statistical_tests
+│   │   ├── Capture_112.png
+│   │   ├── Capture_113.png
+│   │   ├── Capture_114.png
+│   │   ├── Capture_115.png
+│   │   ├── Capture_116.png
+│   │   ├── Capture_117.png
+│   │   ├── Capture_118.png
+│   │   └── Capture_119.png
+│   ├── systems_of_linear_equations_and_polynomial_equation
+│   │   ├── Capture_120.png
+│   │   ├── Capture_121.png
+│   │   └── Capture_122.png
+│   ├── tangents_and_normals_to_a_curve
+│   │   ├── Capture_123.png
+│   │   └── Capture_124.png
+│   └── various_tests
+│       ├── Capture_125.png
+│       ├── Capture_126.png
+│       ├── Capture_127.png
+│       ├── Capture_128.png
+│       ├── Capture_129.png
+│       ├── Capture_130.png
+│       ├── Capture_131.png
+│       └── Capture_132.png
+├── keys
+│   ├── ans.png
+│   ├── book.png
+│   ├── c.png
+│   ├── check.png
+│   ├── circumflex.png
+│   ├── comma.png
+│   ├── ctrl.png
+│   ├── degree.png
+│   ├── del.png
+│   ├── derivative.png
+│   ├── divided.png
+│   ├── doc.png
+│   ├── ee.png
+│   ├── enter.png
+│   ├── equals.png
+│   ├── esc.png
+│   ├── exp.png
+│   ├── fractwo.png
+│   ├── integral.png
+│   ├── lbracket.png
+│   ├── lines.png
+│   ├── menu.png
+│   ├── minus.png
+│   ├── on.png
+│   ├── pi.png
+│   ├── plus.png
+│   ├── pmt.png
+│   ├── point.png
+│   ├── question.png
+│   ├── rbracket.png
+│   ├── save.png
+│   ├── secondderivative.png
+│   ├── shift.png
+│   ├── space.png
+│   ├── sum.png
+│   ├── system.png
+│   ├── systemtwo.png
+│   ├── tab.png
+│   ├── tenpower.png
+│   ├── tex_for_keys.tex
+│   ├── times.png
+│   ├── trig.png
+│   ├── v.png
+│   ├── var.png
+│   └── xsquared.png
+├── logo.png
+├── screen_symbols
+│   ├── sbattery.png
+│   ├── schisquared.png
+│   ├── sintegral.png
+│   ├── sloading.png
+│   └── ssigma.png
+├── tree.txt
+└── warning.png
+
+34 directories, 189 files
