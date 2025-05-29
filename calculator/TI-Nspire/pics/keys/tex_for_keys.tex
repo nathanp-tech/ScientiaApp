@@ -1,0 +1,129 @@
+%\graphicspath{{TI-Nspire_plus_CE-T_}}
+\usepackage{graphicx,calc}
+\newlength\myheight
+\newlength\mydepth
+\settototalheight\myheight{Xygp}
+\settodepth\mydepth{Xygp}
+\setlength\fboxsep{0pt}
+\newcommand*\inlinegraphics[1]{%
+  \settototalheight\myheight{Xygp}%
+  \settodepth\mydepth{Xygp}%
+  \raisebox{-
+  %\mydepth
+  3pt}{\ \includegraphics[height=
+  %\myheight
+  18pt]{#1}}%
+\ }
+
+%here for "2nd" and "clear" button, which don't have any word above them
+\newcommand*\inlinegraphicsbis[1]{%
+  \settototalheight\myheight{Xygp}%
+  \settodepth\mydepth{Xygp}%
+  \raisebox{-
+  %\mydepth
+  3pt}{\ \includegraphics[height=
+  %\myheight
+  12pt]{#1}}%
+\ }
+
+\newcommand*\inlinegraphicstiny[1]{%
+  \settototalheight\myheight{Xygp}%
+  \settodepth\mydepth{Xygp}%
+  \raisebox{
+  %\mydepth
+  .5pt}{\ \includegraphics[height=
+  %\myheight
+  8pt]{#1}}%
+\ }
+
+
+
+%%%%%%%%%%SCREEEN SYMBOLS%%%%%%%%%%%%%%%%
+\newcommand{\sloading}{\inlinegraphicstiny{sloading}}
+\newcommand{\sbattery}{\inlinegraphicsbis{sbattery}}
+\newcommand{\ssigma}{\inlinegraphicstiny{ssigma}\hspace{-0.12cm}}
+\newcommand{\schisquared}{\inlinegraphicstiny{schisquared}}
+\newcommand{\sintegral}{\inlinegraphicstiny{sintegral}\hspace{-0.12cm}}
+
+
+
+%%%%%%%%%%%%%%%KEYS, ORDERED BY LINE%%%%%%%%%%%%%%%%%%%%
+\newcommand{\kmesc}{\inlinegraphics{esc}}
+\newcommand{\ksave}{\inlinegraphics{save}}
+\newcommand{\ktab}{\inlinegraphics{tab}}
+\newcommand{\kon}{\inlinegraphics{on}}
+\newcommand{\kdoc}{\inlinegraphics{doc}}
+\newcommand{\kmenu}{\inlinegraphics{menu}}
+
+
+\newcommand{\kctrl}{\inlinegraphics{ctrl}}
+\newcommand{\kequals}{\inlinegraphics{equals}}
+\newcommand{\ktrig}{\inlinegraphics{trig}}
+\newcommand{\kcircumflex}{\inlinegraphics{circumflex}}
+\newcommand{\kxsquared}{\inlinegraphics{xsquared}}
+\newcommand{\kexp}{\inlinegraphics{exp}}
+\newcommand{\ktenpower}{\inlinegraphics{tenpower}}
+\newcommand{\klbracket}{\inlinegraphics{lbracket}}
+\newcommand{\krbracket}{\inlinegraphics{rbracket}}
+
+
+\newcommand{\kshift}{\inlinegraphics{shift}}
+\newcommand{\kvar}{\inlinegraphics{var}}
+\newcommand{\kpoint}{\inlinegraphics{point}}
+\newcommand{\kans}{\inlinegraphics{ans}}
+
+
+\newcommand{\kdel}{\inlinegraphics{del}}
+\newcommand{\ksystem}{\inlinegraphics{system}}
+\newcommand{\kbook}{\inlinegraphics{book}}
+\newcommand{\ktimes}{\inlinegraphics{times}}
+\newcommand{\kdivided}{\inlinegraphics{divided}}
+\newcommand{\kplus}{\inlinegraphics{plus}}
+\newcommand{\kminus}{\inlinegraphics{minus}}
+\newcommand{\kenter}{\inlinegraphics{enter}}
+
+
+\newcommand{\kee}{\inlinegraphics{ee}}
+\newcommand{\kpi}{\inlinegraphics{pi}}
+\newcommand{\kcomma}{\inlinegraphics{comma}}
+\newcommand{\kspace}{\inlinegraphics{space}}
+
+
+
+\newcommand{\ksystemtwo}{\inlinegraphics{systemtwo}}
+\newcommand{\kfractwo}{\inlinegraphics{fractwo}}
+\newcommand{\kontwo}{\inlinegraphics{ontwo}}
+\newcommand{\kpmt}{\inlinegraphics{pmt}}
+\newcommand{\kintegral}{\inlinegraphics{integral}}
+\newcommand{\kquestion}{\inlinegraphics{question}}
+\newcommand{\kdegree}{\inlinegraphics{degree}}
+\newcommand{\ksum}{\inlinegraphics{sum}}
+\newcommand{\kcheck}{\inlinegraphics{check}}
+\newcommand{\klines}{\inlinegraphics{lines}}
+\newcommand{\kderivative}{\inlinegraphics{derivative}}
+\newcommand{\ksecondderivative}{\inlinegraphics{secondderivative}}
+
+\newcommand{\kc}{\inlinegraphics{c}}
+\newcommand{\kv}{\inlinegraphics{v}}
+
+%%Uncomment what comes right after in the tex to get all the calculator's buttons:
+%\renewcommand{\arraystretch}{1.7}
+%\begin{center}
+%\begin{tabular}{c|c|c|c|c}
+%\kyequals&\kwindow&\kzoom&\ktrace&\kgraph\\
+%\ksecond&\kmode&\kdel&\kleft&\kup\\
+%\kalpha&\kvariable&\kstat&\kdown&\kright\\
+%\kmath&\kapps&\kprgm&\kvars&\kclear\\
+%\kxminusone&\ksin&\kcos&\ktan&\khat\\
+%\kxsquared&\kcomma&\kopenpar&\kclosepar&\kdivision\\
+%\klog&\kseven&\keight&\knine&\ktimes\\
+%\kln&\kfour&\kfive&\ksix&\kminus\\
+%\ksto&\kone&\ktwo&\kthree&\kplus\\
+%\kon&\kzero&\kdot&\kminussymbol&\kenter\\
+%\end{tabular}
+%\end{center}
+
+
+
+
+%https://tex.stackexchange.com/questions/258299/embed-small-image-within-a-line-of-text
