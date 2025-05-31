@@ -10,11 +10,28 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     
+    <link rel="stylesheet" href="{% static 'css/print_styles.css' %}" media="print">
+
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary navbar-perso shadow-sm">
+    <nav id="page-navbar" class="navbar navbar-expand-lg navbar-dark bg-primary navbar-perso shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
                 <img src="{% static 'img/logo.png' %}" alt="Logo" width="150" height="70" class="d-inline-block align-top">
@@ -34,10 +51,6 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'planner:main' %}">Student Planner</a>
-                        </li>
-                        <li class="nav-item"> 
-                            {# LIEN MODIFIÉ ICI #}
-                            <a class="nav-link" href="{% url 'calculator:interactive_index' %}">Calculator Manual</a>
                         </li>
                         
                         {% if user.is_staff %}
@@ -80,7 +93,8 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer mt-auto py-3 bg-light">
+    {# MODIFICATION ICI: Ajout de id="site-footer" #}
+    <footer id="site-footer" class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
             <span class="text-muted">© {% now "Y" %} Scientia App. All rights reserved.</span>
         </div>

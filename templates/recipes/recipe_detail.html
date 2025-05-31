@@ -4,19 +4,28 @@
 {% block title %}{{ recipe.title }} - Recipe Detail{% endblock %}
 
 {% block extra_css %}
-    {# Link to the CSS file for styling the recipe display page #}
-    <link rel="stylesheet" href="{% static 'css/creator.css' %}">
+    {# Link to the CSS file for styling the recipe display page (e.g., creator.css if needed for general display) #}
+    <link rel="stylesheet" href="{% static 'css/creator.css' %}"> 
+    {# Link to print-specific styles directly here #}
+    <link rel="stylesheet" href="{% static 'css/print_styles.css' %}" media="print">
 {% endblock %}
 
 {% block content %}
-<div class="recipe-display-container my-5">
+<div class="recipe-display-container my-5 printable-area"> {# Added printable-area class here #}
     
     <header class="recipe-header text-center mb-4">
-        <h1 class="recipe-title display-4">{{ recipe.title }}</h1>
+        <div class="d-flex justify-content-center align-items-center mb-2"> {# Container for title and print button #}
+            <h1 class="recipe-title display-4 mb-0">{{ recipe.title }}</h1>
+            {% if user.is_staff %}
+                <button id="print-content-btn" class="btn btn-outline-secondary ms-3 non-printable">
+                    <i class="bi bi-printer-fill"></i> Print
+                </button>
+            {% endif %}
+        </div>
         <p class="recipe-meta text-muted">
             <strong>Author:</strong> {{ recipe.author.username|default:"N/A" }} | 
             <strong>Subject:</strong> {{ recipe.subject.name|default:"N/A" }} 
-            {% if recipe.topic %}| <strong>Topic:</strong> {{ recipe.topic.description|default:"N/A" }}{% endif %}
+            {% if recipe.topic %}| <strong>Topic:</strong> {{ recipe.topic.name|default:recipe.topic.description|default:"N/A" }}{% endif %} {# Attempt topic.name, fallback to description #}
             <br>
             <strong>Curriculum:</strong> {{ recipe.curriculum.name|default:"N/A" }} |
             <strong>Language:</strong> {{ recipe.language.name|default:"N/A" }}
@@ -29,7 +38,7 @@
         {# Loop through each block associated with the recipe #}
         {# Assumes 'blocks' is the related_name from RecipeBlock to Recipe #}
         {% for block in recipe.blocks.all %}
-            <div class="recipe-block-display card shadow-sm mb-4">
+            <div class="recipe-block-display card shadow-sm mb-4 avoid-break"> {# Added avoid-break for printing #}
                 <div class="card-body">
                     {# The 'safe' filter is crucial here to render the stored HTML #}
                     {{ block.content_html|safe }}
@@ -40,12 +49,12 @@
         {% endfor %}
     </div>
 
-    <div class="text-center mt-4">
+    <div class="text-center mt-4 non-printable"> {# Hide this section when printing #}
         <a href="{% url 'recipes:browser' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left-circle"></i> Back to Recipe Browser
         </a>
         {% if user.is_staff %}
-        <a href="{% url 'recipes:creator' %}" class="btn btn-outline-primary ms-2">
+        <a href="{% url 'recipes:creator' %}" class="btn btn-outline-primary ms-2"> {# Assuming recipe_creator is the view name for editing #}
             <i class="bi bi-pencil-square"></i> Edit in Creator 
         </a>
         {% endif %}
@@ -53,20 +62,59 @@
 
 </div>
 
-{# Ensure MathJax is loaded if your recipe content uses LaTeX #}
-{# This might already be in your base.html; if so, it's not strictly needed here #}
-{% if recipe.blocks.all %} {# Only load MathJax if there's content #}
-<script>
-    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-        window.MathJax.typesetPromise();
-    } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
-        window.MathJax.startup.promise.then(() => {
-            if (typeof window.MathJax.typesetPromise === 'function') {
-                window.MathJax.typesetPromise();
+{% endblock %}
+
+{% block extra_js %}
+    {# Script for the Print button #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const printButton = document.getElementById('print-content-btn');
+            if (printButton) {
+                printButton.addEventListener('click', function() {
+                    window.print();
+                });
             }
         });
-    }
-</script>
-{% endif %}
+    </script>
 
+    {# Script to re-process MathJax content if present #}
+    {# This assumes MathJax is loaded and configured in base.html #}
+    {% if recipe.blocks.all %} {# Only attempt to re-typeset if there are blocks #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if MathJax is loaded and ready
+            if (typeof window.MathJax !== 'undefined') {
+                if (typeof window.MathJax.typesetPromise === 'function') {
+                    // For MathJax 3 - use typesetPromise if available
+                    window.MathJax.typesetPromise().catch(function (err) {
+                        console.error('MathJax typesetPromise failed:', err);
+                    });
+                } else if (window.MathJax.startup && typeof window.MathJax.startup.promise !== 'undefined') {
+                    // If typesetPromise is not immediately available, wait for startup to complete
+                    window.MathJax.startup.promise.then(() => {
+                        if (typeof window.MathJax.typesetPromise === 'function') {
+                           window.MathJax.typesetPromise().catch(function (err) {
+                                console.error('MathJax typesetPromise after startup failed:', err);
+                            });
+                        } else if (typeof window.MathJax.typeset === 'function') {
+                            // Fallback for other MathJax 3 setups or potentially older versions
+                            window.MathJax.typeset();
+                        } else {
+                            console.warn('MathJax is loaded, but typesetting functions (typesetPromise or typeset) were not found.');
+                        }
+                    }).catch(function (err) {
+                        console.error('MathJax startup promise failed:', err);
+                    });
+                } else if (typeof window.MathJax.Hub !== 'undefined' && typeof window.MathJax.Hub.Queue === 'function') {
+                    // Fallback for MathJax 2
+                    window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub]);
+                } else {
+                    console.warn('MathJax is loaded, but no known typesetting method was found.');
+                }
+            } else {
+                console.warn('MathJax was not found on the page. Ensure it is loaded in base.html.');
+            }
+        });
+    </script>
+    {% endif %}
 {% endblock %}

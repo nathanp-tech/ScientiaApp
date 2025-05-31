@@ -1,0 +1,146 @@
+/* static/css/print_styles.css */
+@media print {
+    /* Éléments à masquer globalement */
+    body > footer, 
+    .main-sidebar,
+    .breadcrumb-container,
+    .action-buttons,
+    .non-printable,
+    #print-content-btn,
+    .edit-section-btn,
+    .delete-section-btn,
+    .add-section-btn,
+    .print-content-btn,
+    #help-btn,
+    #add-block-floating-btn,
+    #metadata-btn,
+    #scroll-to-top-btn {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* --- Barre de navigation principale (Scientia header) --- */
+    nav, .navbar {
+        display: none !important;
+    }
+    #page-navbar { /* Correspond à <nav id="page-navbar" ...> dans base.html */
+        display: flex !important; 
+        background-color: #123456 !important; /* VOTRE COULEUR DE MARQUE SPÉCIFIQUE de base.css */
+        color: #ffffff !important; 
+        box-shadow: none !important; 
+        padding-top: 0.5rem !important; 
+        padding-bottom: 0.5rem !important;
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important;         
+    }
+    #page-navbar .navbar-brand img { 
+        filter: none !important; 
+        max-height: 60px !important; 
+        width: auto !important;
+    }
+    #page-navbar .navbar-brand { 
+        display: inline-block !important;
+    }
+    #page-navbar #navbarNav {
+        display: none !important;
+    }
+    #page-navbar .navbar-toggler { 
+        display: none !important;
+    }
+
+    /* --- Styles pour la zone imprimable --- */
+    .printable-area {
+        width: 100% !important;
+        margin: 20px 0 0 0 !important; 
+        padding: 0 !important; 
+        box-shadow: none !important;
+        border: none !important;
+        font-size: 12pt !important;
+        color: #000 !important;
+    }
+    
+    body, html {
+        width: 100%;
+        height: auto;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        font-size: 12pt !important;
+        color: #000 !important;
+    }
+
+    /* --- En-tête de la recette (Titre, Auteur, Sujet, etc.) --- */
+    body > header { 
+        display: none !important;
+    }
+    .printable-area header.recipe-header {
+        display: block !important; 
+        visibility: visible !important;
+        margin-bottom: 1rem !important; 
+        text-align: center !important; 
+    }
+    .printable-area header.recipe-header .recipe-title {
+        color: #000 !important; 
+        font-size: 20pt !important; 
+    }
+    .printable-area header.recipe-header .recipe-meta {
+        display: block !important;
+        visibility: visible !important;
+        color: #333 !important; 
+        font-size: 10pt !important; 
+    }
+
+    /* --- Pied de page pour l'impression (Copyright) --- */
+    #site-footer { /* Correspond à <footer id="site-footer" ...> dans base.html */
+        display: block !important;
+        visibility: visible !important;
+        text-align: center !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+        background-color: #ffffff !important; 
+        padding: 10px 0 !important;
+        margin-top: 30px !important; 
+        border-top: 1px solid #cccccc !important; 
+    }
+    #site-footer .text-muted { 
+        color: #000 !important; 
+    }
+
+    /* --- Cartes de contenu --- */
+    .card, .recipe-block-display { 
+        box-shadow: none !important;
+        border: 1px solid #ccc !important; 
+        margin-bottom: 15px !important; 
+    }
+
+    /* --- Liens --- */
+    a {
+        color: #000 !important;
+        text-decoration: underline !important;
+    }
+    a[href]:after { 
+        display:none; 
+    }
+    #page-navbar a[href]:after { 
+        content: "" !important;
+    }
+
+    /* --- Gestion des sauts de page --- */
+    .printable-area .avoid-break, 
+    .printable-area img,
+    .printable-area pre,
+    .printable-area blockquote,
+    .recipe-block-display { 
+        page-break-inside: avoid;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* --- Images --- */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
