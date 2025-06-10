@@ -16,11 +16,3 @@ def landing_page_view(request):
     """
     return render(request, 'index.html')
 
-@login_required
-@user_passes_test(lambda u: u.is_staff)
-def admin_dashboard_view(request):
-    """
-    Displays the custom admin dashboard page.
-    """
-    context = {} # Vous pouvez ajouter des statistiques ou d'autres données ici plus tard
-    return render(request, 'admin/index.html', context)

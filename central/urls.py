@@ -23,7 +23,7 @@ from core import views as core_views
 
 urlpatterns = [
     path('admin/', admin.site.urls), #Django admin site
-    path('admin/', core_views.admin_dashboard_view, name='admin_dashboard'),
+    
     
 
     # --- Authentication URLs ---
