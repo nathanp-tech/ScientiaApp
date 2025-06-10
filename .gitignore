@@ -1,0 +1,22 @@
+# Base de données
+db.sqlite3
+
+# Environnement virtuel
+venv/
+env/
+
+# Fichiers de cache Python
+__pycache__/
+*.pyc
+
+# Fichiers statiques et médias de production
+staticfiles/
+mediafiles/
+
+# Fichiers de secrets
+.env
+
+# Fichiers système et IDE
+.DS_Store
+.idea/
+.vscode/
