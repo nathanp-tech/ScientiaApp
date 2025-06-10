@@ -22,8 +22,9 @@ from django.contrib.auth import views as auth_views
 from core import views as core_views
 
 urlpatterns = [
-    # Django admin site
-    path('admin/', admin.site.urls),
+    #path('admin/', admin.site.urls), Django admin site
+    path('admin/', core_views.admin_dashboard_view, name='admin_dashboard'),
+    
 
     # --- Authentication URLs ---
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
@@ -41,7 +42,6 @@ urlpatterns = [
     path('recipes/', include('recipes.urls_pages')),
     path('slides/', include('slides.urls_pages')),
     path('planner/', include('planner.urls_pages')),
-    # MODIFIED LINE: Added namespace='calculator'
     path('calculator/', include(('calculator.urls', 'calculator'), namespace='calculator')),
 
 
