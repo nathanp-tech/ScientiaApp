@@ -1,31 +1,22 @@
-Oui, absolument. Créer un fichier .gitignore est une étape essentielle avant de pousser vos changements, surtout pour un projet Django.
+# .gitignore
 
-Ce fichier indique à Git quels fichiers et dossiers ignorer. Sans lui, vous risquez d'envoyer des fichiers inutiles, secrets ou spécifiques à votre machine (comme votre base de données locale) vers votre dépôt, ce qui peut causer des problèmes sur PythonAnywhere.
-
-Voici un guide complet pour créer votre .gitignore et déployer vos changements sur PythonAnywhere.
-
-Étape 1 : Créer le fichier .gitignore
-À la racine de votre projet (au même niveau que manage.py  et votre dossier .git ), créez un nouveau fichier nommé .gitignore.
-
-
-Copiez et collez le contenu suivant à l'intérieur. Il est spécifiquement adapté à votre projet :
-
-# Fichier .gitignore pour un projet Django
-
-# Base de données locale
-# Ne jamais versionner la base de données de développement !
+# Base de données
 db.sqlite3
 
 # Fichiers de cache Python
-# Ces fichiers sont générés automatiquement et ne doivent pas être versionnés
 __pycache__/
 *.pyc
 
-# Fichiers de système d'exploitation
-# Fichiers spécifiques à macOS
-.DS_Store
+# Environnement virtuel
+venv/
+.venv/
+env/
 
-# Fichiers spécifiques à Windows
+# Dossier staticfiles de Django (généré par collectstatic)
+staticfiles/
+
+# Fichiers de système d'exploitation
+.DS_Store
 Thumbs.db
 
 # Fichiers de configuration d'IDE/éditeur
@@ -36,18 +27,5 @@ Thumbs.db
 # Fichiers de logs
 *.log
 
-# Fichiers d'environnement virtuel
-# Si vous avez un dossier venv, env, .venv, etc.
-venv/
-env/
-.venv/
-
-# Dépendances Python
-# Le fichier requirements.txt est versionné, mais pas les paquets installés
-/env/
-/venv/
-/.venv/
-
-# Ne pas versionner les secrets
-# Si vous utilisez un fichier .env pour stocker des variables d'environnement
+# Fichiers .env
 .env
