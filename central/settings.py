@@ -17,14 +17,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here' # Replace with a real key for production
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'scientia2025')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+DEBUG = False
 
 
+ALLOWED_HOSTS = ['davidscientia.eu.pythonanywhere.com']
 # Application definition
 
 INSTALLED_APPS = [
@@ -120,9 +119,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# --- AJOUTEZ CETTE SECTION ---
+# Indique à Django où trouver les dossiers statiques qui ne sont pas
+# à l'intérieur d'une application (par exemple, le dossier 'static' principal).
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, 'static'),
 ]
+# -----------------------------
+
+# C'est la destination où 'collectstatic' copiera tous les fichiers pour la production.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
