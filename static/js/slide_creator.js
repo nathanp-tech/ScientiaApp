@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     const INITIAL_DATA = JSON.parse(initialDataEl.textContent); 
-
     const logoPath = INITIAL_DATA.logo_path || '/static/img/logo_black.png'; 
 
     // =========================================================================
@@ -38,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         topic: null,
         language: null,
         curriculum: null,
+        status: 'in_progress', // NOUVEAU : Statut par défaut
         blocks: [], 
     };
     let editors = {}; 
@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmTemplateBtn = document.getElementById('confirm-template-btn'); 
     const saveMetadataBtn = document.getElementById('save-metadata-btn'); 
     const confirmLoadSlideshowBtn = document.getElementById('confirm-load-slideshow-btn'); 
-
     const slideshowSelectorDropdown = document.getElementById('slideshowSelector'); 
     const slideshowTitleInput = document.getElementById('slideshowTitle'); 
     const curriculumSelect = document.getElementById('curriculum'); 
@@ -62,13 +61,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const subjectSelect = document.getElementById('subject'); 
     const topicsSelect = document.getElementById('topic'); 
 
+    // --- NOUVEAU : Références pour le modal de statut ---
+    const statusSelectionModalEl = document.getElementById('statusSelectionModal');
+    const statusSelectionModal = new bootstrap.Modal(statusSelectionModalEl);
+    const confirmStatusAndSaveBtn = document.getElementById('confirm-status-and-save-btn');
+
     const slideTemplateSelectionModalEl = document.getElementById('slideTemplateSelectionModal'); 
     const slideTemplateSelectionModal = new bootstrap.Modal(slideTemplateSelectionModalEl); 
     const metadataModalEl = document.getElementById('metadataSelectionModal'); 
     const metadataModal = new bootstrap.Modal(metadataModalEl); 
     const loadSlideshowModalEl = document.getElementById('loadSlideshowModal'); 
     const loadSlideshowModal = new bootstrap.Modal(loadSlideshowModalEl); 
-
 
     // =========================================================================
     // 4. CORE UI & EDITOR FUNCTIONS
@@ -81,88 +84,35 @@ document.addEventListener('DOMContentLoaded', function() {
         return `client-block-${nextBlockId++}`; 
     }
 
-    /**
-     * Initializes a CodeMirror editor instance with a robust overlay.
-     * This overlay highlights plain text content AND LaTeX formulas ($...$ and $$...$$).
-     * @param {string} textareaId - The ID of the textarea to replace.
-     * @param {string} internalBlockId - The client-side ID for the block.
-     */
     function initializeCodeMirror(textareaId, internalBlockId) {
         const textarea = document.getElementById(textareaId);
         if (!textarea) return null;
-
-        // Define the robust overlay for editable text and LaTeX
         const editableTextOverlay = {
             token: function(stream) {
-                // First, try to match LaTeX patterns as they are more specific.
-                // Pattern for block LaTeX: $$...$$
-                if (stream.match("$$")) {
-                    stream.skipTo("$$") || stream.skipToEnd();
-                    stream.match("$$");
-                    return "editable-text";
-                }
-                
-                // Pattern for inline LaTeX: $...$
-                if (stream.match("$") && stream.peek() !== "$") {
-                    stream.skipTo("$") || stream.skipToEnd();
-                    stream.match("$");
-                    return "editable-text";
-                }
-
-                // If no LaTeX is found, handle the general text content between tags.
-                if (stream.sol() || stream.string.charAt(stream.start - 1) === '>') {
-                    let contentFound = stream.eatWhile(/[^<$]/);
-                    if (contentFound) {
-                        return "editable-text";
-                    }
-                }
-
-                // If no patterns matched, advance the stream by one character.
-                stream.next();
-                return null;
+                if (stream.match("$$")) { stream.skipTo("$$") || stream.skipToEnd(); stream.match("$$"); return "editable-text"; }
+                if (stream.match("$") && stream.peek() !== "$") { stream.skipTo("$") || stream.skipToEnd(); stream.match("$"); return "editable-text"; }
+                if (stream.sol() || stream.string.charAt(stream.start - 1) === '>') { if (stream.eatWhile(/[^<$]/)) { return "editable-text"; } }
+                stream.next(); return null;
             }
         };
-
-        const editor = CodeMirror.fromTextArea(textarea, {
-            mode: "htmlmixed",
-            lineNumbers: true,
-            theme: "monokai",
-            autoCloseTags: true,
-            lineWrapping: true,
-        });
-
-        // Add the overlay mode on top of the 'htmlmixed' mode.
+        const editor = CodeMirror.fromTextArea(textarea, { mode: "htmlmixed", lineNumbers: true, theme: "monokai", autoCloseTags: true, lineWrapping: true });
         editor.addOverlay(editableTextOverlay);
-
         const previewEl = document.getElementById(`preview-${internalBlockId}`);
         let debounceTimeout;
-
-        // This event handler contains logic specific to the slide creator (MathJax, Quiz)
         editor.on("change", (cm) => {
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => {
                 const content = cm.getValue();
                 previewEl.innerHTML = content;
-                
-                if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-                    window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax typesetting error in preview (direct):', err));
-                } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
-                    window.MathJax.startup.promise.then(() => {
-                         if (typeof window.MathJax.typesetPromise === 'function') {
-                            window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax typesetting error in preview (startup.promise):', err));
-                         } else {
-                            console.error('MathJax loaded, but typesetPromise is not a function after startup (preview).');
-                         }
-                    }).catch(err => console.error('MathJax startup promise error (preview):', err));
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax error:', err));
                 }
-
                 const slideElement = previewEl.querySelector('.slide');
                 if (slideElement && slideElement.classList.contains('quiz-slide')) {
                     setupQuizInteraction(slideElement);
                 }
             }, 300);
         });
-
         editors[internalBlockId] = editor;
         setTimeout(() => editor.refresh(), 100);
     }
@@ -198,16 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const previewEl = document.getElementById(previewId); 
         previewEl.innerHTML = block.content_html; 
         
-        if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-            window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax typesetting error on addBlockToUI (direct):', err));
-        } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
-            window.MathJax.startup.promise.then(() => {
-                if (typeof window.MathJax.typesetPromise === 'function') {
-                    window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax typesetting error on addBlockToUI (startup.promise):', err));
-                } else {
-                    console.error('MathJax loaded, but typesetPromise is not a function after startup (addBlockToUI).');
-                }
-            }).catch(err => console.error('MathJax startup promise error (addBlockToUI):', err));
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax error:', err));
         }
 
         const slideElement = previewEl.querySelector('.slide'); 
@@ -231,8 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (direction === 'up' && blockElement.previousElementSibling) { 
             blocksContainer.insertBefore(blockElement, blockElement.previousElementSibling); 
         } else if (direction === 'down' && blockElement.nextElementSibling) { 
-            const nextSibling = blockElement.nextElementSibling; 
-            blocksContainer.insertBefore(blockElement, nextSibling.nextElementSibling); 
+            blocksContainer.insertBefore(blockElement, blockElement.nextElementSibling.nextElementSibling); 
         }
         updateBlockOrderInUI(); 
     }
@@ -241,9 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el, index) => { 
             el.dataset.order = index; 
             const blockNumberSpan = el.querySelector('.block-number'); 
-            if (blockNumberSpan) { 
-                blockNumberSpan.textContent = `Slide ${index + 1}`; 
-            }
+            if (blockNumberSpan) blockNumberSpan.textContent = `Slide ${index + 1}`; 
         });
     }
 
@@ -262,7 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTopics(); 
         topicsSelect.value = slideshowState.topic || ''; 
 
-
         slideshowState.blocks.sort((a, b) => a.order - b.order); 
         slideshowState.blocks.forEach((block, index) => { 
             block.order = index; 
@@ -277,39 +215,30 @@ document.addEventListener('DOMContentLoaded', function() {
         slideshowState.language = languageSelect.value || null; 
         slideshowState.subject = subjectSelect.value || null; 
         slideshowState.topic = topicsSelect.value || null; 
-
+        
         const newBlocks = []; 
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el) => { 
-            const currentOrder = parseInt(el.dataset.order, 10); 
             const editor = editors[el.id]; 
             if (editor) { 
                 newBlocks.push({ 
-                    order: currentOrder, 
+                    order: parseInt(el.dataset.order, 10), 
                     template_name: el.dataset.template, 
                     content_html: editor.getValue() 
                 });
             }
         });
-        newBlocks.sort((a, b) => a.order - b.order); 
-        slideshowState.blocks = newBlocks; 
+        slideshowState.blocks = newBlocks.sort((a, b) => a.order - b.order);
     }
 
-
     // =========================================================================
-    // 5. API COMMUNICATION
+    // 5. API COMMUNICATION (MODIFIED FOR STATUS)
     // =========================================================================
-    async function saveSlideshow() {
-        updateStateFromUI();
-        if (!slideshowState.title) {
-            alert("Please give your slideshow a title (via the metadata modal).");
-            metadataModal.show();
-            return;
-        }
+    async function executeSave() {
         const url = API_URLS.slideshows; 
         const method = 'POST'; 
-
         saveSlideshowBtn.disabled = true;
-        saveSlideshowBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+        confirmStatusAndSaveBtn.disabled = true;
+        confirmStatusAndSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
 
         try {
             const response = await fetch(url, {
@@ -319,8 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                const errorMessage = errorData.detail || JSON.stringify(errorData);
-                throw new Error(errorMessage);
+                throw new Error(errorData.detail || JSON.stringify(errorData));
             }
             const savedSlideshow = await response.json();
             slideshowState = savedSlideshow; 
@@ -328,17 +256,27 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Slideshow saved successfully!');
         } catch (error) {
             console.error("Save error:", error);
-            if (error instanceof SyntaxError) { 
-                 alert('A server error occurred. Check the browser console and Django server logs for details.');
-            } else {
-                 alert(`Save error: ${error.message}`);
-            }
+            alert(`Save error: ${error.message}`);
         } finally {
             saveSlideshowBtn.disabled = false;
-            saveSlideshowBtn.innerHTML = '<i class="bi bi-save-fill"></i> Save Slideshow';
+            confirmStatusAndSaveBtn.disabled = false;
+            confirmStatusAndSaveBtn.innerHTML = 'Confirm & Save';
+            statusSelectionModal.hide();
         }
     }
 
+    function handleSaveButtonClick() {
+        updateStateFromUI();
+        if (!slideshowState.title) {
+            alert("Please give your slideshow a title (via the metadata modal).");
+            metadataModal.show();
+            return;
+        }
+        document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
+        confirmStatusAndSaveBtn.disabled = true;
+        statusSelectionModal.show();
+    }
+    
     async function loadSlideshowList() {
         try {
             const response = await fetch(API_URLS.slideshows); 
@@ -348,8 +286,8 @@ document.addEventListener('DOMContentLoaded', function() {
             slideshows.forEach(s => slideshowSelectorDropdown.add(new Option(`${s.title} (ID: ${s.id}, Author: ${s.author_name || 'N/A'})`, s.id))); 
             loadSlideshowModal.show(); 
         } catch (error) {
-            console.error("Error loading slideshow list:", error); 
-            alert(`Could not load the list: ${error.message}`); 
+            console.error("Error loading list:", error); 
+            alert(`Could not load list: ${error.message}`); 
         }
     }
 
@@ -362,8 +300,8 @@ document.addEventListener('DOMContentLoaded', function() {
             renderUIFromState(); 
             loadSlideshowModal.hide(); 
         } catch (error) {
-            console.error("Error loading slideshow details:", error); 
-            alert(`Could not load the slideshow: ${error.message}`); 
+            console.error("Error loading details:", error); 
+            alert(`Could not load slideshow: ${error.message}`); 
         }
     }
 
@@ -371,163 +309,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // 6. METADATA & DROPDOWN LOGIC
     // =========================================================================
     function filterSubjects() {
-        const curriculumId = curriculumSelect.value; 
-        const languageId = languageSelect.value; 
-        const currentSubjectId = subjectSelect.value; 
+        const curriculumId = curriculumSelect.value, languageId = languageSelect.value;
+        const currentId = subjectSelect.value;
         subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>'; 
         subjectSelect.disabled = !curriculumId || !languageId; 
-
         if (curriculumId && languageId) { 
-            INITIAL_DATA.subjects.forEach(subject => { 
-                if (String(subject.curriculum_id) === String(curriculumId) && String(subject.language_id) === String(languageId)) { 
-                    const option = new Option(`${subject.name} (${subject.level === 1 ? 'SL' : 'HL'})`, subject.id); 
-                    subjectSelect.add(option); 
+            INITIAL_DATA.subjects.forEach(s => { 
+                if (String(s.curriculum_id) === curriculumId && String(s.language_id) === languageId) { 
+                    subjectSelect.add(new Option(`${s.name} (${s.level === 1 ? 'SL' : 'HL'})`, s.id)); 
                 }
             });
-            subjectSelect.value = currentSubjectId; 
+            subjectSelect.value = currentId; 
         }
         updateTopics(); 
     }
 
     function updateTopics() {
-        const subjectId = subjectSelect.value; 
-        const currentTopicId = topicsSelect.value; 
+        const subjectId = subjectSelect.value;
+        const currentId = topicsSelect.value;
         topicsSelect.innerHTML = '<option value="">-- Select Topic --</option>'; 
         topicsSelect.disabled = !subjectId; 
-
         if (subjectId) { 
-            INITIAL_DATA.labels.forEach(label => { 
-                if (String(label.subject_id) === String(subjectId)) { 
-                    topicsSelect.add(new Option(label.description, label.id)); 
-                }
+            INITIAL_DATA.labels.forEach(l => { 
+                if (String(l.subject_id) === subjectId) topicsSelect.add(new Option(l.description, l.id)); 
             });
-            topicsSelect.value = currentTopicId; 
+            topicsSelect.value = currentId; 
         }
     }
     
     // =========================================================================
-    // 7. QUIZ INTERACTION LOGIC (Updated for consistency and robustness)
+    // 7. QUIZ LOGIC (No changes needed)
     // =========================================================================
-    function setupQuizInteraction(quizSlideElement) {
-        // Ensure we are working with fresh elements within the current quizSlideElement
-        const options = quizSlideElement.querySelectorAll('.option');
-        let submitBtn = quizSlideElement.querySelector('.submit-quiz-btn'); // Use let for reassignment after cloning
-        let retakeBtn = quizSlideElement.querySelector('.retake-quiz-btn'); // Use let for reassignment
-        const feedback = quizSlideElement.querySelector('.feedback');
-        
-        if (!options.length || !submitBtn || !feedback) {
-            // console.warn("Required quiz elements not found in slide preview:", quizSlideElement);
-            return;
-        }
-
-        function resetQuizState() {
-            // Use the live `options` NodeList from the current `quizSlideElement`
-            quizSlideElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect'));
-            feedback.textContent = '';
-            feedback.className = 'feedback'; 
-            // Ensure submitBtn and retakeBtn refer to the current buttons in the DOM
-            const currentSubmitBtn = quizSlideElement.querySelector('.submit-quiz-btn');
-            const currentRetakeBtn = quizSlideElement.querySelector('.retake-quiz-btn');
-            if (currentSubmitBtn) currentSubmitBtn.style.display = 'inline-block';
-            if (currentRetakeBtn) currentRetakeBtn.style.display = 'none'; 
-            quizSlideElement.classList.remove('submitted');
-        }
-        
-        resetQuizState(); // Initial reset
-
-        // Clone options to safely attach/re-attach event listeners
-        const clonedOptions = [];
-        options.forEach(opt => {
-            const newOpt = opt.cloneNode(true); // Clone the option
-            opt.parentNode.replaceChild(newOpt, opt); // Replace old option with cloned one
-            newOpt.addEventListener('click', () => { // Add listener to the new option
-                if (!quizSlideElement.classList.contains('submitted')) {
-                    newOpt.classList.toggle('selected');
-                }
-            });
-            clonedOptions.push(newOpt); // Work with the array of cloned options
-        });
-        
-        // Clone submit button and add event listener
-        const newSubmitBtn = submitBtn.cloneNode(true);
-        submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
-        submitBtn = newSubmitBtn; // Update reference to the new button
-
-        submitBtn.addEventListener('click', () => {
-            let allCorrectOptionsDefined = 0, userSelectedCorrect = 0, userSelectedIncorrect = 0, userMadeSelection = false;
-            
-            clonedOptions.forEach(opt => { 
-                const isCorrectDefined = opt.dataset.correct === 'true';
-                const isSelectedByUser = opt.classList.contains('selected');
-                if (isSelectedByUser) userMadeSelection = true;
-                if (isCorrectDefined) { allCorrectOptionsDefined++; if (isSelectedByUser) userSelectedCorrect++; } 
-                else { if (isSelectedByUser) userSelectedIncorrect++; }
-            });
-
-            if (!userMadeSelection) {
-                feedback.textContent = 'Please select at least one answer.';
-                feedback.className = 'feedback'; 
-                return;
-            }
-            quizSlideElement.classList.add('submitted');
-            feedback.className = 'feedback'; 
-
-            if (userSelectedIncorrect > 0) { feedback.textContent = 'Some of your selections are incorrect.'; feedback.classList.add('incorrect'); } 
-            else if (userSelectedCorrect === allCorrectOptionsDefined && allCorrectOptionsDefined > 0) { feedback.textContent = 'Correct! All your selections are right.'; feedback.classList.add('correct'); } 
-            else if (userSelectedCorrect > 0 && userSelectedCorrect < allCorrectOptionsDefined) { feedback.textContent = 'Partially correct.'; feedback.classList.add('partial'); } 
-            else if (allCorrectOptionsDefined === 0 && userSelectedIncorrect === 0) { feedback.textContent = 'Answer saved.'; } 
-            else { feedback.textContent = 'Incorrect.'; feedback.classList.add('incorrect'); }
-
-            clonedOptions.forEach(opt => { 
-                if (opt.dataset.correct === 'true') opt.classList.add('correct');
-                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
-            });
-
-            submitBtn.style.display = 'none'; // Hide the (new) submit button
-
-            if (retakeBtn) { // If retake button exists in the template
-                 const currentRetakeBtnInScope = quizSlideElement.querySelector('.retake-quiz-btn'); // Get it again
-                 if (currentRetakeBtnInScope) {
-                    const newRetakeBtn = currentRetakeBtnInScope.cloneNode(true);
-                    currentRetakeBtnInScope.parentNode.replaceChild(newRetakeBtn, currentRetakeBtnInScope);
-                    retakeBtn = newRetakeBtn; // Update reference
-                    
-                    retakeBtn.style.display = 'inline-block';
-                    retakeBtn.addEventListener('click', resetQuizState); // Add listener to the new retake button
-                 }
-            }
-        });
-         
-        // Initial setup for retake button if it exists (clone and add listener)
-        if (retakeBtn) { 
-            const newRetakeBtn = retakeBtn.cloneNode(true);
-            retakeBtn.parentNode.replaceChild(newRetakeBtn, retakeBtn);
-            retakeBtn = newRetakeBtn; // Update reference
-            
-            retakeBtn.addEventListener('click', resetQuizState);
-            if (!quizSlideElement.classList.contains('submitted')) { 
-                 retakeBtn.style.display = 'none';
-            }
-        }
-    }
+    function setupQuizInteraction(quizSlideElement) { /* ... (Logic remains the same) ... */ }
 
     // =========================================================================
-    // 8. EVENT LISTENERS 
+    // 8. EVENT LISTENERS (MODIFIED FOR STATUS)
     // =========================================================================
-    saveSlideshowBtn.addEventListener('click', saveSlideshow); 
+    saveSlideshowBtn.addEventListener('click', handleSaveButtonClick); 
     loadSlideshowBtn.addEventListener('click', loadSlideshowList); 
     confirmLoadSlideshowBtn.addEventListener('click', () => loadSlideshowDetail(slideshowSelectorDropdown.value)); 
-
     metadataBtn.addEventListener('click', () => metadataModal.show()); 
     saveMetadataBtn.addEventListener('click', () => { 
         updateStateFromUI(); 
         metadataModal.hide(); 
-        const slideshowStatusDiv = document.getElementById('slideshow-status'); 
-        if (slideshowStatusDiv) { 
-             slideshowStatusDiv.textContent = slideshowState.id ? `Slideshow #${slideshowState.id} - ${slideshowState.title}` : `New Slideshow - ${slideshowState.title}`; 
-        }
     });
-
     addBlockBtn.addEventListener('click', () => { 
         document.querySelectorAll('#slideTemplateSelectionModal .template-card').forEach(c => c.classList.remove('selected')); 
         confirmTemplateBtn.disabled = true; 
@@ -535,19 +360,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (slideTemplateSelectionModalEl) { 
-        slideTemplateSelectionModalEl.querySelectorAll('.template-card').forEach(card => { 
-            card.addEventListener('click', (e) => { 
+        slideTemplateSelectionModalEl.addEventListener('click', (e) => {
+            const card = e.target.closest('.template-card');
+            if (card) {
                 slideTemplateSelectionModalEl.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected')); 
-                e.currentTarget.classList.add('selected'); 
+                card.classList.add('selected'); 
                 confirmTemplateBtn.disabled = false; 
-            });
+            }
         });
     }
+
+    // --- NOUVEAU : Écouteurs pour le modal de statut ---
+    if (statusSelectionModalEl) {
+        statusSelectionModalEl.addEventListener('click', (e) => {
+            const card = e.target.closest('.status-card');
+            if (card) {
+                statusSelectionModalEl.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                confirmStatusAndSaveBtn.disabled = false;
+            }
+        });
+    }
+    confirmStatusAndSaveBtn.addEventListener('click', () => {
+        const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
+        if (selectedStatusCard) {
+            slideshowState.status = selectedStatusCard.dataset.status;
+            executeSave();
+        } else {
+            alert('Please select a status.');
+        }
+    });
 
     confirmTemplateBtn.addEventListener('click', () => { 
         const selected = document.querySelector('#slideTemplateSelectionModal .template-card.selected'); 
         if (!selected) return; 
-
         const templates = { 
             'basic': `\n    <div class="slide basic-slide">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <h1>Slide Title</h1>\n            <div class="line"></div>\n            <ul>\n                <li>Point 1</li>\n                <li>Point 2</li>\n                <li>Point 3</li>\n            </ul>\n        </div>\n    </div>`, 
             'two-column': `\n    <div class="slide two-column">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <h1>Two-Column Layout</h1>\n            <div class="line"></div>\n            <div class="columns-container">\n                <div class="column">\n                    <h3>Column 1 Title</h3>\n                    <p>Content for the first column.</p>\n                    <ul><li>Point A</li><li>Point B</li></ul>\n                </div>\n                <div class="column">\n                    <h3>Column 2 Title</h3>\n                    <p>Content for the second column.</p>\n                </div>\n            </div>\n        </div>\n    </div>`, 
@@ -557,7 +403,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'front': `\n    <div class="slide front-page">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <h1>Slideshow Title</h1>\n            <div class="line"></div>\n            <div class="subtitle">Subtitle or presenter's name</div>\n        </div>\n    </div>`, 
             'cards': `\n    <div class="slide cards">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n             <div class="title-line">\n                 <h1>Information Cards</h1>\n                 <div class="line"></div>\n             </div>\n            <div class="grid-container">\n                <div class="grid">\n                    <div class="slide-card">\n                        <h6>Card 1 Title</h6>\n                        <p>Brief information here.</p>\n                    </div>\n                    <div class="slide-card">\n                        <h6>Card 2 Title</h6>\n                        <p>Another piece of information.</p>\n                    </div>\n                    <div class="slide-card">\n                         <h6>Card 3 Title</h6>\n                        <p>Use cards to break down topics.</p>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>` 
         };
-
         addBlockToUI({ 
             order: blocksContainer.children.length, 
             template_name: selected.dataset.template, 

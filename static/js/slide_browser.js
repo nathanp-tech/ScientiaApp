@@ -68,6 +68,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- 3. Fetching and Displaying Slideshow List ---
+    
+    // --- NOUVEAU : Fonction pour créer le badge de statut ---
+    function getStatusBadge(status) {
+        const statuses = {
+            'in_progress': { name: 'In Progress', class: 'bg-secondary' },
+            'pending_review': { name: 'Pending Review', class: 'bg-warning text-dark' },
+            'completed': { name: 'Completed', class: 'bg-success' }
+        };
+        const statusInfo = statuses[status] || { name: 'Unknown', class: 'bg-light text-dark' };
+        return `<span class="badge ${statusInfo.class} float-end">${statusInfo.name}</span>`;
+    }
+
     async function fetchAndDisplaySlideshowList() {
         loadingSpinnerList.style.display = 'inline-block';
         slideshowListContainer.innerHTML = '<p class="text-muted p-3">Loading slideshows...</p>';
@@ -105,8 +117,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'list-group-item list-group-item-action';
-            item.textContent = slideshow.title || `Slideshow ID: ${slideshow.id}`;
             item.dataset.slideshowId = slideshow.id;
+
+            // --- NOUVEAU : Ajout du titre et du badge de statut ---
+            const statusBadge = getStatusBadge(slideshow.status);
+            item.innerHTML = `
+                ${slideshow.title || `Slideshow ID: ${slideshow.id}`}
+                ${statusBadge}
+            `;
+            
             item.addEventListener('click', () => loadAndDisplaySlideshow(slideshow.id));
             slideshowListContainer.appendChild(item);
         });
@@ -166,13 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const slideBlock = currentSlideshow.blocks[currentSlideIndex];
         slideDisplayArea.innerHTML = slideBlock.content_html; 
 
-        // --- MATHJAX UPDATE ---
-        // Ensure MathJax is ready before attempting to typeset
         if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-            // If MathJax is already loaded and typesetPromise is available
             window.MathJax.typesetPromise([slideDisplayArea]).catch((err) => console.error('MathJax typesetting error (direct):', err));
         } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
-            // If MathJax is still starting up, wait for its promise
             window.MathJax.startup.promise.then(() => {
                 if (typeof window.MathJax.typesetPromise === 'function') {
                     window.MathJax.typesetPromise([slideDisplayArea]).catch((err) => console.error('MathJax typesetting error (startup.promise):', err));
@@ -180,11 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('MathJax loaded, but typesetPromise is not a function after startup.');
                 }
             }).catch(err => console.error('MathJax startup promise error:', err));
-        } else {
-            // MathJax not found or not configured as expected
-            // console.warn('MathJax not available or not configured for typesetting.');
         }
-        // --- END MATHJAX UPDATE ---
 
         const slideElement = slideDisplayArea.querySelector('.slide'); 
         if (slideElement && slideElement.classList.contains('quiz-slide')) {
@@ -204,8 +215,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 5. Quiz Interaction Logic ---
     function setupQuizInteraction(quizSlideElement) {
         const options = quizSlideElement.querySelectorAll('.option');
-        let submitBtn = quizSlideElement.querySelector('.submit-quiz-btn'); // Use let for re-assignment after cloning
-        let retakeBtn = quizSlideElement.querySelector('.retake-quiz-btn'); // Use let for re-assignment
+        let submitBtn = quizSlideElement.querySelector('.submit-quiz-btn');
+        let retakeBtn = quizSlideElement.querySelector('.retake-quiz-btn');
         const feedback = quizSlideElement.querySelector('.feedback');
 
         if (!options.length || !submitBtn || !feedback) {
@@ -216,10 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
             quizSlideElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect'));
             feedback.textContent = '';
             feedback.className = 'feedback'; 
-            
-            const currentSubmitBtn = quizSlideElement.querySelector('.submit-quiz-btn'); // Re-select in case it was cloned
-            const currentRetakeBtn = quizSlideElement.querySelector('.retake-quiz-btn'); // Re-select
-
+            const currentSubmitBtn = quizSlideElement.querySelector('.submit-quiz-btn');
+            const currentRetakeBtn = quizSlideElement.querySelector('.retake-quiz-btn');
             if (currentSubmitBtn) currentSubmitBtn.style.display = 'inline-block';
             if (currentRetakeBtn) currentRetakeBtn.style.display = 'none'; 
             quizSlideElement.classList.remove('submitted');
@@ -240,11 +249,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const newSubmitBtn = submitBtn.cloneNode(true);
         submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
-        submitBtn = newSubmitBtn; // Update reference
+        submitBtn = newSubmitBtn;
 
         submitBtn.addEventListener('click', () => {
             let allCorrectOptionsDefined = 0, userSelectedCorrect = 0, userSelectedIncorrect = 0, userMadeSelection = false;
-            
             clonedOptions.forEach(opt => { 
                 const isCorrectDefined = opt.dataset.correct === 'true';
                 const isSelectedByUser = opt.classList.contains('selected');
@@ -271,27 +279,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (opt.dataset.correct === 'true') opt.classList.add('correct');
                 else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
             });
+            submitBtn.style.display = 'none';
 
-            submitBtn.style.display = 'none'; // Hide the (new) submit button
-
-            // Handle retake button
-            const currentRetakeBtnInScope = quizSlideElement.querySelector('.retake-quiz-btn');
-            if (currentRetakeBtnInScope) { // Check if retake button exists in the template
-                const newRetakeBtn = currentRetakeBtnInScope.cloneNode(true);
-                currentRetakeBtnInScope.parentNode.replaceChild(newRetakeBtn, currentRetakeBtnInScope);
-                retakeBtn = newRetakeBtn; // Update reference
-                
-                retakeBtn.style.display = 'inline-block';
-                retakeBtn.addEventListener('click', resetQuizState); 
+            if (retakeBtn) {
+                 const currentRetakeBtnInScope = quizSlideElement.querySelector('.retake-quiz-btn');
+                 if (currentRetakeBtnInScope) {
+                    const newRetakeBtn = currentRetakeBtnInScope.cloneNode(true);
+                    currentRetakeBtnInScope.parentNode.replaceChild(newRetakeBtn, currentRetakeBtnInScope);
+                    retakeBtn = newRetakeBtn;
+                    retakeBtn.style.display = 'inline-block';
+                    retakeBtn.addEventListener('click', resetQuizState);
+                 }
             }
         });
          
-        // Initial setup for retake button if it exists (clone and add listener)
         if (retakeBtn) { 
             const newRetakeBtn = retakeBtn.cloneNode(true);
             retakeBtn.parentNode.replaceChild(newRetakeBtn, retakeBtn);
-            retakeBtn = newRetakeBtn; // Update reference
-            
+            retakeBtn = newRetakeBtn;
             retakeBtn.addEventListener('click', resetQuizState);
             if (!quizSlideElement.classList.contains('submitted')) { 
                  retakeBtn.style.display = 'none';
@@ -302,32 +307,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 6. Fullscreen Functionality ---
     function toggleFullscreen() {
         const elemToFullscreen = slideshowPlayerContainer; 
-
-        if (!document.fullscreenElement &&    
-            !document.mozFullScreenElement && 
-            !document.webkitFullscreenElement && 
-            !document.msFullscreenElement) {  
-            if (elemToFullscreen.requestFullscreen) {
-                elemToFullscreen.requestFullscreen();
-            } else if (elemToFullscreen.mozRequestFullScreen) { 
-                elemToFullscreen.mozRequestFullScreen();
-            } else if (elemToFullscreen.webkitRequestFullscreen) { 
-                elemToFullscreen.webkitRequestFullscreen();
-            } else if (elemToFullscreen.msRequestFullscreen) { 
-                elemToFullscreen.msRequestFullscreen();
-            }
+        if (!document.fullscreenElement) {  
+            if (elemToFullscreen.requestFullscreen) { elemToFullscreen.requestFullscreen(); } 
+            else if (elemToFullscreen.webkitRequestFullscreen) { elemToFullscreen.webkitRequestFullscreen(); } 
             fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
             fullscreenBtn.title = 'Exit Fullscreen';
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) { 
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) { 
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) { 
-                document.msExitFullscreen();
-            }
+            if (document.exitFullscreen) { document.exitFullscreen(); } 
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
             fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
             fullscreenBtn.title = 'Toggle Fullscreen';
         }
