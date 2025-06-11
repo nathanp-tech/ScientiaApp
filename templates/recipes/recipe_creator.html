@@ -10,6 +10,25 @@
     
     {# Shared stylesheet for creator pages #}
     <link rel="stylesheet" href="{% static 'css/creator.css' %}">
+
+    <style>
+        /* CSS to make status cards interactive and provide clear feedback */
+        .status-card {
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .status-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #0d6efd; /* Bootstrap primary blue */
+        }
+        .status-card.selected {
+            border-color: #0d6efd;
+            background-color: #e7f1ff; /* A light blue background for selection */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -47,8 +66,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    {# Scripts for MathJax and CodeMirror #}
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    {# Scripts for CodeMirror #}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.js"></script>

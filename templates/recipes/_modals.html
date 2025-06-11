@@ -113,3 +113,50 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="statusSelectionModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalLabel">Choose Recipe Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select the current status for this recipe before saving.</p>
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    <div class="col">
+                        <div class="card status-card h-100" data-status="in_progress">
+                            <div class="card-body text-center">
+                                <i class="bi bi-pencil-square fs-1 mb-2 text-secondary"></i>
+                                <h6 class="card-title fw-bold">In Progress</h6>
+                                <p class="card-text small">This recipe is actively being edited.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card status-card h-100" data-status="pending_review">
+                            <div class="card-body text-center">
+                                <i class="bi bi-hourglass-split fs-1 mb-2 text-warning"></i>
+                                <h6 class="card-title fw-bold">Pending Review</h6>
+                                <p class="card-text small">Ready for review by a moderator or admin.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card status-card h-100" data-status="completed">
+                            <div class="card-body text-center">
+                                <i class="bi bi-check-circle-fill fs-1 mb-2 text-success"></i>
+                                <h6 class="card-title fw-bold">Completed</h6>
+                                <p class="card-text small">Finished and ready to be used.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-status-and-save-btn" disabled>Confirm & Save</button>
+            </div>
+        </div>
+    </div>
+</div>

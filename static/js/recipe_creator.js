@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         topic: null,
         language: null,
         curriculum: null,
+        status: 'in_progress', // Default status
         blocks: [],
     };
 
@@ -62,6 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const languageSelect = document.getElementById('language');
     const subjectSelect = document.getElementById('subject');
     const topicsSelect = document.getElementById('topic');
+    const confirmStatusAndSaveBtn = document.getElementById('confirm-status-and-save-btn');
     // --- REFERENCE TO HELP BUTTON AND MODAL ELEMENT ---
     const helpBtn = document.getElementById('help-btn'); 
     const helpModalEl = document.getElementById('helpModal');
@@ -69,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const recipeTemplateSelectionModal = new bootstrap.Modal(document.getElementById('recipeTemplateSelectionModal'));
     const metadataModal = new bootstrap.Modal(document.getElementById('metadataSelectionModal'));
     const loadRecipeModal = new bootstrap.Modal(document.getElementById('loadProjectModal'));
+    const statusSelectionModal = new bootstrap.Modal(document.getElementById('statusSelectionModal'));
 
 
     // =========================================================================
@@ -243,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
         recipeTitleInput.value = recipeState.title || '';
         curriculumSelect.value = recipeState.curriculum || '';
         languageSelect.value = recipeState.language || '';
-
+        
         filterSubjects();
         subjectSelect.value = recipeState.subject || '';
 
@@ -264,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
         recipeState.language = languageSelect.value || null;
         recipeState.subject = subjectSelect.value || null;
         recipeState.topic = topicsSelect.value || null;
+        // Status is no longer updated from here.
 
         const newBlocks = [];
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el) => {
@@ -286,22 +290,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
 
     /**
-     * Saves the current recipe to the server.
-     * Always sends a POST request; the backend handles create vs. update logic.
+     * The actual API call to save the recipe.
+     * This is now separated from the button click handler.
      */
-    async function saveRecipe() {
-        updateStateFromUI();
-        if (!recipeState.title) {
-            alert("Please give your recipe a title (via the metadata modal).");
-            metadataModal.show();
-            return;
-        }
-
+    async function executeSave() {
         const url = API_URLS.recipes;
         const method = 'POST';
 
-        saveRecipeBtn.disabled = true;
-        saveRecipeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+        // Disable button to prevent multiple submissions
+        confirmStatusAndSaveBtn.disabled = true;
+        confirmStatusAndSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+        saveRecipeBtn.disabled = true; // Also disable the main save button
 
         try {
             const response = await fetch(url, {
@@ -332,10 +331,34 @@ document.addEventListener('DOMContentLoaded', function() {
                  alert(`Save error: ${error.message}`);
             }
         } finally {
+            // Re-enable buttons
+            confirmStatusAndSaveBtn.disabled = false;
+            confirmStatusAndSaveBtn.innerHTML = 'Confirm & Save';
             saveRecipeBtn.disabled = false;
-            saveRecipeBtn.innerHTML = '<i class="bi bi-save-fill"></i> Save Recipe';
+            statusSelectionModal.hide(); // Hide the modal on completion
         }
     }
+
+
+    /**
+     * Initiates the save process by showing the status selection modal.
+     */
+    function handleSaveButtonClick() {
+        updateStateFromUI();
+        if (!recipeState.title) {
+            alert("Please give your recipe a title (via the metadata modal).");
+            metadataModal.show();
+            return;
+        }
+
+        // Reset the status modal before showing
+        document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
+        confirmStatusAndSaveBtn.disabled = true;
+
+        // Show the status selection modal
+        statusSelectionModal.show();
+    }
+
 
     async function loadRecipeList() {
         try {
@@ -404,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 7. EVENT LISTENERS
     // =========================================================================
 
-    saveRecipeBtn.addEventListener('click', saveRecipe);
+    saveRecipeBtn.addEventListener('click', handleSaveButtonClick);
     loadRecipeBtn.addEventListener('click', loadRecipeList);
     confirmLoadBtn.addEventListener('click', () => loadRecipeDetail(recipeSelectorDropdown.value));
 
@@ -430,6 +453,36 @@ document.addEventListener('DOMContentLoaded', function() {
             e.currentTarget.classList.add('selected');
             confirmTemplateBtn.disabled = false;
         });
+    });
+
+    
+    const statusModalEl = document.getElementById('statusSelectionModal');
+    if (statusModalEl) {
+        // Force focus on the modal when it is shown. This helps prevent event conflicts.
+        statusModalEl.addEventListener('shown.bs.modal', () => {
+            statusModalEl.focus();
+        });
+
+        // Use event delegation for clicks within the modal.
+        statusModalEl.addEventListener('click', (e) => {
+            const card = e.target.closest('.status-card');
+            if (!card) return;
+
+            statusModalEl.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            confirmStatusAndSaveBtn.disabled = false;
+        });
+    }
+
+    // Event listener for the final save confirmation button
+    confirmStatusAndSaveBtn.addEventListener('click', () => {
+        const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
+        if (selectedStatusCard) {
+            recipeState.status = selectedStatusCard.dataset.status;
+            executeSave(); // Proceed with the actual saving
+        } else {
+            alert('Please select a status.');
+        }
     });
 
     confirmTemplateBtn.addEventListener('click', () => {

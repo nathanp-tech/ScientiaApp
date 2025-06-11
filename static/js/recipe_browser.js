@@ -85,27 +85,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function getStatusBadge(status) {
+        const statuses = {
+            'in_progress': { name: 'In Progress', class: 'bg-secondary' },
+            'pending_review': { name: 'Pending Review', class: 'bg-warning text-dark' },
+            'completed': { name: 'Completed', class: 'bg-success' }
+        };
+        const statusInfo = statuses[status] || { name: 'Unknown', class: 'bg-light text-dark' };
+        return `<span class="badge ${statusInfo.class}">${statusInfo.name}</span>`;
+    }
+
     function renderRecipeList(recipes) {
         recipeListContainer.innerHTML = '';
         if (recipes.length === 0) {
-            recipeListContainer.innerHTML = '<p class="text-muted">No recipes match the current filters.</p>';
+            recipeListContainer.innerHTML = '<p class="text-muted p-3">No recipes match the current filters.</p>';
             return;
         }
 
         recipes.forEach(recipe => {
             const recipeElement = document.createElement('a');
             recipeElement.href = `/recipes/${recipe.id}/`; // Link to the detail page
-            recipeElement.className = 'list-group-item list-group-item-action';
+            recipeElement.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
             
             const author = recipe.author_name || 'N/A';
             const subject = recipe.subject_name || 'N/A';
 
+            // Assuming API returns a `status` field, e.g., 'in_progress'
+            const statusBadge = getStatusBadge(recipe.status);
+
             recipeElement.innerHTML = `
                 <div>
                     <strong>${recipe.title}</strong>
-                    <div class="text-muted">Subject: ${subject} | Author: ${author}</div>
+                    <div class="text-muted small mt-1">
+                        Subject: ${subject} | Author: ${author}
+                    </div>
                 </div>
-                <span class="badge bg-primary rounded-pill">View</span>
+                <div class="d-flex flex-column align-items-end">
+                    ${statusBadge}
+                    <span class="badge bg-primary rounded-pill mt-1">View</span>
+                </div>
             `;
             recipeListContainer.appendChild(recipeElement);
         });
