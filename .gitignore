@@ -30,6 +30,3 @@ Thumbs.db
 # Fichiers .env
 .env
 
-# Fichier de configuration Django
-# Contient des clés secrètes et des paramètres locaux. Ne pas versionner.
-central/settings.py
