@@ -1,34 +1,22 @@
-/**
- * @file slide_browser.js
- * @description Handles the slide browser page: filtering, listing, and displaying slideshows.
- */
+// static/js/recipe_browser.js
 document.addEventListener('DOMContentLoaded', function() {
-
-    // --- 1. Get Initial Data and DOM Elements ---
-    const initialData = JSON.parse(document.getElementById('initial-data-for-filters-json').textContent);
-    const apiUrls = JSON.parse(document.getElementById('api-urls-for-js-json').textContent);
-    const logoPath = initialData.logo_path || '/static/img/logo.png';
+    
+    // --- 1. Get Data and DOM Elements ---
+    const initialData = JSON.parse(document.getElementById('initial-data-json').textContent);
+    const apiUrls = JSON.parse(document.getElementById('api-urls-json').textContent);
+    const userIsStaff = JSON.parse(document.getElementById('user-is-staff-json').textContent);
 
     const curriculumSelect = document.getElementById('curriculum-select');
     const languageSelect = document.getElementById('language-select');
     const subjectSelect = document.getElementById('subject-select');
     const topicSelect = document.getElementById('topic-select');
+    
+    const recipeListContainer = document.getElementById('recipe-list-container');
+    const loadingSpinner = document.getElementById('loading-spinner');
 
-    const slideshowListContainer = document.getElementById('slideshow-list-container');
-    const slideshowPlayerContainer = document.getElementById('slideshow-player-container');
-    const slideDisplayAreaWrapper = document.getElementById('slide-display-area-wrapper'); 
-    const slideDisplayArea = document.getElementById('slide-display-area');
-    const slideshowTitleDisplay = document.getElementById('slideshow-title-display');
-    const slideshowControls = document.getElementById('slideshow-controls');
-    const prevSlideBtn = document.getElementById('prev-slide-btn');
-    const nextSlideBtn = document.getElementById('next-slide-btn');
-    const slideCounter = document.getElementById('slide-counter');
-    const loadingSpinnerList = document.getElementById('loading-spinner-list');
-    const loadingSpinnerPlayer = document.getElementById('loading-spinner-player');
-    const fullscreenBtn = document.getElementById('fullscreen-btn'); 
-
-    let currentSlideshow = null;
-    let currentSlideIndex = 0;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    let recipeIdToDelete = null;
     let debounceTimeout;
 
     // --- 2. Dependent Filter Logic ---
@@ -36,8 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const curriculumId = curriculumSelect.value;
         const languageId = languageSelect.value;
         const previousValue = subjectSelect.value;
-        subjectSelect.innerHTML = '<option value="">All Subjects</option>'; 
-        subjectSelect.disabled = !(curriculumId && languageId);
+        subjectSelect.innerHTML = '<option value="">All Subjects</option>';
+        subjectSelect.disabled = !curriculumId || !languageId;
 
         if (curriculumId && languageId) {
             initialData.subjects.forEach(subject => {
@@ -46,30 +34,54 @@ document.addEventListener('DOMContentLoaded', function() {
                     subjectSelect.add(option);
                 }
             });
-            subjectSelect.value = previousValue;
         }
+        subjectSelect.value = previousValue;
         updateTopicOptions();
     }
 
     function updateTopicOptions() {
         const subjectId = subjectSelect.value;
         const previousValue = topicSelect.value;
-        topicSelect.innerHTML = '<option value="">All Topics</option>'; 
+        topicSelect.innerHTML = '<option value="">All Topics</option>';
         topicSelect.disabled = !subjectId;
 
         if (subjectId) {
-            initialData.labels.forEach(label => { 
+            initialData.labels.forEach(label => {
                 if (String(label.subject_id) === subjectId) {
                     topicSelect.add(new Option(label.description, label.id));
                 }
             });
-            topicSelect.value = previousValue;
+        }
+        topicSelect.value = previousValue;
+    }
+
+    // --- 3. Data Fetching and Display Logic ---
+    async function fetchAndDisplayRecipes() {
+        loadingSpinner.style.display = 'block';
+        const params = new URLSearchParams({
+            curriculum: curriculumSelect.value,
+            language: languageSelect.value,
+            subject: subjectSelect.value,
+            topic: topicSelect.value
+        });
+        
+        for (let [key, value] of params.entries()) {
+            if (!value) params.delete(key);
+        }
+
+        try {
+            const response = await fetch(`${apiUrls.recipes}?${params.toString()}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const recipes = await response.json();
+            renderRecipeList(recipes);
+        } catch (error) {
+            console.error('Error fetching recipes:', error);
+            recipeListContainer.innerHTML = '<p class="text-danger">Failed to load recipes.</p>';
+        } finally {
+            loadingSpinner.style.display = 'none';
         }
     }
 
-    // --- 3. Fetching and Displaying Slideshow List ---
-    
-    // --- NOUVEAU : Fonction pour créer le badge de statut ---
     function getStatusBadge(status) {
         const statuses = {
             'in_progress': { name: 'In Progress', class: 'bg-secondary' },
@@ -77,273 +89,114 @@ document.addEventListener('DOMContentLoaded', function() {
             'completed': { name: 'Completed', class: 'bg-success' }
         };
         const statusInfo = statuses[status] || { name: 'Unknown', class: 'bg-light text-dark' };
-        return `<span class="badge ${statusInfo.class} float-end">${statusInfo.name}</span>`;
+        return `<span class="badge ${statusInfo.class}">${statusInfo.name}</span>`;
     }
 
-    async function fetchAndDisplaySlideshowList() {
-        loadingSpinnerList.style.display = 'inline-block';
-        slideshowListContainer.innerHTML = '<p class="text-muted p-3">Loading slideshows...</p>';
-
-        const params = new URLSearchParams({
-            curriculum: curriculumSelect.value,
-            language: languageSelect.value,
-            subject: subjectSelect.value,
-            topic: topicSelect.value,
-        });
-        for (let [key, value] of params.entries()) {
-            if (!value) params.delete(key);
-        }
-
-        try {
-            const response = await fetch(`${apiUrls.slideshows_api}?${params.toString()}`);
-            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-            const slideshows = await response.json();
-            renderSlideshowList(slideshows);
-        } catch (error) {
-            console.error('Error fetching slideshow list:', error);
-            slideshowListContainer.innerHTML = '<p class="text-danger p-3">Failed to load slideshows. Please try again.</p>';
-        } finally {
-            loadingSpinnerList.style.display = 'none';
-        }
-    }
-
-    function renderSlideshowList(slideshows) {
-        slideshowListContainer.innerHTML = ''; 
-        if (slideshows.length === 0) {
-            slideshowListContainer.innerHTML = '<p class="text-muted p-3">No slideshows match the current filters.</p>';
+    function renderRecipeList(recipes) {
+        recipeListContainer.innerHTML = '';
+        if (recipes.length === 0) {
+            recipeListContainer.innerHTML = '<p class="text-muted p-3">No recipes match the current filters.</p>';
             return;
         }
-        slideshows.forEach(slideshow => {
-            const item = document.createElement('button');
-            item.type = 'button';
-            item.className = 'list-group-item list-group-item-action';
-            item.dataset.slideshowId = slideshow.id;
 
-            // --- NOUVEAU : Ajout du titre et du badge de statut ---
-            const statusBadge = getStatusBadge(slideshow.status);
-            item.innerHTML = `
-                ${slideshow.title || `Slideshow ID: ${slideshow.id}`}
-                ${statusBadge}
+        recipes.forEach(recipe => {
+            const recipeElementWrapper = document.createElement('div');
+            recipeElementWrapper.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+            recipeElementWrapper.setAttribute('data-recipe-id', recipe.id);
+
+            const author = recipe.author_name || 'N/A';
+            const subject = recipe.subject_name || 'N/A';
+            const statusBadge = getStatusBadge(recipe.status);
+
+            const deleteButtonHTML = userIsStaff ? `
+                <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
+            ` : '';
+            
+            recipeElementWrapper.innerHTML = `
+                <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1 me-3">
+                    <div>
+                        <strong>${recipe.title}</strong>
+                        <div class="text-muted small mt-1">
+                            Subject: ${subject} | Author: ${author}
+                        </div>
+                    </div>
+                </a>
+                <div class="d-flex flex-column align-items-end">
+                    <div class="d-flex align-items-center">
+                        ${statusBadge}
+                        ${deleteButtonHTML}
+                    </div>
+                    <span class="badge bg-primary rounded-pill mt-1">View</span>
+                </div>
             `;
-            
-            item.addEventListener('click', () => loadAndDisplaySlideshow(slideshow.id));
-            slideshowListContainer.appendChild(item);
+            recipeListContainer.appendChild(recipeElementWrapper);
         });
-    }
-
-    // --- 4. Loading and Displaying a Single Slideshow ---
-    async function loadAndDisplaySlideshow(slideshowId) {
-        if (!slideshowId) return;
-        loadingSpinnerPlayer.style.display = 'inline-block';
-        slideDisplayArea.innerHTML = '<p class="text-muted text-center p-5">Loading slideshow...</p>';
-        slideshowControls.style.display = 'none';
-        slideshowTitleDisplay.textContent = 'Loading...';
-
-        slideshowListContainer.querySelectorAll('.list-group-item-action').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.slideshowId === String(slideshowId)) {
-                btn.classList.add('active');
-            }
-        });
-
-        try {
-            const detailUrl = `${apiUrls.slideshow_detail_api_base}${slideshowId}/`;
-            const response = await fetch(detailUrl);
-            if (!response.ok) throw new Error(`Network response for slideshow detail was not ok: ${response.statusText}`);
-            currentSlideshow = await response.json();
-            
-            if (currentSlideshow && currentSlideshow.blocks && currentSlideshow.blocks.length > 0) {
-                currentSlideshow.blocks.sort((a, b) => a.order - b.order); 
-                currentSlideIndex = 0;
-                displayCurrentSlide();
-                slideshowTitleDisplay.textContent = currentSlideshow.title || 'Untitled Slideshow';
-                slideshowControls.style.display = 'flex'; 
-                if(fullscreenBtn) fullscreenBtn.style.display = 'inline-block'; 
-            } else {
-                slideDisplayArea.innerHTML = '<p class="text-danger text-center p-5">This slideshow has no content or could not be loaded.</p>';
-                slideshowTitleDisplay.textContent = 'Error';
-                 if(fullscreenBtn) fullscreenBtn.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Error loading slideshow detail:', error);
-            slideDisplayArea.innerHTML = '<p class="text-danger text-center p-5">Failed to load slideshow. Please try again.</p>';
-            slideshowTitleDisplay.textContent = 'Error Loading';
-            if(fullscreenBtn) fullscreenBtn.style.display = 'none';
-        } finally {
-            loadingSpinnerPlayer.style.display = 'none';
-        }
-    }
-
-    function displayCurrentSlide() {
-        if (!currentSlideshow || !currentSlideshow.blocks || currentSlideshow.blocks.length === 0) {
-            slideDisplayArea.innerHTML = '<p class="text-muted text-center p-5">No slides to display.</p>';
-            slideshowControls.style.display = 'none';
-            if(fullscreenBtn) fullscreenBtn.style.display = 'none';
-            return;
-        }
-
-        const slideBlock = currentSlideshow.blocks[currentSlideIndex];
-        slideDisplayArea.innerHTML = slideBlock.content_html; 
-
-        if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-            window.MathJax.typesetPromise([slideDisplayArea]).catch((err) => console.error('MathJax typesetting error (direct):', err));
-        } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
-            window.MathJax.startup.promise.then(() => {
-                if (typeof window.MathJax.typesetPromise === 'function') {
-                    window.MathJax.typesetPromise([slideDisplayArea]).catch((err) => console.error('MathJax typesetting error (startup.promise):', err));
-                } else {
-                    console.error('MathJax loaded, but typesetPromise is not a function after startup.');
-                }
-            }).catch(err => console.error('MathJax startup promise error:', err));
-        }
-
-        const slideElement = slideDisplayArea.querySelector('.slide'); 
-        if (slideElement && slideElement.classList.contains('quiz-slide')) {
-            setupQuizInteraction(slideElement); 
-        }
-        
-        updateSlideControls();
-    }
-
-    function updateSlideControls() {
-        if (!currentSlideshow || currentSlideshow.blocks.length === 0) return;
-        slideCounter.textContent = `Slide ${currentSlideIndex + 1} of ${currentSlideshow.blocks.length}`;
-        prevSlideBtn.disabled = currentSlideIndex === 0;
-        nextSlideBtn.disabled = currentSlideIndex === currentSlideshow.blocks.length - 1;
-    }
-
-    // --- 5. Quiz Interaction Logic ---
-    function setupQuizInteraction(quizSlideElement) {
-        const options = quizSlideElement.querySelectorAll('.option');
-        let submitBtn = quizSlideElement.querySelector('.submit-quiz-btn');
-        let retakeBtn = quizSlideElement.querySelector('.retake-quiz-btn');
-        const feedback = quizSlideElement.querySelector('.feedback');
-
-        if (!options.length || !submitBtn || !feedback) {
-            return;
-        }
-
-        function resetQuizState() {
-            quizSlideElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect'));
-            feedback.textContent = '';
-            feedback.className = 'feedback'; 
-            const currentSubmitBtn = quizSlideElement.querySelector('.submit-quiz-btn');
-            const currentRetakeBtn = quizSlideElement.querySelector('.retake-quiz-btn');
-            if (currentSubmitBtn) currentSubmitBtn.style.display = 'inline-block';
-            if (currentRetakeBtn) currentRetakeBtn.style.display = 'none'; 
-            quizSlideElement.classList.remove('submitted');
-        }
-        resetQuizState(); 
-
-        const clonedOptions = [];
-        options.forEach(opt => {
-            const newOpt = opt.cloneNode(true);
-            opt.parentNode.replaceChild(newOpt, opt);
-            newOpt.addEventListener('click', () => {
-                if (!quizSlideElement.classList.contains('submitted')) {
-                    newOpt.classList.toggle('selected');
-                }
-            });
-            clonedOptions.push(newOpt);
-        });
-        
-        const newSubmitBtn = submitBtn.cloneNode(true);
-        submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
-        submitBtn = newSubmitBtn;
-
-        submitBtn.addEventListener('click', () => {
-            let allCorrectOptionsDefined = 0, userSelectedCorrect = 0, userSelectedIncorrect = 0, userMadeSelection = false;
-            clonedOptions.forEach(opt => { 
-                const isCorrectDefined = opt.dataset.correct === 'true';
-                const isSelectedByUser = opt.classList.contains('selected');
-                if (isSelectedByUser) userMadeSelection = true;
-                if (isCorrectDefined) { allCorrectOptionsDefined++; if (isSelectedByUser) userSelectedCorrect++; } 
-                else { if (isSelectedByUser) userSelectedIncorrect++; }
-            });
-
-            if (!userMadeSelection) {
-                feedback.textContent = 'Please select at least one answer.';
-                feedback.className = 'feedback'; 
-                return;
-            }
-            quizSlideElement.classList.add('submitted');
-            feedback.className = 'feedback'; 
-
-            if (userSelectedIncorrect > 0) { feedback.textContent = 'Some of your selections are incorrect.'; feedback.classList.add('incorrect'); } 
-            else if (userSelectedCorrect === allCorrectOptionsDefined && allCorrectOptionsDefined > 0) { feedback.textContent = 'Correct! All your selections are right.'; feedback.classList.add('correct'); } 
-            else if (userSelectedCorrect > 0 && userSelectedCorrect < allCorrectOptionsDefined) { feedback.textContent = 'Partially correct.'; feedback.classList.add('partial'); } 
-            else if (allCorrectOptionsDefined === 0 && userSelectedIncorrect === 0) { feedback.textContent = 'Answer saved.'; } 
-            else { feedback.textContent = 'Incorrect.'; feedback.classList.add('incorrect'); }
-
-            clonedOptions.forEach(opt => { 
-                if (opt.dataset.correct === 'true') opt.classList.add('correct');
-                else if (opt.classList.contains('selected')) opt.classList.add('incorrect');
-            });
-            submitBtn.style.display = 'none';
-
-            if (retakeBtn) {
-                 const currentRetakeBtnInScope = quizSlideElement.querySelector('.retake-quiz-btn');
-                 if (currentRetakeBtnInScope) {
-                    const newRetakeBtn = currentRetakeBtnInScope.cloneNode(true);
-                    currentRetakeBtnInScope.parentNode.replaceChild(newRetakeBtn, currentRetakeBtnInScope);
-                    retakeBtn = newRetakeBtn;
-                    retakeBtn.style.display = 'inline-block';
-                    retakeBtn.addEventListener('click', resetQuizState);
-                 }
-            }
-        });
-         
-        if (retakeBtn) { 
-            const newRetakeBtn = retakeBtn.cloneNode(true);
-            retakeBtn.parentNode.replaceChild(newRetakeBtn, retakeBtn);
-            retakeBtn = newRetakeBtn;
-            retakeBtn.addEventListener('click', resetQuizState);
-            if (!quizSlideElement.classList.contains('submitted')) { 
-                 retakeBtn.style.display = 'none';
-            }
-        }
-    }
-
-    // --- 6. Fullscreen Functionality ---
-    function toggleFullscreen() {
-        const elemToFullscreen = slideshowPlayerContainer; 
-        if (!document.fullscreenElement) {  
-            if (elemToFullscreen.requestFullscreen) { elemToFullscreen.requestFullscreen(); } 
-            else if (elemToFullscreen.webkitRequestFullscreen) { elemToFullscreen.webkitRequestFullscreen(); } 
-            fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
-            fullscreenBtn.title = 'Exit Fullscreen';
-        } else {
-            if (document.exitFullscreen) { document.exitFullscreen(); } 
-            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-            fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
-            fullscreenBtn.title = 'Toggle Fullscreen';
-        }
     }
     
-    // --- 7. Event Listeners ---
+    // --- 4. Deletion Logic ---
+    async function handleDeleteRecipe() {
+        if (!recipeIdToDelete) return;
+
+        // Django templates automatically add a CSRF token to forms,
+        // but for AJAX, we need to get it from the page manually.
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || document.querySelector('#api-config')?.dataset.csrfToken;
+
+        try {
+            // Replace the '0' placeholder in the URL with the actual recipe ID
+            const deleteUrl = apiUrls.recipe_delete.replace('0', recipeIdToDelete);
+
+            const response = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const elementToRemove = recipeListContainer.querySelector(`[data-recipe-id='${recipeIdToDelete}']`);
+                if (elementToRemove) {
+                    elementToRemove.remove();
+                }
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to delete the recipe.');
+            }
+        } catch (error) {
+            console.error('Deletion error:', error);
+            alert(error.message);
+        } finally {
+            deleteModal.hide();
+            recipeIdToDelete = null;
+        }
+    }
+
+    // --- 5. Add Event Listeners ---
     [curriculumSelect, languageSelect, subjectSelect, topicSelect].forEach(select => {
         select.addEventListener('change', () => {
             if (select === curriculumSelect || select === languageSelect) updateSubjectOptions();
             if (select === subjectSelect) updateTopicOptions();
             clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(fetchAndDisplaySlideshowList, 300);
+            debounceTimeout = setTimeout(fetchAndDisplayRecipes, 300);
         });
     });
-
-    prevSlideBtn.addEventListener('click', () => {
-        if (currentSlideIndex > 0) { currentSlideIndex--; displayCurrentSlide(); }
-    });
-    nextSlideBtn.addEventListener('click', () => {
-        if (currentSlideshow && currentSlideIndex < currentSlideshow.blocks.length - 1) {
-            currentSlideIndex++; displayCurrentSlide();
+    
+    recipeListContainer.addEventListener('click', function(event) {
+        const deleteButton = event.target.closest('.delete-recipe-btn');
+        if (deleteButton) {
+            event.preventDefault();
+            event.stopPropagation();
+            recipeIdToDelete = deleteButton.dataset.recipeId;
+            deleteModal.show();
         }
     });
-    if(fullscreenBtn) { 
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
-        fullscreenBtn.style.display = 'none'; 
-    }
 
-    // --- 8. Initialization ---
-    updateSubjectOptions(); 
-    fetchAndDisplaySlideshowList(); 
+    confirmDeleteBtn.addEventListener('click', handleDeleteRecipe);
+
+
+    // --- 6. Initialization ---
+    updateSubjectOptions();
+    fetchAndDisplayRecipes();
 });

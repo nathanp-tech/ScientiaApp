@@ -3,60 +3,62 @@
 .recipe-browser-page .browser-header {
     text-align: center;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #dee2e6; /* Consistent with slide_browser.css */
+    border-bottom: 1px solid #dee2e6;
 }
 
 .recipe-browser-page .filter-section {
-    background-color: #f8f9fa; /* Light background for filter section */
-    /* card and shadow-sm are Bootstrap classes, already providing some styling */
+    background-color: #f8f9fa;
 }
 
 .recipe-browser-page .filter-section .form-label {
-    font-size: 0.875rem; /* Slightly smaller labels for filters */
+    font-size: 0.875rem;
     margin-bottom: 0.25rem;
 }
 
 .recipe-list-column .card-header {
-    background-color: #e9ecef; /* Consistent header for the list card */
+    background-color: #e9ecef;
     font-weight: 500;
 }
 
 #recipe-list-container .list-group-item-action {
     cursor: pointer;
-    font-size: 0.9rem; /* Consistent font size for list items */
-    display: flex; /* Added from your original recipe_browser.html style block for consistency */
+    font-size: 0.9rem;
+    display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-#recipe-list-container .list-group-item-action .text-muted { /* Added from original style block */
+#recipe-list-container .list-group-item-action .text-muted {
     font-size: 0.85rem;
 }
 
-#recipe-list-container .list-group-item-action.active { /* Style for selected item, if you implement it */
-    background-color: #0d6efd; /* Bootstrap primary blue */
+#recipe-list-container .list-group-item-action.active {
+    background-color: #0d6efd;
     border-color: #0d6efd;
     color: white;
 }
 
-/* Styles for loading spinner (ensure ID matches HTML) */
-#loading-spinner.spinner-border-sm { /* More specific selector */
+#loading-spinner.spinner-border-sm {
     width: 1rem;
     height: 1rem;
     border-width: .2em;
 }
 
-/* Placeholder for recipe detail area if you were to add one */
-/*
-#recipe-detail-area {
-    min-height: 400px; 
-    background-color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 1rem; 
-    border: 1px solid #dee2e6;
-    border-radius: .25rem;
+/* NEW: Styles for the staff-only delete button */
+.delete-recipe-btn {
+    background: none;
+    border: none;
+    color: #dc3545; /* Bootstrap danger color */
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem; /* Space between it and other elements */
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
-*/
+
+.delete-recipe-btn:hover {
+    color: white;
+    background-color: #dc3545; /* On hover, fill with danger color */
+}

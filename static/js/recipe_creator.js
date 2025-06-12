@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const subjectSelect = document.getElementById('subject');
     const topicsSelect = document.getElementById('topic');
     const confirmStatusAndSaveBtn = document.getElementById('confirm-status-and-save-btn');
-    // --- REFERENCE TO HELP BUTTON AND MODAL ELEMENT ---
     const helpBtn = document.getElementById('help-btn'); 
     const helpModalEl = document.getElementById('helpModal');
 
@@ -96,41 +95,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const textarea = document.getElementById(textareaId);
         if (!textarea) return null;
 
-        // Define the robust overlay for editable text and LaTeX
         const editableTextOverlay = {
             token: function(stream) {
-                // First, try to match LaTeX patterns as they are more specific.
                 // Pattern for block LaTeX: $$...$$
                 if (stream.match("$$")) {
-                    // Search for the closing '$$', but don't go past the end of the line.
                     stream.skipTo("$$") || stream.skipToEnd();
-                    // Consume the closing '$$' if found
                     stream.match("$$");
-                    return "editable-text"; // Style the entire block
+                    return "editable-text";
                 }
                 
                 // Pattern for inline LaTeX: $...$
-                // Ensure we don't accidentally match the start of a block '$$'
                 if (stream.match("$") && stream.peek() !== "$") {
-                    // Search for the closing '$'
                     stream.skipTo("$") || stream.skipToEnd();
-                     // Consume the closing '$' if found
                     stream.match("$");
                     return "editable-text";
                 }
 
-                // If no LaTeX is found, handle the general text content between tags.
-                // This logic is robust because it relies on the stream's position relative to tags.
+                // General text content between tags
                 if (stream.sol() || stream.string.charAt(stream.start - 1) === '>') {
-                    // Consume all characters until the next tag '<' or LaTeX delimiter '$'
                     let contentFound = stream.eatWhile(/[^<$]/);
                     if (contentFound) {
                         return "editable-text";
                     }
                 }
 
-                // If no patterns matched, advance the stream by one character and return no style.
-                // This is crucial to prevent the parser from getting stuck in an infinite loop.
+                // Advance the stream if no patterns matched
                 stream.next();
                 return null;
             }
@@ -144,9 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             lineWrapping: true,
         });
 
-        // Add the overlay mode on top of the 'htmlmixed' mode.
         editor.addOverlay(editableTextOverlay);
-
 
         const previewEl = document.getElementById(`preview-${internalBlockId}`);
         let debounceTimeout;
@@ -155,7 +142,11 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => {
                 const content = cm.getValue();
-                previewEl.innerHTML = content;
+                // Ensure we replace the PAIR of slashes with a single <br> tag
+                const processedContent = content.replace(/\/\//g, '<br>');
+                
+                previewEl.innerHTML = processedContent;
+                
                 if (window.MathJax) {
                     MathJax.typesetPromise([previewEl]).catch(err => console.error('MathJax error:', err));
                 }
@@ -178,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
         blockWrapper.dataset.order = block.order;
         blockWrapper.dataset.template = block.template_name;
 
+        // The 'recipe-block' class was removed from the preview div to prevent style conflicts
         blockWrapper.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-secondary block-number">Block ${parseInt(block.order, 10) + 1}</span>
@@ -189,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="editor-preview-container">
                 <div class="editor-column"><textarea id="${editorId}"></textarea></div>
-                <div class="preview-column"><div id="${previewId}" class="block-preview recipe-block"></div></div>
+                <div class="preview-column"><div id="${previewId}" class="block-preview"></div></div>
             </div>`;
 
         blocksContainer.appendChild(blockWrapper);
@@ -198,7 +190,8 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCodeMirror(editorId, internalBlockId);
 
         const previewEl = document.getElementById(previewId);
-        previewEl.innerHTML = block.content_html;
+        // Set the initial preview content without processing for //, as it should be correct from the DB
+        previewEl.innerHTML = block.content_html; 
         if (window.MathJax) MathJax.typesetPromise([previewEl]);
 
         updateEmptyState();
@@ -267,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
         recipeState.language = languageSelect.value || null;
         recipeState.subject = subjectSelect.value || null;
         recipeState.topic = topicsSelect.value || null;
-        // Status is no longer updated from here.
+        // Status is updated via the status modal, not here.
 
         const newBlocks = [];
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el) => {
@@ -289,18 +282,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // 5. API COMMUNICATION
     // =========================================================================
 
-    /**
-     * The actual API call to save the recipe.
-     * This is now separated from the button click handler.
-     */
     async function executeSave() {
         const url = API_URLS.recipes;
         const method = 'POST';
 
-        // Disable button to prevent multiple submissions
         confirmStatusAndSaveBtn.disabled = true;
         confirmStatusAndSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
-        saveRecipeBtn.disabled = true; // Also disable the main save button
+        saveRecipeBtn.disabled = true;
 
         try {
             const response = await fetch(url, {
@@ -331,18 +319,13 @@ document.addEventListener('DOMContentLoaded', function() {
                  alert(`Save error: ${error.message}`);
             }
         } finally {
-            // Re-enable buttons
             confirmStatusAndSaveBtn.disabled = false;
             confirmStatusAndSaveBtn.innerHTML = 'Confirm & Save';
             saveRecipeBtn.disabled = false;
-            statusSelectionModal.hide(); // Hide the modal on completion
+            statusSelectionModal.hide();
         }
     }
 
-
-    /**
-     * Initiates the save process by showing the status selection modal.
-     */
     function handleSaveButtonClick() {
         updateStateFromUI();
         if (!recipeState.title) {
@@ -351,11 +334,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Reset the status modal before showing
         document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
         confirmStatusAndSaveBtn.disabled = true;
 
-        // Show the status selection modal
         statusSelectionModal.show();
     }
 
@@ -458,12 +439,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const statusModalEl = document.getElementById('statusSelectionModal');
     if (statusModalEl) {
-        // Force focus on the modal when it is shown. This helps prevent event conflicts.
         statusModalEl.addEventListener('shown.bs.modal', () => {
             statusModalEl.focus();
         });
 
-        // Use event delegation for clicks within the modal.
         statusModalEl.addEventListener('click', (e) => {
             const card = e.target.closest('.status-card');
             if (!card) return;
@@ -474,12 +453,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Event listener for the final save confirmation button
     confirmStatusAndSaveBtn.addEventListener('click', () => {
         const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
         if (selectedStatusCard) {
             recipeState.status = selectedStatusCard.dataset.status;
-            executeSave(); // Proceed with the actual saving
+            executeSave();
         } else {
             alert('Please select a status.');
         }
@@ -493,9 +471,9 @@ document.addEventListener('DOMContentLoaded', function() {
             'statement': `
 <div class="recipe-block recipe-statement">
     <h2>Recipe Title</h2>
-    <p>Provide an overview of the recipe, its purpose, or list key ingredients here. <p>You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p> . <p>Or display equations like this:</p>
+    <p>Provide an overview of the recipe, its purpose, or list key ingredients here. You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>
+    <p>Or display equations like this:</p>
     $$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$
-    </p>
     <ul>
         <li>Ingredient 1</li>
         <li>Ingredient 2</li>
@@ -536,13 +514,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     renderUIFromState();
 
-    // --- Setup for the Help Modal ---
-    // (Ensure helpBtn and helpModalEl were defined in section 3. DOM ELEMENT REFERENCES)
     if (helpBtn && helpModalEl) {
         const helpModal = new bootstrap.Modal(helpModalEl);
         helpBtn.addEventListener('click', () => {
             helpModal.show();
         });
     }
-    // --- END OF Help Modal Setup ---
 });

@@ -13,356 +13,254 @@ html { min-height: 100%; }
 }
 
 /* --- Common Styles for Recipe Blocks (Preview & Export) --- */
-/* These styles are for the .recipe-block itself and should not affect CodeMirror directly. */
 .recipe-block {
-    width: 100%; /* */
-    height: 100%; /* */
-    display: flex; /* */
-    flex-direction: column; /* */
-    align-items: flex-start; /* */
-    padding: 30px; /* */
-    background: #FFFFF8; /* A light off-white background */ /* */
-    color: #333; /* */
-    text-align: left; /* */
-    overflow: auto; /* Allows scrolling within the block if content overflows */ /* */
-    position: relative; /* */
-    box-sizing: border-box; /* */
-    border: 1px solid #ddd; /* */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* <<< C'est cette ligne qui cause le problème d'alignement */
+    padding: 30px;
+    background: #FFFFF8;
+    color: #333;
+    text-align: left;
+    overflow: auto;
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
 }
 .recipe-block > .container-fluid, .recipe-block > .container, .recipe-block > div {
-    max-height: 100%; /* */
-    width: 100%; /* */
-    padding: 15px; /* */
-    box-sizing: border-box; /* */
+    max-height: 100%;
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
 }
 /* Typography within recipe blocks */
-.recipe-block h1 { font-size: 2.2rem; font-weight: 500; margin-bottom: 20px; color: #2c3e50; } /* */
-.recipe-block h2 { font-size: 1.8rem; margin-bottom: 15px; color: #34495e; } /* */
-.recipe-block h3 { font-size: 1.5rem; color: #34495e; margin-bottom: 10px; } /* */
-.recipe-block p { font-size: 1rem; line-height: 1.7; margin-bottom: 12px; } /* */
-.recipe-block ul, .recipe-block ol { list-style-position: inside; padding-left: 20px; margin: 15px 0; text-align: left; } /* */
-.recipe-block ul { list-style-type: disc; } /* */
-.recipe-block li { margin: 8px 0; font-size: 1rem; } /* */
+.recipe-block h1 { font-size: 2.2rem; font-weight: 500; margin-bottom: 20px; color: #2c3e50; }
+.recipe-block h2 { font-size: 1.8rem; margin-bottom: 15px; color: #34495e; }
+.recipe-block h3 { font-size: 1.5rem; color: #34495e; margin-bottom: 10px; }
+.recipe-block p { font-size: 1rem; line-height: 1.7; margin-bottom: 12px; }
+.recipe-block ul, .recipe-block ol { list-style-position: inside; padding-left: 20px; margin: 15px 0; text-align: left; }
+.recipe-block ul { list-style-type: disc; }
+.recipe-block li { margin: 8px 0; font-size: 1rem; }
 /* Specific template styles for recipe blocks */
-.recipe-block.recipe-enonce h2 { font-size: 2.5rem; color: #0056b3; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; } /* */
-.recipe-block.recipe-enonce p { font-size: 1.1rem; color: #555; } /* */
-.recipe-block.recipe-step h3 { font-size: 1.6rem; color: #28a745; margin-top: 20px; } /* */
-.recipe-block.recipe-step p { font-size: 1rem; } /* */
+.recipe-block.recipe-enonce h2 { font-size: 2.5rem; color: #0056b3; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+.recipe-block.recipe-enonce p { font-size: 1.1rem; color: #555; }
+.recipe-block.recipe-step h3 { font-size: 1.6rem; color: #28a745; margin-top: 20px; }
+.recipe-block.recipe-step p { font-size: 1rem; }
 
 /* --- Editing Interface Styles --- */
 .block-edit-section {
-    margin-bottom: 30px; /* */
-    padding: 20px; /* */
-    border: 1px solid #ccc; /* */
-    border-radius: 8px; /* */
-    background-color: #fff; /* */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* */
-    position: relative; /* For positioning child elements like the block number */ /* */
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
 }
 .block-number {
-    /* position: absolute;  <-- Commentez ou supprimez cette ligne */
-    /* top: 10px;           <-- Commentez ou supprimez cette ligne */
-    /* left: 10px;          <-- Commentez ou supprimez cette ligne */
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
     padding: 3px 8px;
     border-radius: 4px;
     font-size: 0.9em;
     font-weight: bold;
-    /* Vous pouvez ajouter une marge si nécessaire, par exemple : */
-    /* margin-right: auto;  <-- Ceci pousserait les éléments suivants à droite si besoin, mais justify-content-between devrait suffire */
 }
 .editor-preview-container {
-    display: grid; /* */
-    grid-template-columns: 1fr 1fr; /* Creates two equal columns */ /* */
-    gap: 20px; /* */
-    height: 70vh; /* 70% of the viewport height */ /* */
-    overflow: hidden; /* Prevents container from scrolling */ /* */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    height: 70vh;
+    overflow: hidden;
 }
 .editor-column, .preview-column {
-    height: 100%; /* */
-    overflow-y: auto; /* Allows individual scrolling for editor and preview */ /* */
+    height: 100%;
+    overflow-y: auto;
 }
 
 /* Styles for CodeMirror - MODIFIED to better support themes */
 .editor-column .CodeMirror {
-    box-sizing: border-box; /* */
+    box-sizing: border-box;
 }
 .CodeMirror {
-    height: auto; /* */
-    min-height: 300px; /* */
-    font-size: 14px; /* */
-    line-height: 1.4; /* */
-    /* DO NOT ADD background-color or color here to allow the Monokai theme to apply correctly */ /* */
+    height: auto;
+    min-height: 300px;
+    font-size: 14px;
+    line-height: 1.4;
 }
 .CodeMirror-scroll {
-    min-height: 300px; /* Ensures the scrollable area has a minimum height */ /* */
+    min-height: 300px;
 }
 
 /* --- Preview Pane Styles --- */
 .block-preview {
-    width: 100%; /* */
-    height: 100% !important; /* Ensure it fills the column */ /* */
-    box-sizing: border-box; /* */
-    overflow: hidden; /* */
-    position: relative; /* */
-    display: flex; /* */
-    justify-content: center; /* */
-    align-items: center; /* */
-    padding: 0; /* */
+    width: 100%;
+    height: 100% !important;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
 }
 
 /* Styles for how .recipe-block and .slide appear within the .block-preview */
 .block-preview .recipe-block,
 .block-preview .slide {
-    width: 100%; /* */
-    height: 100%; /* */
-    overflow-y: auto; /* Allows scrolling within the previewed block */ /* */
-    overflow-x: hidden; /* */
-    border: none; /* The preview pane itself might have a border, so the block doesn't need one */ /* */
-    /* Background color is inherited from their individual definitions below */
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: none;
 }
 .block-preview .recipe-block {
-    background-color: #FFFFF8; /* Background for the recipe block in preview */ /* */
+    background-color: #FFFFF8;
 }
-/* .slide in preview will use its own background defined in its main style block */
-
 
 /* --- Empty State Style for the Blocks Container --- */
 #blocks-container.empty {
-    display: flex; /* */
-    justify-content: center; /* */
-    align-items: center; /* */
-    min-height: calc(70vh - 40px); /* */
-    text-align: center; /* */
-    color: #6c757d; /* */
-    border: 2px dashed #ddd; /* */
-    border-radius: 5px; /* */
-    background-color: #f8f9fa; /* */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(70vh - 40px);
+    text-align: center;
+    color: #6c757d;
+    border: 2px dashed #ddd;
+    border-radius: 5px;
+    background-color: #f8f9fa;
 }
 #blocks-container.empty::before {
-    content: "Click the '+' button to add your first block!"; /* Generic message */ /* */
-    font-size: 1.5rem; /* */
-    opacity: 0.7; /* */
+    content: "Click the '+' button to add your first block!";
+    font-size: 1.5rem;
+    opacity: 0.7;
 }
 
 /* --- Block Action Buttons (Move, Delete) --- */
 .block-actions {
-    text-align: right; /* */
-    margin-bottom: 10px; /* */
-    padding-right: 5px; /* */
+    text-align: right;
+    margin-bottom: 10px;
+    padding-right: 5px;
 }
 .block-actions .btn {
-    margin-left: 5px; /* */
+    margin-left: 5px;
 }
 
 /* --- Modal Styles --- */
 .modal-body .template-card {
-    cursor: pointer; /* */
-    transition: all 0.2s ease-in-out; /* */
-    border: 2px solid transparent; /* */
-    height: 100%; /* */
-    display: flex; /* */
-    flex-direction: column; /* */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 2px solid transparent;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 .modal-body .template-card .card-body {
-    flex-grow: 1; /* Ensures cards in the same row have equal height */ /* */
+    flex-grow: 1;
 }
 .modal-body .template-card:hover {
-    border-color: #007bff; /* */
-    transform: translateY(-3px); /* */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* */
+    border-color: #007bff;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 .modal-body .template-card.selected {
-    border-color: #28a745; /* */
-    background-color: #e9f7ec; /* */
-    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); /* */
+    border-color: #28a745;
+    background-color: #e9f7ec;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
 }
 #metadataSelectionModal .form-label {
-    font-weight: 500; /* */
+    font-weight: 500;
 }
 #metadataSelectionModal input[type="text"],
-#metadataSelectionModal #slideshowTitle { /* Targeting title input for both creators */ /* */
-    padding: 10px; /* */
-    border-radius: 5px; /* */
-    border: 1px solid #ccc; /* */
-    width: 100%; /* */
+#metadataSelectionModal #slideshowTitle {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
 }
 
 /* --- Common Styles for .slide (used in slide_creator) --- */
 .slide {
-    width: 100%; /* */
-    height: 100%; /* */
-    display: flex; /* */
-    flex-direction: column; /* */
-    justify-content: center; /* */
-    align-items: center; /* */
-    padding: 40px; /* */
-    padding-bottom: 70px; /* Add more padding at the bottom for the logo */ /* */
-    background: #FFFFF0; /* A very light yellow, ivory like background for slides */ /* */
-    color: black; /* */
-    text-align: center; /* */
-    overflow: hidden; /* Prevent content from spilling out abruptly */ /* */
-    position: relative; /* For absolute positioning of child elements like logo */ /* */
-    box-sizing: border-box; /* */
-    border: 1px solid #ddd; /* */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    padding-bottom: 70px;
+    background: #FFFFF0;
+    color: black;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
 }
 .slide > .container-fluid,
 .slide > .container,
-.slide > div:not(.logo) { /* Target direct children containers, excluding the logo div */
-    max-height: 100%; /* */
-    overflow-y: auto; /* Allow content to scroll if it exceeds slide height */ /* */
-    width: 100%; /* */
-    padding: 20px; /* */
-    box-sizing: border-box; /* */
+.slide > div:not(.logo) {
+    max-height: 100%;
+    overflow-y: auto;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
 }
-.slide h1 { font-size: 2.5rem; font-weight: 300; margin-bottom: 30px; color: #333; } /* */
-.slide h2 { font-size: 1.8rem; margin-bottom: 20px; color: #444; } /* */
-.slide h3 { font-size: 1.5rem; color: #333; margin-bottom: 15px; } /* */
-.slide p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 15px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto; } /* */
-.slide .center-p p { text-align: center; } /* Utility class to center paragraphs within a slide */ /* */
-.slide ul, .slide ol { list-style-position: inside; padding-left: 20px; margin: 20px auto; width: 100%; max-width: 800px; text-align: left; } /* */
-.slide ul { list-style-type: disc; } /* */
-.slide ul.no-bullet { list-style-type: none; padding-left: 0; } /* Utility class for unbulleted lists */ /* */
-.slide li { margin: 10px 0; font-size: 1.1rem; } /* */
-.slide .logo { position: absolute; bottom: 25px; right: 30px; text-align: right; z-index: 10; } /* */
-.slide .logo img { height: 40px; opacity: 0.8; } /* */
-.slide .logo .logo-text { font-size: 10px; font-weight: 300; margin-top: 3px; color: #555; } /* */
-.slide .line { width: 60%; margin: 25px auto; border-top: 1px solid #dee2e6; } /* Decorative line */ /* */
-
-/* Specific template styles for .slide */
-.slide.front-page h1 { font-size: 4rem; } /* */
-.slide.front-page .subtitle { font-size: 1.25rem; letter-spacing: 1.5px; color: #6c757d; margin-top: 10px; text-transform: uppercase; } /* */
-
-.slide.two-column .columns-container { display: flex; width: 100%; gap: 30px; max-width: 1200px; align-items: flex-start; } /* */
-.slide.two-column .column { flex: 1; text-align: left; } /* */
-.slide.two-column .column h3 { border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-bottom: 15px; } /* */
-
-.slide.two-column-basic .title-line h1 { font-size: 2rem; margin-bottom: 15px; } /* */
-.slide.two-column-basic .title-line .line { margin-top: 0; margin-bottom: 30px; } /* */
-.slide.two-column-basic .row-twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 25px; max-width: 1000px; margin-left: auto; margin-right: auto; } /* */
-.slide.two-column-basic .row-twocol .left { font-size: 1.1rem; line-height: 1.6; text-align: justify; } /* */
-.slide.two-column-basic .row-twocol .right { font-size: 1rem; line-height: 1.6; text-align: justify; font-style: italic; color: #555; } /* */
-
-.slide.cards .title-line h1 { font-size: 2rem; margin-bottom: 15px; } /* */
-.slide.cards .title-line .line { margin-top: 0; margin-bottom: 30px; } /* */
-.slide.cards .grid-container { width: 100%; max-width: 1100px; margin: 20px auto; } /* */
-.slide.cards .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; } /* */
-.slide.cards .slide-card { background-color: #061244; color: #ffffff; padding: 20px; border-radius: 8px; text-align: left; font-size: 0.9rem; line-height: 1.5; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); height: 100%; } /* */
-
-/* Styles specific to Quiz Slides */
-.slide.quiz-slide { text-align: left; align-items: center; } /* */
-.quiz-slide .quiz-content-wrapper { width: 100%; max-width: 800px; margin: 0 auto; } /* */
-.quiz-slide h1 { font-size: 2rem; margin-bottom: 20px; text-align: center; } /* */
-.quiz-slide .question { margin-bottom: 25px; font-size: 1.3rem; font-weight: 500; text-align: center; } /* */
-.quiz-slide .options { width: 100%; max-width: 700px; margin: 0 auto 20px auto; list-style-type: none; padding: 0; } /* */
-.quiz-slide .option { position: relative; padding: 10px 10px 10px 45px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 5px; cursor: pointer; transition: background-color 0.2s ease; background-color: #fff; } /* */
-.quiz-slide .option:hover { background-color: #f8f9fa; } /* */
-.quiz-slide .option::before { content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: 2px solid #ccc; border-radius: 4px; background-color: #fff; transition: all 0.2s ease; } /* */
-.quiz-slide .option.selected::before { background-color: #007bff; border-color: #007bff; content: '✔'; color: white; font-size: 14px; text-align: center; line-height: 18px; } /* */
-.quiz-slide.submitted .option { cursor: default; } /* */
-.quiz-slide.submitted .option.correct::before { background-color: #28a745 !important; border-color: #28a745 !important; content: '✔'; color: white; font-size: 14px; text-align: center; line-height: 18px; } /* */
-.quiz-slide.submitted .option.incorrect::before { background-color: #dc3545 !important; border-color: #dc3545 !important; content: '✖'; color: white; font-size: 14px; text-align: center; line-height: 18px; } /* */
-.quiz-slide.submitted .option.selected.incorrect::before { background-color: #dc3545 !important; border-color: #dc3545 !important; content: '✖'; color: white; font-size: 14px; text-align: center; line-height: 18px; } /* */
-.quiz-slide.submitted .option.correct:not(.selected)::before { background-color: #e9f7ec !important; border-color: #28a745 !important; content: '✔'; color: #28a745; font-size: 14px; text-align: center; line-height: 18px; } /* */
-.quiz-slide .feedback { margin-top: 15px; font-weight: bold; min-height: 24px; text-align: center; } /* */
-.quiz-slide .feedback.correct { color: #28a745; } /* */
-.quiz-slide .feedback.incorrect { color: #dc3545; } /* */
-.quiz-slide .feedback.partial { color: #fd7e14; } /* Orange for partial feedback */ /* */
-.quiz-slide .quiz-buttons { text-align: center; margin-top: 20px; } /* */
-.quiz-slide .submit-quiz-btn { margin-right: 10px; } /* */
-.quiz-slide .retake-quiz-btn { display: none; } /* Retake button hidden by default */ /* */
-
-/* --- MathJax specific styles --- */
-.slide .math-inline { display: inline-block; margin: 0 4px; } /* */
-.slide .math-block { display: block; margin: 15px auto; text-align: center; overflow-x: auto; padding: 10px 0; } /* */
-.MathJax_Display { display: block !important; text-align: center !important; margin: 1em auto !important; overflow-x: auto; overflow-y: hidden; } /* */
-.MathJax { font-size: 100% !important; line-height: normal !important; vertical-align: baseline !important; } /* */
+.slide h1 { font-size: 2.5rem; font-weight: 300; margin-bottom: 30px; color: #333; }
+.slide h2 { font-size: 1.8rem; margin-bottom: 20px; color: #444; }
+.slide h3 { font-size: 1.5rem; color: #333; margin-bottom: 15px; }
+.slide p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 15px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto; }
+.slide .center-p p { text-align: center; }
+.slide ul, .slide ol { list-style-position: inside; padding-left: 20px; margin: 20px auto; width: 100%; max-width: 800px; text-align: left; }
+.slide ul { list-style-type: disc; }
+.slide ul.no-bullet { list-style-type: none; padding-left: 0; }
+.slide li { margin: 10px 0; font-size: 1.1rem; }
+.slide .logo { position: absolute; bottom: 25px; right: 30px; text-align: right; z-index: 10; }
+.slide .logo img { height: 40px; opacity: 0.8; }
+.slide .logo .logo-text { font-size: 10px; font-weight: 300; margin-top: 3px; color: #555; }
+.slide .line { width: 60%; margin: 25px auto; border-top: 1px solid #dee2e6; }
 
 /* --- Floating Buttons --- */
 .floating-btn {
-    position: fixed; /* */
-    right: 30px; /* */
-    z-index: 1050; /* */
-    width: 60px; /* */
-    height: 60px; /* */
-    border-radius: 50%; /* */
-    display: flex; /* */
-    justify-content: center; /* */
-    align-items: center; /* */
-    color: white; /* */
-    border: none; /* */
-    box-shadow: 0 8px 15px rgba(0,0,0,0.2); /* */
-    transition: all 0.3s ease; /* */
-    font-size: 24px; /* */
+    position: fixed;
+    right: 30px;
+    z-index: 1050;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    border: none;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    font-size: 24px;
 }
 .floating-btn:hover {
-    transform: translateY(-4px); /* Lifts the button on hover */ /* */
-    box-shadow: 0 12px 20px rgba(0,0,0,0.3); /* */
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
 }
-.floating-btn i {
-    font-style: normal; /* Corrects potential italicization of icons */ /* */
+#add-block-floating-btn {
+    bottom: 105px;
+    background: linear-gradient(145deg, #4ecdc4, #45b7d1);
 }
-
-/* Specific styles for floating buttons by ID */
-/* Positions updated based on previous reviews to ensure they don't overlap too much */
-#add-block-floating-btn { /* Shared ID for "Add Block" in Recipe and "Add Slide" in Slide creator */
-    bottom: 105px; /* Positioned higher up */ /* */
-    background: linear-gradient(145deg, #4ecdc4, #45b7d1); /* */
-}
-#add-block-floating-btn:hover {
-     background: linear-gradient(145deg, #45b7d1, #4ecdc4); /* */
-}
-#metadata-btn {
-    bottom: 180px; /* */
-    background: linear-gradient(145deg, #6c757d, #495057); /* */
-    width: 55px; /* */
-    height: 55px; /* */
-    font-size: 20px; /* */
-}
-#metadata-btn:hover {
-     background: linear-gradient(145deg, #495057, #6c757d); /* */
-}
-#scroll-to-top-btn {
-    bottom: 250px; /* */
-    background: linear-gradient(145deg, #ffc107, #ff9800); /* */
-    width: 50px; /* */
-    height: 50px; /* */
-    font-size: 20px; /* */
-    display: none; /* Hidden by default, shown by JS */ /* */
-    cursor: pointer; /* */
-}
- #scroll-to-top-btn:hover {
-     background: linear-gradient(145deg, #ff9800, #ffc107); /* */
- }
-
- /* Export/Load Button Area */
- #export-load-container {
-     text-align: center; /* */
-     margin-top: 30px; /* */
-     padding-bottom: 100px; /* Adds space at the bottom of the page */ /* */
- }
-  #export-load-container .btn {
-     margin: 5px; /* */
-  }
-
 
 /* ======================================================= */
-/* == NEW STYLES FOR CODEMIRROR EDITABLE TEXT HIGHLIGHT   == */
+/* ==   CORRECTION FINALE POUR CENTRER LES ÉQUATIONS    == */
 /* ======================================================= */
-
 /*
- The 'monokai' theme provides the base styling for HTML tags, attributes, etc.
- We are adding a new style for the text content inside tags.
- The 'cm-editable-text' class is applied by our custom JavaScript overlay.
+  Cette règle annule l'alignement à gauche forcé par la classe .recipe-block
+  qui utilise display:flex et align-items: flex-start.
 */
+.recipe-block mjx-container[display="true"] {
+    display: block !important;
+    margin: 1em auto !important;
+    align-self: center !important;
+}
+
 .cm-s-monokai .cm-editable-text {
-  color: #A6E22E !important; /* A bright, easily noticeable color like Monokai green */
+  color: #A6E22E !important; /* Une couleur verte, facile à voir sur le thème Monokai */
   font-style: italic;
   font-weight: bold;
 }
-
-/*
-  The HTML tags and attributes will retain their original colors (pink/yellow) from the theme,
-  while the text inside will now be green, creating a clear visual distinction.
-*/
