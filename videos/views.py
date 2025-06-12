@@ -7,8 +7,10 @@ def video_home_view(request):
     """
     This view displays the feature's homepage with a dropdown to select a subject.
     """
-    # We fetch all subjects to populate the dropdown.
-    subjects = Subject.objects.all()
+    # --- MODIFICATION ---
+    # We fetch unique subject names to avoid duplicates like 'Physics' appearing twice.
+    subjects = Subject.objects.order_by('name').values('name').distinct()
+    
     context = {
         'subjects': subjects
     }
