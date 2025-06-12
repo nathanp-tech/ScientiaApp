@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 1. Get Data and DOM Elements ---
     const initialData = JSON.parse(document.getElementById('initial-data-json').textContent);
     const apiUrls = JSON.parse(document.getElementById('api-urls-json').textContent);
-    const userIsStaff = JSON.parse(document.getElementById('user-is-staff-json').textContent);
+    const userIsStaff = JSON.parse(document.getElementById('user-is-staff-json').textContent); // Get user status
 
     const curriculumSelect = document.getElementById('curriculum-select');
     const languageSelect = document.getElementById('language-select');
@@ -14,12 +14,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const recipeListContainer = document.getElementById('recipe-list-container');
     const loadingSpinner = document.getElementById('loading-spinner');
 
+    // Modal elements for deletion
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     let recipeIdToDelete = null;
+
     let debounceTimeout;
 
-    // --- 2. Dependent Filter Logic ---
+    // --- 2. Dependent Filter Logic (No changes here) ---
+
     function updateSubjectOptions() {
         const curriculumId = curriculumSelect.value;
         const languageId = languageSelect.value;
@@ -56,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- 3. Data Fetching and Display Logic ---
+
     async function fetchAndDisplayRecipes() {
         loadingSpinner.style.display = 'block';
         const params = new URLSearchParams({
@@ -102,12 +106,13 @@ document.addEventListener('DOMContentLoaded', function() {
         recipes.forEach(recipe => {
             const recipeElementWrapper = document.createElement('div');
             recipeElementWrapper.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-            recipeElementWrapper.setAttribute('data-recipe-id', recipe.id);
+            recipeElementWrapper.setAttribute('data-recipe-id', recipe.id); // Add ID for easier removal
 
             const author = recipe.author_name || 'N/A';
             const subject = recipe.subject_name || 'N/A';
             const statusBadge = getStatusBadge(recipe.status);
 
+            // Staff-only delete button
             const deleteButtonHTML = userIsStaff ? `
                 <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
                     <i class="bi bi-trash-fill"></i>
@@ -115,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ` : '';
             
             recipeElementWrapper.innerHTML = `
-                <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1 me-3">
+                <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1">
                     <div>
                         <strong>${recipe.title}</strong>
                         <div class="text-muted small mt-1">
@@ -123,12 +128,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </a>
-                <div class="d-flex flex-column align-items-end">
-                    <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column align-items-end me-3">
                         ${statusBadge}
-                        ${deleteButtonHTML}
+                        <span class="badge bg-primary rounded-pill mt-1">View</span>
                     </div>
-                    <span class="badge bg-primary rounded-pill mt-1">View</span>
+                    ${deleteButtonHTML}
                 </div>
             `;
             recipeListContainer.appendChild(recipeElementWrapper);
@@ -136,18 +141,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // --- 4. Deletion Logic ---
+
+    // Function to handle the actual deletion via API
     async function handleDeleteRecipe() {
         if (!recipeIdToDelete) return;
 
-        // Django templates automatically add a CSRF token to forms,
-        // but for AJAX, we need to get it from the page manually.
-        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || document.querySelector('#api-config')?.dataset.csrfToken;
+        // Note: You need a way to get the CSRF token for POST/DELETE requests in Django
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
         try {
-            // Replace the '0' placeholder in the URL with the actual recipe ID
-            const deleteUrl = apiUrls.recipe_delete.replace('0', recipeIdToDelete);
-
-            const response = await fetch(deleteUrl, {
+            // Assumes your API URL for deletion is like /api/recipes/<id>/delete/
+            // Ensure this URL is provided in `api_urls` from your Django view.
+            const response = await fetch(`${apiUrls.recipe_delete.replace('0', recipeIdToDelete)}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -156,17 +161,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
+                // Remove the recipe from the list on success
                 const elementToRemove = recipeListContainer.querySelector(`[data-recipe-id='${recipeIdToDelete}']`);
                 if (elementToRemove) {
                     elementToRemove.remove();
                 }
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to delete the recipe.');
+                throw new Error('Failed to delete the recipe.');
             }
         } catch (error) {
             console.error('Deletion error:', error);
-            alert(error.message);
+            alert(error.message); // Simple error feedback
         } finally {
             deleteModal.hide();
             recipeIdToDelete = null;
@@ -174,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- 5. Add Event Listeners ---
+
     [curriculumSelect, languageSelect, subjectSelect, topicSelect].forEach(select => {
         select.addEventListener('change', () => {
             if (select === curriculumSelect || select === languageSelect) updateSubjectOptions();
@@ -183,10 +189,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Event delegation for delete buttons
     recipeListContainer.addEventListener('click', function(event) {
         const deleteButton = event.target.closest('.delete-recipe-btn');
         if (deleteButton) {
-            event.preventDefault();
+            event.preventDefault(); // Stop navigation if the parent is a link
             event.stopPropagation();
             recipeIdToDelete = deleteButton.dataset.recipeId;
             deleteModal.show();

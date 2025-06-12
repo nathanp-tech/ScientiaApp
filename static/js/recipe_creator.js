@@ -1,11 +1,13 @@
 /**
  * @file recipe_creator.js
- * @description Logic for the recipe creator interface, including state management,
- * API communication, and dynamic UI for creating recipe blocks.
+ * @description Logic for the recipe creator interface.
  */
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 1. INITIAL SETUP & CONFIGURATION ---
+    // =========================================================================
+    // 1. INITIAL SETUP & CONFIGURATION
+    // =========================================================================
+
     const apiConfigEl = document.getElementById('api-config-json');
     if (!apiConfigEl) {
         console.error("Critical error: The API configuration object (#api-config-json) was not found.");
@@ -24,7 +26,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const INITIAL_DATA = JSON.parse(initialDataEl.textContent);
 
-    // --- 2. STATE MANAGEMENT ---
+    // =========================================================================
+    // 2. STATE MANAGEMENT
+    // =========================================================================
+
     let recipeState = {
         id: null,
         title: '',
@@ -36,10 +41,14 @@ document.addEventListener('DOMContentLoaded', function() {
         status: 'in_progress', // Default status
         blocks: [],
     };
+
     let editors = {};
     let nextBlockId = 1;
 
-    // --- 3. DOM ELEMENT REFERENCES ---
+    // =========================================================================
+    // 3. DOM ELEMENT REFERENCES
+    // =========================================================================
+
     const blocksContainer = document.getElementById('blocks-container');
     const saveRecipeBtn = document.getElementById('save-recipe-server-btn');
     const loadRecipeBtn = document.getElementById('load-recipe-server-btn');
@@ -53,9 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const curriculumSelect = document.getElementById('curriculum');
     const languageSelect = document.getElementById('language');
     const subjectSelect = document.getElementById('subject');
-    const topicsSelect = $('#topic'); // Using jQuery for Select2
+    const topicsSelect = document.getElementById('topic');
     const confirmStatusAndSaveBtn = document.getElementById('confirm-status-and-save-btn');
-    const helpBtn = document.getElementById('help-btn');
+    const helpBtn = document.getElementById('help-btn'); 
     const helpModalEl = document.getElementById('helpModal');
 
     const recipeTemplateSelectionModal = new bootstrap.Modal(document.getElementById('recipeTemplateSelectionModal'));
@@ -63,14 +72,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadRecipeModal = new bootstrap.Modal(document.getElementById('loadProjectModal'));
     const statusSelectionModal = new bootstrap.Modal(document.getElementById('statusSelectionModal'));
 
-    // Initialize Select2 for the topics dropdown inside the modal
-    topicsSelect.select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Select a Topic',
-        dropdownParent: $('#metadataSelectionModal') // Crucial for search to work in modals
-    });
 
-    // --- 4. CORE UI & EDITOR FUNCTIONS ---
+    // =========================================================================
+    // 4. CORE UI & EDITOR FUNCTIONS
+    // =========================================================================
+
     function updateEmptyState() {
         blocksContainer.classList.toggle('empty', blocksContainer.children.length === 0);
     }
@@ -79,27 +85,41 @@ document.addEventListener('DOMContentLoaded', function() {
         return `client-block-${nextBlockId++}`;
     }
 
+    /**
+     * Initializes a CodeMirror editor instance with a robust overlay.
+     * This overlay highlights plain text content AND LaTeX formulas ($...$ and $$...$$).
+     * @param {string} textareaId - The ID of the textarea to replace.
+     * @param {string} internalBlockId - The client-side ID for the block.
+     */
     function initializeCodeMirror(textareaId, internalBlockId) {
         const textarea = document.getElementById(textareaId);
         if (!textarea) return null;
 
         const editableTextOverlay = {
             token: function(stream) {
+                // Pattern for block LaTeX: $$...$$
                 if (stream.match("$$")) {
                     stream.skipTo("$$") || stream.skipToEnd();
                     stream.match("$$");
                     return "editable-text";
                 }
+                
+                // Pattern for inline LaTeX: $...$
                 if (stream.match("$") && stream.peek() !== "$") {
                     stream.skipTo("$") || stream.skipToEnd();
                     stream.match("$");
                     return "editable-text";
                 }
+
+                // General text content between tags
                 if (stream.sol() || stream.string.charAt(stream.start - 1) === '>') {
-                    if (stream.eatWhile(/[^<$]/)) {
+                    let contentFound = stream.eatWhile(/[^<$]/);
+                    if (contentFound) {
                         return "editable-text";
                     }
                 }
+
+                // Advance the stream if no patterns matched
                 stream.next();
                 return null;
             }
@@ -122,8 +142,11 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => {
                 const content = cm.getValue();
+                // Ensure we replace the PAIR of slashes with a single <br> tag
                 const processedContent = content.replace(/\/\//g, '<br>');
+                
                 previewEl.innerHTML = processedContent;
+                
                 if (window.MathJax) {
                     MathJax.typesetPromise([previewEl]).catch(err => console.error('MathJax error:', err));
                 }
@@ -133,6 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
         editors[internalBlockId] = editor;
         setTimeout(() => editor.refresh(), 100);
     }
+
 
     function addBlockToUI(block) {
         const internalBlockId = generateInternalBlockId();
@@ -145,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
         blockWrapper.dataset.order = block.order;
         blockWrapper.dataset.template = block.template_name;
 
+        // The 'recipe-block' class was removed from the preview div to prevent style conflicts
         blockWrapper.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-secondary block-number">Block ${parseInt(block.order, 10) + 1}</span>
@@ -156,16 +181,19 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="editor-preview-container">
                 <div class="editor-column"><textarea id="${editorId}"></textarea></div>
-                <div class="preview-column"><div id="${previewId}" class="recipe-block ${block.template_name}"></div></div>
+                <div class="preview-column"><div id="${previewId}" class="block-preview"></div></div>
             </div>`;
 
         blocksContainer.appendChild(blockWrapper);
         document.getElementById(editorId).value = block.content_html;
+
         initializeCodeMirror(editorId, internalBlockId);
 
         const previewEl = document.getElementById(previewId);
+        // Set the initial preview content without processing for //, as it should be correct from the DB
         previewEl.innerHTML = block.content_html; 
         if (window.MathJax) MathJax.typesetPromise([previewEl]);
+
         updateEmptyState();
 
         blockWrapper.querySelector('.delete-block').addEventListener('click', () => {
@@ -183,7 +211,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (direction === 'up' && blockElement.previousElementSibling) {
             blocksContainer.insertBefore(blockElement, blockElement.previousElementSibling);
         } else if (direction === 'down' && blockElement.nextElementSibling) {
-            blocksContainer.insertBefore(blockElement.nextElementSibling, blockElement);
+            const nextSibling = blockElement.nextElementSibling;
+            if (nextSibling.nextElementSibling) {
+                blocksContainer.insertBefore(blockElement, nextSibling.nextElementSibling);
+            } else {
+                blocksContainer.appendChild(blockElement);
+            }
         }
         updateBlockOrderInUI();
     }
@@ -192,7 +225,9 @@ document.addEventListener('DOMContentLoaded', function() {
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el, index) => {
             el.dataset.order = index;
             const blockNumberSpan = el.querySelector('.block-number');
-            if (blockNumberSpan) blockNumberSpan.textContent = `Block ${index + 1}`;
+            if (blockNumberSpan) {
+                blockNumberSpan.textContent = `Block ${index + 1}`;
+            }
         });
     }
 
@@ -207,11 +242,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         filterSubjects();
         subjectSelect.value = recipeState.subject || '';
-        
-        updateTopics();
-        topicsSelect.val(recipeState.topic || '').trigger('change');
 
-        recipeState.blocks.sort((a, b) => a.order - b.order).forEach((block, index) => {
+        updateTopics();
+        topicsSelect.value = recipeState.topic || '';
+
+        recipeState.blocks.sort((a, b) => a.order - b.order);
+        recipeState.blocks.forEach((block, index) => {
             block.order = index;
             addBlockToUI(block);
         });
@@ -223,14 +259,16 @@ document.addEventListener('DOMContentLoaded', function() {
         recipeState.curriculum = curriculumSelect.value || null;
         recipeState.language = languageSelect.value || null;
         recipeState.subject = subjectSelect.value || null;
-        recipeState.topic = topicsSelect.val() || null;
+        recipeState.topic = topicsSelect.value || null;
+        // Status is updated via the status modal, not here.
 
         const newBlocks = [];
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el) => {
+            const currentOrder = parseInt(el.dataset.order, 10);
             const editor = editors[el.id];
             if (editor) {
                 newBlocks.push({
-                    order: parseInt(el.dataset.order, 10),
+                    order: currentOrder,
                     template_name: el.dataset.template,
                     content_html: editor.getValue()
                 });
@@ -240,7 +278,10 @@ document.addEventListener('DOMContentLoaded', function() {
         recipeState.blocks = newBlocks;
     }
 
-    // --- 5. API COMMUNICATION ---
+    // =========================================================================
+    // 5. API COMMUNICATION
+    // =========================================================================
+
     async function executeSave() {
         const url = API_URLS.recipes;
         const method = 'POST';
@@ -252,19 +293,31 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch(url, {
                 method: method,
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
                 body: JSON.stringify(recipeState),
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || JSON.stringify(errorData));
+                const errorMessage = errorData.detail || JSON.stringify(errorData);
+                throw new Error(errorMessage);
             }
-            recipeState = await response.json(); 
+            
+            const savedRecipe = await response.json();
+            
+            recipeState = savedRecipe; 
+            
             renderUIFromState();
             alert('Recipe saved successfully!');
         } catch (error) {
             console.error("Save error:", error);
-            alert(`Save error: ${error.message}`);
+            if (error instanceof SyntaxError) {
+                 alert('A server error occurred. Check the browser console and Django server logs for details.');
+            } else {
+                 alert(`Save error: ${error.message}`);
+            }
         } finally {
             confirmStatusAndSaveBtn.disabled = false;
             confirmStatusAndSaveBtn.innerHTML = 'Confirm & Save';
@@ -280,16 +333,20 @@ document.addEventListener('DOMContentLoaded', function() {
             metadataModal.show();
             return;
         }
+
         document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
         confirmStatusAndSaveBtn.disabled = true;
+
         statusSelectionModal.show();
     }
+
 
     async function loadRecipeList() {
         try {
             const response = await fetch(API_URLS.recipes);
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             const recipes = await response.json();
+
             recipeSelectorDropdown.innerHTML = '<option value="">-- Choose a recipe --</option>';
             recipes.forEach(r => recipeSelectorDropdown.add(new Option(`${r.title} (ID: ${r.id}, Author: ${r.author_name || 'N/A'})`, r.id)));
             loadRecipeModal.show();
@@ -313,7 +370,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- 6. METADATA & DROPDOWN LOGIC ---
+    // =========================================================================
+    // 6. METADATA & DROPDOWN LOGIC
+    // =========================================================================
+
     function filterSubjects() {
         const curriculumId = curriculumSelect.value;
         const languageId = languageSelect.value;
@@ -332,54 +392,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateTopics() {
         const subjectId = subjectSelect.value;
-        const previousValue = topicsSelect.val();
-        topicsSelect.empty();
-        topicsSelect.prop('disabled', !subjectId);
+        topicsSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+        topicsSelect.disabled = !subjectId;
 
-        if (subjectId) {
-            const relevantLabels = INITIAL_DATA.labels
-                .filter(label => String(label.subject_id) === String(subjectId))
-                .sort((a, b) => a.description.localeCompare(b.description, undefined, { numeric: true }));
-            const hierarchicalData = buildHierarchy(relevantLabels);
-            topicsSelect.select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Select a Topic',
-                dropdownParent: $('#metadataSelectionModal'),
-                data: hierarchicalData
-            });
-        } else {
-             topicsSelect.select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Select Subject First',
-                dropdownParent: $('#metadataSelectionModal'),
-                data: []
-            });
-        }
-        topicsSelect.val(previousValue).trigger('change');
-    }
+        if (!subjectId) return;
 
-    function buildHierarchy(labels) {
-        const tree = [];
-        const map = {};
-        tree.push({ id: '', text: '' }); // Blank option for placeholder
-        labels.forEach(label => {
-            const number = label.description.split(' ')[0];
-            map[number] = { id: label.id, text: label.description };
-        });
-        labels.forEach(label => {
-            const number = label.description.split(' ')[0];
-            const parentNumber = number.substring(0, number.lastIndexOf('.'));
-            if (parentNumber && map[parentNumber]) {
-                map[parentNumber].children = map[parentNumber].children || [];
-                map[parentNumber].children.push(map[number]);
-            } else {
-                tree.push(map[number]);
+        INITIAL_DATA.labels.forEach(label => {
+            if (String(label.subject_id) === String(subjectId)) {
+                topicsSelect.add(new Option(label.description, label.id));
             }
         });
-        return tree;
     }
 
-    // --- 7. EVENT LISTENERS ---
+    // =========================================================================
+    // 7. EVENT LISTENERS
+    // =========================================================================
+
     saveRecipeBtn.addEventListener('click', handleSaveButtonClick);
     loadRecipeBtn.addEventListener('click', loadRecipeList);
     confirmLoadBtn.addEventListener('click', () => loadRecipeDetail(recipeSelectorDropdown.value));
@@ -396,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     addBlockBtn.addEventListener('click', () => {
         document.querySelectorAll('#recipeTemplateSelectionModal .template-card').forEach(c => c.classList.remove('selected'));
-        confirmTemplateBtn.disabled = false;
+        confirmTemplateBtn.disabled = true;
         recipeTemplateSelectionModal.show();
     });
 
@@ -408,15 +436,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    
     const statusModalEl = document.getElementById('statusSelectionModal');
     if (statusModalEl) {
+        statusModalEl.addEventListener('shown.bs.modal', () => {
+            statusModalEl.focus();
+        });
+
         statusModalEl.addEventListener('click', (e) => {
             const card = e.target.closest('.status-card');
-            if (card) {
-                statusModalEl.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                confirmStatusAndSaveBtn.disabled = false;
-            }
+            if (!card) return;
+
+            statusModalEl.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            confirmStatusAndSaveBtn.disabled = false;
         });
     }
 
@@ -433,26 +466,58 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmTemplateBtn.addEventListener('click', () => {
         const selected = document.querySelector('#recipeTemplateSelectionModal .template-card.selected');
         if (!selected) return;
+
         const templates = {
-            'statement': `\n<div class="recipe-block recipe-statement">\n    <h2>Recipe Title</h2>\n    <p>Provide an overview of the recipe, its purpose, or list key ingredients here. You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>\n    <p>Or display equations like this:</p>\n    $$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$\n    <ul>\n        <li>Ingredient 1</li>\n        <li>Ingredient 2</li>\n    </ul>\n</div>`,
-            'step': `\n<div class="recipe-block recipe-step">\n    <h3>1. Step Title (e.g., Preparation)</h3>\n    <p>You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>\n    <p>Or display equations like this:</p>\n    $$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$\n    <ol>\n        <li>Sub-action 1: Another example $E=mc^2$</li>\n        <li>Sub-action 2: Fraction example: $\\frac{a}{b}$</li>\n    </ol>\n</div>`
+            'statement': `
+<div class="recipe-block recipe-statement">
+    <h2>Recipe Title</h2>
+    <p>Provide an overview of the recipe, its purpose, or list key ingredients here. You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>
+    <p>Or display equations like this:</p>
+    $$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$
+    <ul>
+        <li>Ingredient 1</li>
+        <li>Ingredient 2</li>
+    </ul>
+</div>`,
+            'step': `
+<div class="recipe-block recipe-step">
+    <h3>1. Step Title (e.g., Preparation)</h3>
+    <p>You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>
+    <p>Or display equations like this:</p>
+    $$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$
+    <ol>
+        <li>Sub-action 1: Another example $E=mc^2$</li>
+        <li>Sub-action 2: Fraction example: $\\frac{a}{b}$</li>
+    </ol>
+    <p>A more complex equation:</p>
+    $$ f(x) = \\int_{-\\infty}^{\\infty} \\hat{f}(\\xi) e^{2 \\pi i \\xi x} d\\xi $$
+</div>`
         };
+
         addBlockToUI({
             order: blocksContainer.children.length,
             template_name: selected.dataset.template,
             content_html: templates[selected.dataset.template] || '<p>New block.</p>'
         });
+
         recipeTemplateSelectionModal.hide();
     });
+
     
     curriculumSelect.addEventListener('change', filterSubjects);
     languageSelect.addEventListener('change', filterSubjects);
     subjectSelect.addEventListener('change', updateTopics);
 
-    // --- 8. INITIALIZATION ---
+    // =========================================================================
+    // 8. INITIALIZATION & HELP MODAL ACTIVATION
+    // =========================================================================
+
     renderUIFromState();
+
     if (helpBtn && helpModalEl) {
         const helpModal = new bootstrap.Modal(helpModalEl);
-        helpBtn.addEventListener('click', () => helpModal.show());
+        helpBtn.addEventListener('click', () => {
+            helpModal.show();
+        });
     }
 });
