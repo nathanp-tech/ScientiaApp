@@ -1,4 +1,5 @@
 # File: central/settings.py
+# Version with debug prints to diagnose environment detection.
 
 from pathlib import Path
 import os
@@ -6,30 +7,37 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # ==============================================================================
-# DYNAMIC CONFIGURATION BASED ON ENVIRONMENT
+# DYNAMIC CONFIGURATION BASED ON ENVIRONMENT (WITH DEBUGGING)
 # ==============================================================================
+
+print("--- Debugging settings.py on server ---") # Debug message: Start of block
 
 # Check if the code is running on PythonAnywhere by looking for a specific environment variable.
 IS_PRODUCTION = 'PYTHONANYWHERE_DOMAIN' in os.environ
+print(f"Value of IS_PRODUCTION: {IS_PRODUCTION}") # Debug message: Show if the variable was found
 
 if IS_PRODUCTION:
+    print("ACTION: Running PRODUCTION settings") # Debug message: Inside the IF block
     # --- PRODUCTION SETTINGS (PythonAnywhere) ---
     DEBUG = False
     ALLOWED_HOSTS = ['davidscientia.eu.pythonanywhere.com']
     
     # In production, the SECRET_KEY MUST be read from an environment variable.
-    # You will set this in the PythonAnywhere "Web" tab.
     SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 else:
+    print("ACTION: Running LOCAL settings") # Debug message: Inside the ELSE block
     # --- LOCAL DEVELOPMENT SETTINGS ---
     DEBUG = True
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
     
     # For local development, we can use a simpler, hardcoded key.
-    # This key will NOT be used in production.
     SECRET_KEY = 'django-insecure-local-key-for-scientia-project'
+
+print(f"Final ALLOWED_HOSTS value is: {ALLOWED_HOSTS}") # Debug message: Show the final value
+print("--- End of settings.py debug ---") # Debug message: End of block
 
 # ==============================================================================
 
