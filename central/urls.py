@@ -43,6 +43,7 @@ urlpatterns = [
     path('slides/', include('slides.urls_pages')),
     path('planner/', include('planner.urls_pages')),
     path('calculator/', include(('calculator.urls', 'calculator'), namespace='calculator')),
+    path('videos/', include('videos.urls', namespace='videos')),
 
 
     # --- Core URL (Homepage) ---

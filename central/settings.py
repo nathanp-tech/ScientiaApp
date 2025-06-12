@@ -12,11 +12,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # DYNAMIC CONFIGURATION BASED ON ENVIRONMENT (WITH DEBUGGING)
 # ==============================================================================
 
-print("--- Debugging settings.py on server ---") # Debug message: Start of block
 
 # Check if the code is running on PythonAnywhere by looking for a specific environment variable.
 IS_PRODUCTION = 'PYTHONANYWHERE_DOMAIN' in os.environ
-print(f"Value of IS_PRODUCTION: {IS_PRODUCTION}") # Debug message: Show if the variable was found
 
 if IS_PRODUCTION:
     print("ACTION: Running PRODUCTION settings") # Debug message: Inside the IF block
@@ -36,8 +34,6 @@ else:
     # For local development, we can use a simpler, hardcoded key.
     SECRET_KEY = 'scientia2025'
 
-print(f"Final ALLOWED_HOSTS value is: {ALLOWED_HOSTS}") # Debug message: Show the final value
-print("--- End of settings.py debug ---") # Debug message: End of block
 
 # ==============================================================================
 
@@ -55,6 +51,7 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'slides.apps.SlidesConfig',
     'planner.apps.PlannerConfig',
+    'videos.apps.VideosConfig'
 ]
 
 MIDDLEWARE = [

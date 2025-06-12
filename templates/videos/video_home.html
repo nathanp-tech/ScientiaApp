@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Video Resources{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center">
+        <h1>Video Resources</h1>
+        <p class="lead">Select a subject to view related video resources and interactive materials.</p>
+    </div>
+
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Choose a Subject</h5>
+                    <div class="input-group">
+                        <select class="form-select" id="subject-selector">
+                            <option selected disabled>Select a subject...</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.name|lower }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subjectSelector = document.getElementById('subject-selector');
+
+    subjectSelector.addEventListener('change', function() {
+        const selectedSubject = this.value;
+
+        if (selectedSubject === 'physics') {
+            // If Physics is selected, redirect to the formulas page
+            window.location.href = "{% url 'videos:physics_formulas' %}";
+        }
+        // You can add more 'else if' conditions here for other subjects in the future
+    });
+});
+</script>
+{% endblock %}
