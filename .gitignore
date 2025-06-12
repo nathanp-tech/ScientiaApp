@@ -33,3 +33,5 @@ Thumbs.db
 # Fichier de configuration Django
 # Contient des clés secrètes et des paramètres locaux. Ne pas versionner.
 central/settings.py
+planner/migrations/0003_alter_studyplan_options_and_more.py
+slides/migrations/0005_slide_status.py
