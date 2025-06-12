@@ -21,7 +21,7 @@
 }
 
 #recipe-list-container .list-group-item-action {
-    cursor: pointer;
+    cursor: default;
     font-size: 0.9rem;
     display: flex;
     justify-content: space-between;
@@ -32,19 +32,13 @@
     font-size: 0.85rem;
 }
 
-#recipe-list-container .list-group-item-action.active {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    color: white;
-}
-
 #loading-spinner.spinner-border-sm {
     width: 1rem;
     height: 1rem;
     border-width: .2em;
 }
 
-/* NEW: Styles for the staff-only delete button */
+/* Styles for the staff-only delete button */
 .delete-recipe-btn {
     background: none;
     border: none;
@@ -54,11 +48,11 @@
     font-size: 1rem;
     line-height: 1;
     border-radius: 0.25rem;
-    margin-left: 0.5rem; /* Space between it and other elements */
+    margin-left: 0.5rem;
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
 
 .delete-recipe-btn:hover {
     color: white;
-    background-color: #dc3545; /* On hover, fill with danger color */
+    background-color: #dc3545;
 }

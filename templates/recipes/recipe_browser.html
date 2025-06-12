@@ -10,7 +10,7 @@
 {% block content %}
 <div class="container mt-4 recipe-browser-page">
 
-    {# ADD THIS LINE TO PROVIDE THE CSRF TOKEN FOR AJAX REQUESTS #}
+    {# Provides the CSRF token for secure AJAX requests #}
     {% csrf_token %}
 
     <header class="browser-header mb-4">
@@ -73,10 +73,10 @@
     </div>
 </div>
 
-{# This path assumes _modals.html is in templates/recipes/ #}
+{# Includes the delete confirmation modal #}
 {% include "recipes/_modals.html" %}
 
-{# Pass data from Django view to JavaScript #}
+{# Passes data from the Django view to JavaScript #}
 {{ initial_data|json_script:"initial-data-json" }}
 {{ api_urls|json_script:"api-urls-json" }}
 {{ user.is_staff|json_script:"user-is-staff-json" }}
