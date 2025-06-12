@@ -25,7 +25,7 @@ if IS_PRODUCTION:
     ALLOWED_HOSTS = ['davidscientia.eu.pythonanywhere.com']
     
     # In production, the SECRET_KEY MUST be read from an environment variable.
-    SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+    SECRET_KEY = '!n#n%7+3n8k=s(y@q_c^#^v)l+m+v@x!0+8b7j3a#^s)@'
 
 else:
     print("ACTION: Running LOCAL settings") # Debug message: Inside the ELSE block
@@ -34,7 +34,7 @@ else:
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
     
     # For local development, we can use a simpler, hardcoded key.
-    SECRET_KEY = 'django-insecure-local-key-for-scientia-project'
+    SECRET_KEY = 'scientia2025'
 
 print(f"Final ALLOWED_HOSTS value is: {ALLOWED_HOSTS}") # Debug message: Show the final value
 print("--- End of settings.py debug ---") # Debug message: End of block
