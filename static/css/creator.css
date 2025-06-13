@@ -18,7 +18,7 @@ html { min-height: 100%; }
     height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* <<< C'est cette ligne qui cause le problème d'alignement */
+    align-items: flex-start; /* <<< This line causes the alignment problem */
     padding: 30px;
     background: #FFFFF8;
     color: #333;
@@ -247,20 +247,30 @@ html { min-height: 100%; }
 }
 
 /* ======================================================= */
-/* ==   CORRECTION FINALE POUR CENTRER LES ÉQUATIONS    == */
+/* ==   STYLES FOR CODEMIRROR EDITABLE TEXT HIGHLIGHT   == */
 /* ======================================================= */
 /*
-  Cette règle annule l'alignement à gauche forcé par la classe .recipe-block
-  qui utilise display:flex et align-items: flex-start.
+  This targets the '.cm-editable-text' class applied by our custom
+  JavaScript overlay within the CodeMirror editor with the 'monokai' theme.
+*/
+.cm-s-monokai .cm-editable-text {
+  color: #A6E22E !important; /* A bright green, easily noticeable on the Monokai theme */
+  font-style: italic;
+  font-weight: bold;
+}
+
+/* ======================================================= */
+/* ==     FINAL CORRECTION FOR CENTERING EQUATIONS      == */
+/* ======================================================= */
+/*
+  This rule overrides the left-alignment forced by the .recipe-block class,
+  which uses `display: flex` and `align-items: flex-start`.
 */
 .recipe-block mjx-container[display="true"] {
     display: block !important;
     margin: 1em auto !important;
     align-self: center !important;
 }
-
-.cm-s-monokai .cm-editable-text {
-  color: #A6E22E !important; /* Une couleur verte, facile à voir sur le thème Monokai */
-  font-style: italic;
-  font-weight: bold;
+.recipe-block mjx-container[display="true"] table {
+    margin: 0 auto !important;
 }

@@ -135,33 +135,32 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Custom create method to implement "upsert" (update or insert) logic.
-        If a recipe with the unique metadata exists, it's updated.
-        Otherwise, a new recipe is created.
+        Custom create/update logic based on the presence of an ID in the request data.
         """
-        language_id = request.data.get('language')
-        curriculum_id = request.data.get('curriculum')
-        subject_id = request.data.get('subject')
-        topic_id = request.data.get('topic')
-        filters = {
-            'language_id': language_id,
-            'curriculum_id': curriculum_id,
-            'subject_id': subject_id,
-            'topic_id': topic_id,
-        }
+        recipe_id = request.data.get('id')
 
-        existing_recipe = Recipe.objects.filter(**filters).first()
-
-        if existing_recipe:
-            # If recipe exists, update it
-            serializer = self.get_serializer(instance=existing_recipe, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        # If an ID is provided, this is an UPDATE request.
+        if recipe_id:
+            try:
+                instance = Recipe.objects.get(pk=recipe_id)
+                # Ensure the user is the author or staff, for security
+                if instance.author != request.user and not request.user.is_staff:
+                    return Response({"detail": "You do not have permission to edit this recipe."}, status=status.HTTP_403_FORBIDDEN)
+                
+                serializer = self.get_serializer(instance=instance, data=request.data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Recipe.DoesNotExist:
+                return Response({"detail": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # If no ID is provided, this is a CREATE request.
         else:
-            # If not, create a new one
-            return super().create(request, *args, **kwargs)
-
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     def perform_create(self, serializer):
         """
         Called during a creation. Ensures the author is correctly set.

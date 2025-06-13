@@ -51,13 +51,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const blocksContainer = document.getElementById('blocks-container');
     const saveRecipeBtn = document.getElementById('save-recipe-server-btn');
-    const loadRecipeBtn = document.getElementById('load-recipe-server-btn');
+    // REMOVED: The "Load" button is no longer on this page.
+    // const loadRecipeBtn = document.getElementById('load-recipe-server-btn'); 
     const addBlockBtn = document.getElementById('add-block-floating-btn');
     const metadataBtn = document.getElementById('metadata-btn');
     const confirmTemplateBtn = document.getElementById('confirm-template-btn');
     const saveMetadataBtn = document.getElementById('save-metadata-btn');
-    const confirmLoadBtn = document.getElementById('confirm-load-btn');
-    const recipeSelectorDropdown = document.getElementById('projectSelector');
     const recipeTitleInput = document.getElementById('projectTitle');
     const curriculumSelect = document.getElementById('curriculum');
     const languageSelect = document.getElementById('language');
@@ -69,7 +68,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const recipeTemplateSelectionModal = new bootstrap.Modal(document.getElementById('recipeTemplateSelectionModal'));
     const metadataModal = new bootstrap.Modal(document.getElementById('metadataSelectionModal'));
-    const loadRecipeModal = new bootstrap.Modal(document.getElementById('loadProjectModal'));
+    // REMOVED: The "Load" modal is no longer needed.
+    // const loadRecipeModal = new bootstrap.Modal(document.getElementById('loadProjectModal'));
     const statusSelectionModal = new bootstrap.Modal(document.getElementById('statusSelectionModal'));
 
 
@@ -89,41 +89,40 @@ document.addEventListener('DOMContentLoaded', function() {
      * Initializes a CodeMirror editor instance with a robust overlay.
      * This overlay highlights plain text content AND LaTeX formulas ($...$ and $$...$$).
      * @param {string} textareaId - The ID of the textarea to replace.
-     * @param {string} internalBlockId - The client-side ID for the block.
+     *_SIDE* @param {string} internalBlockId - The client-side ID for the block.
      */
     function initializeCodeMirror(textareaId, internalBlockId) {
         const textarea = document.getElementById(textareaId);
         if (!textarea) return null;
 
+        // START: This is the new, more robust overlay logic
         const editableTextOverlay = {
             token: function(stream) {
-                // Pattern for block LaTeX: $$...$$
+                // For block math $$...$$
                 if (stream.match("$$")) {
                     stream.skipTo("$$") || stream.skipToEnd();
                     stream.match("$$");
                     return "editable-text";
                 }
-                
-                // Pattern for inline LaTeX: $...$
+                // For inline math $...$ (but not $$)
                 if (stream.match("$") && stream.peek() !== "$") {
                     stream.skipTo("$") || stream.skipToEnd();
                     stream.match("$");
                     return "editable-text";
                 }
-
-                // General text content between tags
+                // For plain text content between tags
                 if (stream.sol() || stream.string.charAt(stream.start - 1) === '>') {
-                    let contentFound = stream.eatWhile(/[^<$]/);
-                    if (contentFound) {
+                    // Eat characters until the next tag or math delimiter
+                    if (stream.eatWhile(/[^<$]/)) {
                         return "editable-text";
                     }
                 }
-
-                // Advance the stream if no patterns matched
+                // If no rule matches, advance the stream
                 stream.next();
                 return null;
             }
         };
+        // END: New overlay logic
 
         const editor = CodeMirror.fromTextArea(textarea, {
             mode: "htmlmixed",
@@ -133,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
             lineWrapping: true,
         });
 
+        // Apply the overlay to the editor instance
         editor.addOverlay(editableTextOverlay);
 
         const previewEl = document.getElementById(`preview-${internalBlockId}`);
@@ -142,11 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => {
                 const content = cm.getValue();
-                // Ensure we replace the PAIR of slashes with a single <br> tag
-                const processedContent = content.replace(/\/\//g, '<br>');
-                
-                previewEl.innerHTML = processedContent;
-                
+                previewEl.innerHTML = content;
                 if (window.MathJax) {
                     MathJax.typesetPromise([previewEl]).catch(err => console.error('MathJax error:', err));
                 }
@@ -158,6 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
+    /**
+     * Creates and adds a new block editor/preview section to the UI.
+     * NOW WITH UNDO/REDO BUTTONS.
+     * @param {object} block - The block data object.
+     */
     function addBlockToUI(block) {
         const internalBlockId = generateInternalBlockId();
         const editorId = `editor-${internalBlockId}`;
@@ -169,20 +170,33 @@ document.addEventListener('DOMContentLoaded', function() {
         blockWrapper.dataset.order = block.order;
         blockWrapper.dataset.template = block.template_name;
 
-        // The 'recipe-block' class was removed from the preview div to prevent style conflicts
+        // START: HTML for buttons has been updated here
         blockWrapper.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-secondary block-number">Block ${parseInt(block.order, 10) + 1}</span>
                 <div class="block-actions">
-                    <button class="btn btn-sm btn-outline-secondary move-block-up" title="Move Up"><i class="bi bi-arrow-up"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary move-block-down" title="Move Down"><i class="bi bi-arrow-down"></i></button>
-                    <button class="btn btn-sm btn-danger delete-block" title="Delete"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary undo-btn" title="Undo">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary redo-btn" title="Redo">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary move-block-up" title="Move Up">
+                        <i class="bi bi-arrow-up"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary move-block-down" title="Move Down">
+                        <i class="bi bi-arrow-down"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-block" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             </div>
             <div class="editor-preview-container">
                 <div class="editor-column"><textarea id="${editorId}"></textarea></div>
                 <div class="preview-column"><div id="${previewId}" class="block-preview"></div></div>
             </div>`;
+        // END: HTML for buttons has been updated here
 
         blocksContainer.appendChild(blockWrapper);
         document.getElementById(editorId).value = block.content_html;
@@ -190,12 +204,12 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCodeMirror(editorId, internalBlockId);
 
         const previewEl = document.getElementById(previewId);
-        // Set the initial preview content without processing for //, as it should be correct from the DB
-        previewEl.innerHTML = block.content_html; 
+        previewEl.innerHTML = block.content_html;
         if (window.MathJax) MathJax.typesetPromise([previewEl]);
 
         updateEmptyState();
 
+        // --- Event listeners for existing buttons ---
         blockWrapper.querySelector('.delete-block').addEventListener('click', () => {
             if (confirm("Are you sure you want to delete this block?")) {
                 blockWrapper.remove();
@@ -205,6 +219,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         blockWrapper.querySelector('.move-block-up').addEventListener('click', () => moveBlock(blockWrapper, 'up'));
         blockWrapper.querySelector('.move-block-down').addEventListener('click', () => moveBlock(blockWrapper, 'down'));
+
+        // --- START: Add event listeners for new Undo/Redo buttons ---
+        blockWrapper.querySelector('.undo-btn').addEventListener('click', () => {
+            const editor = editors[internalBlockId];
+            if (editor) {
+                editor.undo(); // CodeMirror's built-in undo function
+            }
+        });
+
+        blockWrapper.querySelector('.redo-btn').addEventListener('click', () => {
+            const editor = editors[internalBlockId];
+            if (editor) {
+                editor.redo(); // CodeMirror's built-in redo function
+            }
+        });
+        // --- END: Add event listeners for new Undo/Redo buttons ---
     }
 
     function moveBlock(blockElement, direction) {
@@ -237,6 +267,9 @@ document.addEventListener('DOMContentLoaded', function() {
         nextBlockId = 1;
 
         recipeTitleInput.value = recipeState.title || '';
+        // Update the status title based on whether we are editing or creating
+        document.getElementById('recipe-status').textContent = recipeState.id ? `Editing Recipe #${recipeState.id}` : 'New Recipe';
+
         curriculumSelect.value = recipeState.curriculum || '';
         languageSelect.value = recipeState.language || '';
         
@@ -255,12 +288,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateStateFromUI() {
+        // The ID is part of the state and should not be reset here
         recipeState.title = recipeTitleInput.value;
         recipeState.curriculum = curriculumSelect.value || null;
         recipeState.language = languageSelect.value || null;
         recipeState.subject = subjectSelect.value || null;
         recipeState.topic = topicsSelect.value || null;
-        // Status is updated via the status modal, not here.
 
         const newBlocks = [];
         blocksContainer.querySelectorAll('.block-edit-section').forEach((el) => {
@@ -283,8 +316,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
 
     async function executeSave() {
+        updateStateFromUI(); // Get latest data before sending
         const url = API_URLS.recipes;
-        const method = 'POST';
+        const method = 'POST'; // We always POST to the collection endpoint
 
         confirmStatusAndSaveBtn.disabled = true;
         confirmStatusAndSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
@@ -307,17 +341,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const savedRecipe = await response.json();
             
-            recipeState = savedRecipe; 
+            recipeState = savedRecipe; // Update state with response from server (includes ID)
             
-            renderUIFromState();
+            renderUIFromState(); // Re-render the UI with the latest state
             alert('Recipe saved successfully!');
         } catch (error) {
             console.error("Save error:", error);
-            if (error instanceof SyntaxError) {
-                 alert('A server error occurred. Check the browser console and Django server logs for details.');
-            } else {
-                 alert(`Save error: ${error.message}`);
-            }
+            alert(`Save error: ${error.message}`);
         } finally {
             confirmStatusAndSaveBtn.disabled = false;
             confirmStatusAndSaveBtn.innerHTML = 'Confirm & Save';
@@ -333,40 +363,23 @@ document.addEventListener('DOMContentLoaded', function() {
             metadataModal.show();
             return;
         }
-
         document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
         confirmStatusAndSaveBtn.disabled = true;
-
         statusSelectionModal.show();
-    }
-
-
-    async function loadRecipeList() {
-        try {
-            const response = await fetch(API_URLS.recipes);
-            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-            const recipes = await response.json();
-
-            recipeSelectorDropdown.innerHTML = '<option value="">-- Choose a recipe --</option>';
-            recipes.forEach(r => recipeSelectorDropdown.add(new Option(`${r.title} (ID: ${r.id}, Author: ${r.author_name || 'N/A'})`, r.id)));
-            loadRecipeModal.show();
-        } catch (error) {
-            console.error("Error loading recipe list:", error);
-            alert(`Could not load list: ${error.message}`);
-        }
     }
 
     async function loadRecipeDetail(recipeId) {
         if (!recipeId) return;
+        document.getElementById('recipe-status').textContent = `Loading Recipe #${recipeId}...`;
         try {
             const response = await fetch(`${API_URLS.recipes}${recipeId}/`);
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             recipeState = await response.json();
             renderUIFromState();
-            loadRecipeModal.hide();
         } catch (error) {
             console.error("Error loading recipe details:", error);
             alert(`Could not load the recipe: ${error.message}`);
+            document.getElementById('recipe-status').textContent = 'Error loading recipe.';
         }
     }
 
@@ -409,17 +422,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
 
     saveRecipeBtn.addEventListener('click', handleSaveButtonClick);
-    loadRecipeBtn.addEventListener('click', loadRecipeList);
-    confirmLoadBtn.addEventListener('click', () => loadRecipeDetail(recipeSelectorDropdown.value));
+    // REMOVED: Event listener for the old "Load" button.
 
     metadataBtn.addEventListener('click', () => metadataModal.show());
     saveMetadataBtn.addEventListener('click', () => {
         updateStateFromUI();
         metadataModal.hide();
-        const recipeStatusDiv = document.getElementById('recipe-status');
-        if (recipeStatusDiv) {
-            recipeStatusDiv.textContent = recipeState.id ? `Recipe #${recipeState.id} - ${recipeState.title}` : `New Recipe - ${recipeState.title}`;
-        }
     });
 
     addBlockBtn.addEventListener('click', () => {
@@ -435,33 +443,19 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmTemplateBtn.disabled = false;
         });
     });
-
     
     const statusModalEl = document.getElementById('statusSelectionModal');
     if (statusModalEl) {
-        statusModalEl.addEventListener('shown.bs.modal', () => {
-            statusModalEl.focus();
-        });
-
         statusModalEl.addEventListener('click', (e) => {
             const card = e.target.closest('.status-card');
             if (!card) return;
-
             statusModalEl.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             confirmStatusAndSaveBtn.disabled = false;
         });
     }
 
-    confirmStatusAndSaveBtn.addEventListener('click', () => {
-        const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
-        if (selectedStatusCard) {
-            recipeState.status = selectedStatusCard.dataset.status;
-            executeSave();
-        } else {
-            alert('Please select a status.');
-        }
-    });
+    confirmStatusAndSaveBtn.addEventListener('click', executeSave);
 
     confirmTemplateBtn.addEventListener('click', () => {
         const selected = document.querySelector('#recipeTemplateSelectionModal .template-card.selected');
@@ -483,15 +477,32 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="recipe-block recipe-step">
     <h3>1. Step Title (e.g., Preparation)</h3>
     <p>You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>
-    <p>Or display equations like this:</p>
-    $$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$
-    <ol>
-        <li>Sub-action 1: Another example $E=mc^2$</li>
-        <li>Sub-action 2: Fraction example: $\\frac{a}{b}$</li>
-    </ol>
-    <p>A more complex equation:</p>
-    $$ f(x) = \\int_{-\\infty}^{\\infty} \\hat{f}(\\xi) e^{2 \\pi i \\xi x} d\\xi $$
-</div>`
+    <p>You can also display subsequent calculations:</p>
+    $$
+    \\begin{align}
+    f'(x) = (e^x)' \\cos x + e^x (\\cos x)' \\\\
+    f'(x) = e^x \\cos x - e^x \\sin x
+    \\end{align}
+    $$
+    <p>If you want them perfectly aligned:</p>
+    $$
+    \\begin{align}
+    f'(x) &= (e^x)' \\cos x + e^x (\\cos x)' \\\\
+           &= e^x \\cos x - e^x \\sin x
+    \\end{align}
+    $$
+</div>`,
+            'aligned-math': `
+<p>Here, you can detail a multi-line calculation:</p>
+$$
+\\begin{align}
+% Write your first line of calculation here. Use & to align.
+f'(x) &= (e^x)' \\cos x + e^x (\\cos x)' \\\\
+% Use \\\\ to jump to the next line
+&= e^x \\cos x - e^x \\sin x
+\\end{align}
+$$
+`
         };
 
         addBlockToUI({
@@ -503,17 +514,33 @@ document.addEventListener('DOMContentLoaded', function() {
         recipeTemplateSelectionModal.hide();
     });
 
-    
     curriculumSelect.addEventListener('change', filterSubjects);
     languageSelect.addEventListener('change', filterSubjects);
     subjectSelect.addEventListener('change', updateTopics);
 
     // =========================================================================
-    // 8. INITIALIZATION & HELP MODAL ACTIVATION
+    // 8. INITIALIZATION
     // =========================================================================
 
-    renderUIFromState();
+    /**
+     * This function runs when the page loads.
+     * It checks if an 'id' is present in the URL.
+     * If so, it loads the corresponding recipe for editing.
+     * If not, it presents a blank slate for a new recipe.
+     */
+    function initializePage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipeIdToLoad = urlParams.get('id');
 
+        if (recipeIdToLoad) {
+            loadRecipeDetail(recipeIdToLoad);
+        } else {
+            renderUIFromState(); // Renders a blank new recipe form
+        }
+    }
+
+    initializePage(); // Execute the initialization logic
+    
     if (helpBtn && helpModalEl) {
         const helpModal = new bootstrap.Modal(helpModalEl);
         helpBtn.addEventListener('click', () => {

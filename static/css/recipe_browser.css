@@ -38,21 +38,52 @@
     border-width: .2em;
 }
 
-/* Styles for the staff-only delete button */
-.delete-recipe-btn {
+
+/* ======================================================= */
+/* ==   Styles for Admin Action Icons (Edit & Delete)   == */
+/* ======================================================= */
+
+/* Container for the admin icons to ensure proper alignment */
+.admin-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* Common style for both edit and delete icon buttons/links */
+.admin-actions .edit-recipe-btn,
+.admin-actions .delete-recipe-btn {
     background: none;
     border: none;
-    color: #dc3545; /* Bootstrap danger color */
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    font-size: 1rem;
+    padding: 0.25rem;
     line-height: 1;
     border-radius: 0.25rem;
-    margin-left: 0.5rem;
+    margin-left: 0.85rem; /* Adds space between icons and from the status badge */
+    text-decoration: none; /* Removes underline from the edit link */
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
 
-.delete-recipe-btn:hover {
+/* Specific colors */
+.admin-actions .edit-recipe-btn {
+    color: #6c757d; /* Neutral gray */
+}
+
+.admin-actions .delete-recipe-btn {
+    color: #dc3545; /* Bootstrap danger red */
+}
+
+/* Hover effects */
+.admin-actions .edit-recipe-btn:hover {
+    color: #0d6efd; /* Bootstrap primary blue */
+}
+
+.admin-actions .delete-recipe-btn:hover {
     color: white;
     background-color: #dc3545;
+}
+
+/* Icon size for both buttons */
+.admin-actions .bi {
+    font-size: 1.3rem; /* Increased icon size */
+    vertical-align: middle;
 }

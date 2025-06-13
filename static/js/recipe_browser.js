@@ -112,15 +112,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const subject = recipe.subject_name || 'N/A';
             const statusBadge = getStatusBadge(recipe.status);
 
-            // Staff-only delete button
-            const deleteButtonHTML = userIsStaff ? `
+            // Staff-only edit and delete buttons
+            const adminButtonsHTML = userIsStaff ? `
+                <a href="/recipes/create/?id=${recipe.id}" class="edit-recipe-btn" title="Edit Recipe">
+                    <i class="bi bi-pencil-fill"></i>
+                </a>
                 <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
                     <i class="bi bi-trash-fill"></i>
                 </button>
             ` : '';
             
-            // --- MODIFICATION DE LA MISE EN PAGE ICI ---
-            // Le ${deleteButtonHTML} a été déplacé pour être à côté de ${statusBadge}
             recipeElementWrapper.innerHTML = `
                 <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1 me-3">
                     <div>
@@ -131,9 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </a>
                 <div class="d-flex flex-column align-items-end">
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center admin-actions">
                         ${statusBadge}
-                        ${deleteButtonHTML}
+                        ${adminButtonsHTML}
                     </div>
                     <span class="badge bg-primary rounded-pill mt-1">View</span>
                 </div>
