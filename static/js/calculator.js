@@ -2,118 +2,70 @@
 document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM fully loaded. Initializing calculator script.");
 
-    // --- NEW FUNCTION: Injects all custom styles for dynamic content ---
     function injectDynamicStyles() {
-        // Check if styles have already been injected to avoid duplication
         if (document.getElementById('custom-dynamic-styles')) return;
         
         const style = document.createElement('style');
         style.id = 'custom-dynamic-styles';
-        // This string contains all the CSS rules we want to apply dynamically
         style.innerHTML = `
-            /* --- Spacing & Layout Styles --- */
-            
-            /* Space around the blue button container */
-            #calculator-content-display .button-container {
-                margin-top: 1rem;
-                margin-bottom: 2.5rem;
-            }
-
-            /* Space around section titles (h2) */
-            #calculator-content-display h2 {
-                margin-top: 2.5rem;
-                margin-bottom: 1.5rem;
-            }
-
-            /* Space for paragraphs to improve readability */
-            #calculator-content-display p {
-                margin-top: 1rem;
-                margin-bottom: 1.25rem;
-                line-height: 1.6; /* Improves text readability */
-            }
-
-            /* Prevents excessive margin on the very first title */
+            /* Spacing & Layout Styles */
+            #calculator-content-display .button-container { margin-top: 1rem; margin-bottom: 2.5rem; }
+            #calculator-content-display h2 { margin-top: 2.5rem; margin-bottom: 1.5rem; }
+            #calculator-content-display p { margin-top: 1rem; margin-bottom: 1.25rem; line-height: 1.6; }
             #calculator-content-display .content-container:first-of-type h2:first-of-type,
-            #calculator-content-display > h2:first-of-type {
-                margin-top: 0.5rem;
-            }
-
-            /* --- Step-by-Step List Styles --- */
-
-            /* Reset default list styles */
-            #calculator-content-display ol.list-group-numbered {
-                border: 0;
-                counter-reset: list-item;
-                padding-left: 0;
-            }
-
-            /* Style for each step item to look like a card */
-            #calculator-content-display .list-group-item {
-                display: flex;
-                align-items: flex-start;
-                margin-bottom: 1.5rem;
-                background-color: #ffffff;
-                border: 1px solid #dee2e6;
-                border-radius: 0.5rem;
-                padding: 1.5rem;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            }
-            #calculator-content-display .list-group-item:last-child {
-                margin-bottom: 0;
-            }
-
-            /* Style for the numbered circle using a pseudo-element */
-            #calculator-content-display ol.list-group-numbered > .list-group-item::before {
-                counter-increment: list-item;
-                content: counter(list-item); /* Display only the number */
-                background-color: #050263; /* Theme color */
-                color: white;
-                font-weight: bold;
-                font-size: 1.25rem;
-                border-radius: 50%; /* Perfect circle */
-                width: 45px;
-                height: 45px;
-                min-width: 45px; /* Prevent shrinking */
-                margin-right: 1.5rem; /* Space between circle and text */
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-            }
+            #calculator-content-display > h2:first-of-type { margin-top: 0.5rem; }
+            /* Step-by-Step List Styles */
+            #calculator-content-display ol.list-group-numbered { border: 0; counter-reset: list-item; padding-left: 0; }
+            #calculator-content-display .list-group-item { display: flex; align-items: flex-start; margin-bottom: 1.5rem; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+            #calculator-content-display .list-group-item:last-child { margin-bottom: 0; }
+            #calculator-content-display ol.list-group-numbered > .list-group-item::before { counter-increment: list-item; content: counter(list-item); background-color: #050263; color: white; font-weight: bold; font-size: 1.25rem; border-radius: 50%; width: 45px; height: 45px; min-width: 45px; margin-right: 1.5rem; display: inline-flex; align-items: center; justify-content: center; }
+            /* Wrapper for step content to ensure proper flex alignment */
+            #calculator-content-display .list-group-item > div { flex: 1; }
         `;
         document.head.appendChild(style);
     }
 
-    // --- NEW FUNCTION: Handles clicks on internal anchor links ---
+    // --- NEW FUNCTION: Wraps step content in a div for proper alignment ---
+    function structureStepContent(container) {
+        if (!container) return;
+        const listItems = container.querySelectorAll('ol.list-group-numbered .list-group-item');
+
+        listItems.forEach(item => {
+            // Check if this has been done already to prevent errors
+            if (item.dataset.structured) return;
+
+            const contentWrapper = document.createElement('div');
+            // Move all existing children of the list item into the new wrapper
+            while (item.firstChild) {
+                contentWrapper.appendChild(item.firstChild);
+            }
+            // Append the new wrapper back to the list item
+            item.appendChild(contentWrapper);
+            // Mark as done
+            item.dataset.structured = 'true';
+        });
+    }
+
     function attachAnchorLinkListeners(container) {
         if (!container) return;
-        // Target <a> links inside .button-container that have an href starting with #
         const anchorLinks = container.querySelectorAll('.button-container a[href^="#"]');
         
         anchorLinks.forEach(link => {
-            // Prevent attaching the same listener multiple times
             if (link.dataset.anchorListenerAttached) return;
-
             link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent the default link behavior
+                event.preventDefault();
                 const targetId = this.getAttribute('href');
                 try {
                     const targetElement = document.querySelector(targetId);
                     if (targetElement) {
-                        // Smoothly scroll the view to the target element
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start' 
-                        });
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
-                } catch(e) {
-                    console.error("Invalid selector for anchor link: ", targetId, e);
-                }
+                } catch(e) { console.error("Invalid selector for anchor link: ", targetId, e); }
             });
             link.dataset.anchorListenerAttached = 'true';
         });
     }
 
-    // --- Core script logic begins here ---
     const dataContainer = document.getElementById('calculator-data-container');
     const contentDisplay = document.getElementById('calculator-content-display');
     const pageSubtitle = document.getElementById('calculator-page-subtitle');
@@ -173,8 +125,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function typesetMath(element) {
         if (!element || !element.innerHTML.trim()) return;
-        if (mathJaxIsReady && window.MathJax) {
+        if (mathJaxIsReady && window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+            if (typeof window.MathJax.typesetClear === 'function') {
+                window.MathJax.typesetClear([element]);
+            }
             window.MathJax.typesetPromise([element]).catch((err) => console.error('MathJax typesetting error:', err));
+        } else if (!mathJaxIsReady) {
+            console.warn("MathJax not ready yet for typesetting. It will run when the library is loaded.");
         }
     }
     
@@ -188,13 +145,13 @@ document.addEventListener('DOMContentLoaded', function () {
             
             contentDisplay.innerHTML = processedContent;
             contentDisplay.dataset.mathjaxProcessed = 'false'; 
-
-            if (pageSubtitle) pageSubtitle.innerHTML = `Currently viewing: <strong>${currentPageTitleForSubtitle || initialFilename}</strong>`;
-            document.title = `${currentPageTitleForSubtitle || initialFilename} - ${basePageTitle}`;
             
-            // Attach listeners for internal anchor links
+            // --- Call helper functions AFTER content is loaded ---
+            structureStepContent(contentDisplay);
             attachAnchorLinkListeners(contentDisplay);
             
+            if (pageSubtitle) pageSubtitle.innerHTML = `Currently viewing: <strong>${currentPageTitleForSubtitle || initialFilename}</strong>`;
+            document.title = `${currentPageTitleForSubtitle || initialFilename} - ${basePageTitle}`;
             if (mathJaxIsReady) {
                 typesetMath(contentDisplay);
                 contentDisplay.dataset.mathjaxProcessed = 'true';
@@ -221,16 +178,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 contentDisplay.innerHTML = cleanedContent;
                 contentDisplay.dataset.mathjaxProcessed = 'false';
                 
+                // --- Call helper functions AFTER content is loaded ---
+                structureStepContent(contentDisplay);
+                attachAnchorLinkListeners(contentDisplay);
+
                 const effectiveTitle = data.title || newPageTitleFromLink;
                 if (pageSubtitle) pageSubtitle.innerHTML = `Currently viewing: <strong>${effectiveTitle}</strong>`;
                 
                 const newUrl = interactiveIndexWithFileBaseUrl.replace('PLACEHOLDER_FILENAME', filename);
                 history.pushState({ filename: filename, title: effectiveTitle }, `${effectiveTitle} - ${basePageTitle}`, newUrl);
                 document.title = `${effectiveTitle} - ${basePageTitle}`;
-
-                // Attach listeners for internal anchor links
-                attachAnchorLinkListeners(contentDisplay);
-                
                 typesetMath(contentDisplay); 
                 contentDisplay.dataset.mathjaxProcessed = 'true';
 
@@ -260,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- Initialization Sequence ---
-    injectDynamicStyles(); // Inject all custom CSS rules once at the beginning
+    injectDynamicStyles();
     attachNavEventListeners();
     handleInitialContentDisplay();
 
