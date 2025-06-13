@@ -162,6 +162,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             # If not, create a new one
             return super().create(request, *args, **kwargs)
 
+    def perform_create(self, serializer):
+        """
+        Called during a creation. Ensures the author is correctly set.
+        """
+        serializer.save(author=self.request.user)
+
     def perform_update(self, serializer):
         """
         Called during an update. Ensures the author is correctly set.
