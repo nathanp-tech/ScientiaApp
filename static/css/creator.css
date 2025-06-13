@@ -274,3 +274,8 @@ html { min-height: 100%; }
 .recipe-block mjx-container[display="true"] table {
     margin: 0 auto !important;
 }
+
+.recipe-block .text-center {
+    text-align: center; /* Overrides 'text-align: left' */
+    width: 100%;        /* Ensures the element spans the full width, making centering visible */
+}

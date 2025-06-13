@@ -477,6 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="recipe-block recipe-step">
     <h3>1. Step Title (e.g., Preparation)</h3>
     <p>You can include inline LaTeX like this: $x^2 + y^2 = z^2$.</p>
+    <p class="text-center"> You can center text like this </p>
     <p>You can also display subsequent calculations:</p>
     $$
     \\begin{align}
