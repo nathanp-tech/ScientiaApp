@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Calculator Manuals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        padding: 4rem 2rem;
+        background-color: #f8f9fa;
+        border-radius: .3rem;
+        text-align: center;
+    }
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+    .card-link .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 20px rgba(0,0,0,.15);
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="hero-section mb-5">
+        <h1 class="display-4">Welcome to the Calculator Manual App</h1>
+        <p class="lead">Your comprehensive guide to using TI graphing calculators. Please select your calculator model below to get started.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <a href="{% url 'calculator:ti_nspire_index' %}" class="card-link">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <h2 class="card-title">TI-Nspire CX</h2>
+                        <p class="card-text">Access the interactive manual for the TI-Nspire CX series.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 mb-4">
+            <a href="#" class="card-link" aria-disabled="true">
+                <div class="card h-100 text-center bg-light">
+                    <div class="card-body">
+                        <h2 class="card-title">TI-84 Plus CE</h2>
+                        <p class="card-text text-muted">(Coming Soon)</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

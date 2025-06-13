@@ -6,14 +6,18 @@ from . import views
 app_name = 'calculator'
 
 urlpatterns = [
-    # Page principale du manuel, peut afficher un fichier par défaut ou une intro
-    path('', views.calculator_interactive_view, name='interactive_index'),
+    # Main homepage for the calculator section
+    path('', views.calculator_homepage_view, name='homepage'),
+
+    # TI-Nspire Manual Pages
+    # Base URL for the interactive index
+    path('ti-nspire/', views.ti_nspire_manual_view, name='ti_nspire_index'),
     
-    # URL pour charger une page spécifique directement au chargement initial de l'index
-    # Ex: /calculator/amortization.html
-    path('<str:filename>/', views.calculator_interactive_view, name='interactive_index_with_file'),
+    # URL for loading a specific page initially
+    # e.g., /calculator/ti-nspire/amortization.html
+    path('ti-nspire/<str:filename>/', views.ti_nspire_manual_view, name='ti_nspire_index_with_file'),
     
-    # API endpoint pour récupérer le contenu d'une page HTML via JavaScript
-    # Ex: /calculator/api/get-page/amortization.html/
-    path('api/get-page/<str:filename>/', views.get_calculator_page_content_api, name='api_get_page_content'),
+    # API endpoint to get page content via JavaScript
+    # e.g., /calculator/api/ti-nspire/get-page/amortization.html/
+    path('api/ti-nspire/get-page/<str:filename>/', views.get_calculator_page_content_api, name='api_get_ti_nspire_page_content'),
 ]

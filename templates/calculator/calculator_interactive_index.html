@@ -16,17 +16,17 @@
         </p>
     </header>
 
-    {# Calculator section navigation bar (HTML structure remains the same) #}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
-      <div class="container">
+    {# Calculator section navigation bar #}
+    <nav class="navbar navbar-expand-lg navbar-dark calculator-sub-nav mb-4">
+      <div class="container-fluid">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#calculatorSubNav" aria-controls="calculatorSubNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="calculatorSubNav">
-          <ul class="navbar-nav w-90 justify-content-evenly">
+          <ul class="navbar-nav w-100 justify-content-evenly">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle fw-bold text-center" href="#" id="dropdownAISL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AI SL</a>
-              <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="dropdownAISL">
+              <a class="nav-link dropdown-toggle" href="#" id="dropdownAISL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AI SL</a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownAISL">
                 <li class="dropdown-header">1 Number and Algebra</li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="scientific_notation.html">1.1 Scientific notation and rounding</a></li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="arithmetic_sequences.html">1.2 Arithmetic sequences and series</a></li>
@@ -56,8 +56,8 @@
               </ul>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle fw-bold text-center" href="#" id="dropdownAIHL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AI HL</a>
-              <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="dropdownAIHL">
+              <a class="nav-link dropdown-toggle" href="#" id="dropdownAIHL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AI HL</a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownAIHL">
                 <li class="dropdown-header">1 Number and Algebra</li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="scientific_notation.html">1.1 Scientific notation and rounding</a></li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="arithmetic_sequences.html">1.2 Arithmetic sequences and series</a></li>
@@ -98,8 +98,8 @@
               </ul>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle fw-bold text-center" href="#" id="dropdownAASL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AA SL</a>
-              <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="dropdownAASL">
+              <a class="nav-link dropdown-toggle" href="#" id="dropdownAASL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AA SL</a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownAASL">
                 <li class="dropdown-header">1 Number and Algebra</li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="scientific_notation.html">1.1 Scientific notation and rounding</a></li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="arithmetic_sequences.html">1.2 Arithmetic sequences and series</a></li>
@@ -136,8 +136,8 @@
               </ul>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle fw-bold text-center" href="#" id="dropdownAAHL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AA HL</a>
-              <ul class="dropdown-menu scrollable-dropdown" aria-labelledby="dropdownAAHL">
+              <a class="nav-link dropdown-toggle" href="#" id="dropdownAAHL" role="button" data-bs-toggle="dropdown" aria-expanded="false">AA HL</a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownAAHL">
                 <li class="dropdown-header">1 Number and Algebra</li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="scientific_notation.html">1.1 Scientific notation and rounding</a></li>
                 <li><a class="dropdown-item calculator-nav-link" href="#" data-filename="arithmetic_sequences.html">1.2 Arithmetic sequences and series</a></li>
@@ -192,10 +192,10 @@
          data-current-page-title-for-subtitle="{{ current_page_title_for_subtitle|escapejs }}"
          data-page-title="{{ page_title|escapejs }}"
          data-static-url="{% get_static_prefix %}"
-         data-calculator-image-base-path="img/calculator_pics/" {# NOUVEAU CHEMIN: relatif à STATIC_URL #}
-         data-api-base-url="{% url 'calculator:api_get_page_content' filename="PLACEHOLDER_FILENAME" %}"
-         data-interactive-index-base-url="{% url 'calculator:interactive_index' %}"
-         data-interactive-index-with-file-base-url="{% url 'calculator:interactive_index_with_file' filename="PLACEHOLDER_FILENAME" %}"
+         data-calculator-image-base-path="img/calculator_pics/"
+         data-api-base-url="{% url 'calculator:api_get_ti_nspire_page_content' filename="PLACEHOLDER_FILENAME" %}"
+         data-interactive-index-base-url="{% url 'calculator:ti_nspire_index' %}"
+         data-interactive-index-with-file-base-url="{% url 'calculator:ti_nspire_index_with_file' filename="PLACEHOLDER_FILENAME" %}"
          style="display: none;">
     </div>
 
@@ -205,8 +205,11 @@
     </template>
 
     <div id="calculator-content-display" class="calculator-content-wrapper mt-3">
-        {# JavaScript will populate this or display the placeholder #}
-        <p id="initial-placeholder" class="text-center text-muted p-5">Select a topic from the menu above to display its content.</p>
+        {# UPDATED: This is the new placeholder text that shows on first load #}
+        <div id="initial-placeholder" class="text-center text-muted p-5">
+            <h2>Welcome to the TI-Nspire CX Manual</h2>
+            <p>Please select a topic from the navigation menus above to display its content.</p>
+        </div>
     </div>
 
     <div id="loading-indicator" class="text-center my-3" style="display: none;">
@@ -218,7 +221,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{# MathJax Configuration BEFORE loading MathJax script #}
+{# MathJax Configuration #}
 <script>
   window.MathJax = {
     tex: {
@@ -230,12 +233,10 @@
     svg: {
       fontCache: 'global'
     },
-    options: {},
     startup: {
       ready: () => {
         console.log('MathJax global configuration is ready.');
         MathJax.startup.defaultReady();
-        // Dispatch a custom event to signal that MathJax is ready for calculator.js
         document.dispatchEvent(new CustomEvent('mathJaxReadyForCalculator'));
       }
     }
@@ -244,5 +245,5 @@
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 {# Load custom JavaScript file #}
-<script src="{% static 'js/calculator.js' %}" defer></script>
+<script src="{% static 'js/calculator.js' %}"></script>
 {% endblock %}
