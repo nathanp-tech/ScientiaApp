@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let debounceTimeout;
 
-    // --- 2. Dependent Filter Logic (No changes here) ---
+    // --- 2. Dependent Filter Logic ---
 
     function updateSubjectOptions() {
         const curriculumId = curriculumSelect.value;
@@ -108,42 +108,49 @@ document.addEventListener('DOMContentLoaded', function() {
             recipeElementWrapper.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
             recipeElementWrapper.setAttribute('data-recipe-id', recipe.id);
 
-            const author = recipe.author_name || 'N/A';
             const subject = recipe.subject_name || 'N/A';
-            const statusBadge = getStatusBadge(recipe.status);
-
-            // Staff-only edit and delete buttons
-            const adminButtonsHTML = userIsStaff ? `
-                <a href="/recipes/create/?id=${recipe.id}" class="edit-recipe-btn" title="Edit Recipe">
-                    <i class="bi bi-pencil-fill"></i>
-                </a>
-                <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-            ` : '';
             
+            // Conditionally build the HTML for details and status/admin buttons
+            let detailsHTML = `<div class="text-muted small mt-1">Subject: ${subject}</div>`;
+            let statusAndAdminHTML = ''; // This will remain empty for non-staff users
+
+            if (userIsStaff) {
+                const author = recipe.author_name || 'N/A';
+                detailsHTML = `<div class="text-muted small mt-1">Subject: ${subject} | Author: ${author}</div>`;
+
+                const statusBadge = getStatusBadge(recipe.status);
+                // For staff, we build the HTML with the status badge and admin buttons
+                statusAndAdminHTML = `
+                    ${statusBadge}
+                    <a href="/recipes/create/?id=${recipe.id}" class="edit-recipe-btn" title="Edit Recipe">
+                        <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                `;
+            }
+
             recipeElementWrapper.innerHTML = `
                 <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1 me-3">
                     <div>
                         <strong>${recipe.title}</strong>
-                        <div class="text-muted small mt-1">
-                            Subject: ${subject} | Author: ${author}
-                        </div>
+                        ${detailsHTML}
                     </div>
                 </a>
                 <div class="d-flex flex-column align-items-end">
                     <div class="d-flex align-items-center admin-actions">
-                        ${statusBadge}
-                        ${adminButtonsHTML}
+                        ${statusAndAdminHTML}
                     </div>
                     <span class="badge bg-primary rounded-pill mt-1">View</span>
                 </div>
             `;
+
             recipeListContainer.appendChild(recipeElementWrapper);
         });
     }
     
-    // --- 4. Deletion Logic (No changes here) ---
+    // --- 4. Deletion Logic ---
 
     async function handleDeleteRecipe() {
         if (!recipeIdToDelete) return;
@@ -176,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- 5. Add Event Listeners (No changes here) ---
+    // --- 5. Add Event Listeners ---
 
     [curriculumSelect, languageSelect, subjectSelect, topicSelect].forEach(select => {
         select.addEventListener('change', () => {
@@ -200,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmDeleteBtn.addEventListener('click', handleDeleteRecipe);
 
 
-    // --- 6. Initialization (No changes here) ---
+    // --- 6. Initialization ---
     updateSubjectOptions();
     fetchAndDisplayRecipes();
 });
