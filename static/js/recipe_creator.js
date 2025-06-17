@@ -316,9 +316,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
 
     async function executeSave() {
-        updateStateFromUI(); // Get latest data before sending
+        const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
+        if (selectedStatusCard) {
+            recipeState.status = selectedStatusCard.dataset.status;
+        } else {
+            alert('Please select a status before saving.');
+            return;
+        }
+
+        updateStateFromUI(); 
+        
         const url = API_URLS.recipes;
-        const method = 'POST'; // We always POST to the collection endpoint
+        const method = 'POST';
 
         confirmStatusAndSaveBtn.disabled = true;
         confirmStatusAndSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
@@ -341,9 +350,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const savedRecipe = await response.json();
             
-            recipeState = savedRecipe; // Update state with response from server (includes ID)
+            recipeState = savedRecipe; 
             
-            renderUIFromState(); // Re-render the UI with the latest state
+            renderUIFromState(); 
             alert('Recipe saved successfully!');
         } catch (error) {
             console.error("Save error:", error);
@@ -422,7 +431,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
 
     saveRecipeBtn.addEventListener('click', handleSaveButtonClick);
-    // REMOVED: Event listener for the old "Load" button.
 
     metadataBtn.addEventListener('click', () => metadataModal.show());
     saveMetadataBtn.addEventListener('click', () => {
