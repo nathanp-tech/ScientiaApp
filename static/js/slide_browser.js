@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let debounceTimeout;
 
-    // --- 2. Dependent Filter Logic (No changes here) ---
+    // --- 2. Dependent Filter Logic ---
 
     function updateSubjectOptions() {
         const curriculumId = curriculumSelect.value;
@@ -106,52 +106,60 @@ document.addEventListener('DOMContentLoaded', function() {
         recipes.forEach(recipe => {
             const recipeElementWrapper = document.createElement('div');
             recipeElementWrapper.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-            recipeElementWrapper.setAttribute('data-recipe-id', recipe.id); // Add ID for easier removal
+            recipeElementWrapper.setAttribute('data-recipe-id', recipe.id);
 
-            const author = recipe.author_name || 'N/A';
             const subject = recipe.subject_name || 'N/A';
-            const statusBadge = getStatusBadge(recipe.status);
-
-            // Staff-only delete button
-            const deleteButtonHTML = userIsStaff ? `
-                <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-            ` : '';
             
+            // --- MODIFICATION START ---
+            // Conditionally build the HTML for details and status/admin buttons
+            
+            let detailsHTML = `<div class="text-muted small mt-1">Subject: ${subject}</div>`;
+            let statusAndAdminHTML = '';
+
+            if (userIsStaff) {
+                const author = recipe.author_name || 'N/A';
+                detailsHTML = `<div class="text-muted small mt-1">Subject: ${subject} | Author: ${author}</div>`;
+
+                const statusBadge = getStatusBadge(recipe.status);
+                statusAndAdminHTML = `
+                    ${statusBadge}
+                    <a href="/recipes/create/?id=${recipe.id}" class="edit-recipe-btn" title="Edit Recipe">
+                        <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    <button class="delete-recipe-btn" data-recipe-id="${recipe.id}" title="Delete Recipe">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                `;
+            }
+
             recipeElementWrapper.innerHTML = `
-                <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1">
+                <a href="/recipes/${recipe.id}/" class="text-decoration-none text-dark flex-grow-1 me-3">
                     <div>
                         <strong>${recipe.title}</strong>
-                        <div class="text-muted small mt-1">
-                            Subject: ${subject} | Author: ${author}
-                        </div>
+                        ${detailsHTML}
                     </div>
                 </a>
-                <div class="d-flex align-items-center">
-                    <div class="d-flex flex-column align-items-end me-3">
-                        ${statusBadge}
-                        <span class="badge bg-primary rounded-pill mt-1">View</span>
+                <div class="d-flex flex-column align-items-end">
+                    <div class="d-flex align-items-center admin-actions">
+                        ${statusAndAdminHTML}
                     </div>
-                    ${deleteButtonHTML}
+                    <span class="badge bg-primary rounded-pill mt-1">View</span>
                 </div>
             `;
+            // --- MODIFICATION END ---
+
             recipeListContainer.appendChild(recipeElementWrapper);
         });
     }
     
     // --- 4. Deletion Logic ---
 
-    // Function to handle the actual deletion via API
     async function handleDeleteRecipe() {
         if (!recipeIdToDelete) return;
 
-        // Note: You need a way to get the CSRF token for POST/DELETE requests in Django
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
         try {
-            // Assumes your API URL for deletion is like /api/recipes/<id>/delete/
-            // Ensure this URL is provided in `api_urls` from your Django view.
             const response = await fetch(`${apiUrls.recipe_delete.replace('0', recipeIdToDelete)}`, {
                 method: 'DELETE',
                 headers: {
@@ -161,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
-                // Remove the recipe from the list on success
                 const elementToRemove = recipeListContainer.querySelector(`[data-recipe-id='${recipeIdToDelete}']`);
                 if (elementToRemove) {
                     elementToRemove.remove();
@@ -171,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Deletion error:', error);
-            alert(error.message); // Simple error feedback
+            alert(error.message);
         } finally {
             deleteModal.hide();
             recipeIdToDelete = null;
@@ -189,11 +196,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Event delegation for delete buttons
     recipeListContainer.addEventListener('click', function(event) {
         const deleteButton = event.target.closest('.delete-recipe-btn');
         if (deleteButton) {
-            event.preventDefault(); // Stop navigation if the parent is a link
+            event.preventDefault();
             event.stopPropagation();
             recipeIdToDelete = deleteButton.dataset.recipeId;
             deleteModal.show();

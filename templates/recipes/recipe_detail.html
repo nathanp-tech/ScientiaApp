@@ -23,11 +23,15 @@
             {% endif %}
         </div>
         <p class="recipe-meta text-muted">
+            {# --- MODIFICATION START --- #}
+            {% if user.is_staff %}
             <strong>Author:</strong> {{ recipe.author.username|default:"N/A" }} | 
+            {% endif %}
             <strong>Subject:</strong> {{ recipe.subject.name|default:"N/A" }} 
             {% if recipe.topic %}| <strong>Topic:</strong> {{ recipe.topic.name|default:recipe.topic.description|default:"N/A" }}{% endif %} {# Attempt topic.name, fallback to description #}
             <br>
-            <strong>Curriculum:</strong> {{ recipe.curriculum.name|default:"N/A" }} |
+            {# --- MODIFICATION END --- #}
+            <strong>Curriculum:</strong> {{ recipe.curriculum.name|default:"N/a" }} |
             <strong>Language:</strong> {{ recipe.language.name|default:"N/A" }}
             <br>
             <strong>Last Updated:</strong> {{ recipe.updated_at|date:"F j, Y, P" }}
