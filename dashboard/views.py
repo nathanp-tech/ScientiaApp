@@ -50,16 +50,16 @@ class ChartDataAPIView(APIView):
                 base_name = re.split(r'\s+(HL|SL)$', name, 1)[0].strip()
                 processed_subjects[base_name] = 0
 
-            # Step 2: Now, apply the status filter to the queryset that will be used for counting.
-            filtered_queryset = base_queryset
+            # Step 2: Create a separate queryset for counting, applying the status filter.
+            counting_queryset = base_queryset
             if status and status.upper() != 'ALL':
-                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+                # CORRECTED: This list now includes PENDING instead of PENDING_REVIEW
+                valid_statuses = ['IN_PROGRESS', 'PENDING', 'COMPLETED']
                 if status.upper() in valid_statuses:
-                    # This was the error. We need to filter the base_queryset, not assign it.
-                    filtered_queryset = base_queryset.filter(status=status.upper())
+                    counting_queryset = base_queryset.filter(status=status.upper())
             
             # Step 3: Aggregate counts using the filtered queryset.
-            aggregation = filtered_queryset.values('subject__name').annotate(count=Count('id'))
+            aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
             
             for item in aggregation:
                 full_name = item['subject__name']
@@ -82,13 +82,14 @@ class ChartDataAPIView(APIView):
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
 
             # Apply status filter here as well for topic counts
+            counting_queryset = base_queryset
             if status and status.upper() != 'ALL':
-                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+                valid_statuses = ['IN_PROGRESS', 'PENDING', 'COMPLETED']
                 if status.upper() in valid_statuses:
-                    base_queryset = base_queryset.filter(status=status.upper())
+                    counting_queryset = base_queryset.filter(status=status.upper())
 
             all_labels = Label.objects.filter(subject__name__startswith=subject_name).select_related('parent')
-            content_counts_qs = base_queryset.filter(subject__name__startswith=subject_name)\
+            content_counts_qs = counting_queryset.filter(subject__name__startswith=subject_name)\
                                               .values('topic_id')\
                                               .annotate(count=Count('id'))
             content_counts = {item['topic_id']: item['count'] for item in content_counts_qs}

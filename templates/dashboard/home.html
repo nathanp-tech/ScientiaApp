@@ -20,18 +20,19 @@
                 <!-- Group of filters on the right -->
                 <div class="d-flex align-items-center">
                     
-                    <!-- New Status Filter Dropdown -->
+                    <!-- Status Filter Dropdown -->
                     <div class="me-3">
                         <label for="status-filter" class="form-label form-label-sm mb-0 me-1 fw-bold">Status:</label>
                         <select class="form-select form-select-sm" id="status-filter" style="width: auto; display: inline-block;">
                             <option value="ALL" selected>All</option>
                             <option value="IN_PROGRESS">In Progress</option>
-                            <option value="PENDING_REVIEW">Pending Review</option>
+                            <!-- CORRECTED VALUE: Changed from PENDING_REVIEW to PENDING -->
+                            <option value="PENDING">Pending Review</option>
                             <option value="COMPLETED">Completed</option>
                         </select>
                     </div>
 
-                    <!-- Existing Button Group -->
+                    <!-- Model Selection Button Group -->
                     <div class="btn-group" role="group" aria-label="Data model selection">
                         <button id="show-recipes-btn" type="button" class="btn btn-primary btn-sm">Recipes</button>
                         <button id="show-slides-btn" type="button" class="btn btn-outline-primary btn-sm">Slideshows</button>
