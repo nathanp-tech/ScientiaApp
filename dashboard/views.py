@@ -53,10 +53,11 @@ class ChartDataAPIView(APIView):
             # Step 2: Create a separate queryset for counting, applying the status filter.
             counting_queryset = base_queryset
             if status and status.upper() != 'ALL':
-                # CORRECTED: This list now includes PENDING instead of PENDING_REVIEW
-                valid_statuses = ['IN_PROGRESS', 'PENDING', 'COMPLETED']
-                if status.upper() in valid_statuses:
-                    counting_queryset = base_queryset.filter(status=status.upper())
+                # CORRECTED: This list now matches the values in your recipes/models.py
+                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+                # Use exact status value, not upper, as model uses lowercase with underscores
+                if status in valid_statuses:
+                    counting_queryset = base_queryset.filter(status=status)
             
             # Step 3: Aggregate counts using the filtered queryset.
             aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
@@ -84,9 +85,9 @@ class ChartDataAPIView(APIView):
             # Apply status filter here as well for topic counts
             counting_queryset = base_queryset
             if status and status.upper() != 'ALL':
-                valid_statuses = ['IN_PROGRESS', 'PENDING', 'COMPLETED']
-                if status.upper() in valid_statuses:
-                    counting_queryset = base_queryset.filter(status=status.upper())
+                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+                if status in valid_statuses:
+                    counting_queryset = base_queryset.filter(status=status)
 
             all_labels = Label.objects.filter(subject__name__startswith=subject_name).select_related('parent')
             content_counts_qs = counting_queryset.filter(subject__name__startswith=subject_name)\
