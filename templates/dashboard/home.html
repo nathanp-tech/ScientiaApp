@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <header class="mb-4 border-bottom pb-3">
+        <h1 class="display-5">Statistics Dashboard</h1>
+        <p class="text-muted">Interactive charts for Recipes and Slideshows.</p>
+    </header>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <div id="chart-breadcrumbs" class="text-muted small"></div>
+                <div class="btn-group" role="group" aria-label="Data model selection">
+                    <button id="show-recipes-btn" type="button" class="btn btn-primary btn-sm active">Recipes</button>
+                    <button id="show-slides-btn" type="button" class="btn btn-outline-primary btn-sm">Slideshows</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="chart-container" style="position: relative; height:65vh;">
+                 <canvas id="statsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

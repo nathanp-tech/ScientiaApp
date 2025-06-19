@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'slides.apps.SlidesConfig',
     'planner.apps.PlannerConfig',
-    'videos.apps.VideosConfig'
+    'videos.apps.VideosConfig',
+    'dashboard.apps.DashboardConfig',
 ]
 
 MIDDLEWARE = [

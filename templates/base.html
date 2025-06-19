@@ -5,18 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Scientia App{% endblock %}</title>
-
-    {# --- Stylesheets --- #}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
-    
-    {# NEW: Select2 CSS and Bootstrap 5 theme #}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/print_styles.css' %}" media="print">
-
     <script>
         MathJax = {
           tex: {
@@ -28,14 +22,10 @@
           }
         };
     </script>
-    <script type="text/javascript" id="MathJax-script" async
-        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
-    
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-
     <nav id="page-navbar" class="navbar navbar-expand-lg navbar-dark bg-primary navbar-perso shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
@@ -45,25 +35,13 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'recipes:browser' %}">Recipe Browser</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'slides:browser' %}">Slide Browser</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'calculator:homepage' %}">Calculator Manual</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'videos:video_home' %}">Videos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'planner:main' %}">Student Planner</a>
-                        </li>
-                        
+                        <li class="nav-item"><a class="nav-link" href="{% url 'recipes:browser' %}">Recipe Browser</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'slides:browser' %}">Slide Browser</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'calculator:homepage' %}">Calculator Manual</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'videos:video_home' %}">Videos</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'planner:main' %}">Student Planner</a></li>
                         {% if user.is_staff %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="adminToolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -72,6 +50,8 @@
                             <ul class="dropdown-menu" aria-labelledby="adminToolsDropdown">
                                 <li><a class="dropdown-item" href="{% url 'recipes:creator' %}">Recipe Creator</a></li>
                                 <li><a class="dropdown-item" href="{% url 'slides:creator' %}">Slide Creator</a></li>
+                                <!-- ADD THE NEW LINK HERE -->
+                                <li><a class="dropdown-item" href="{% url 'dashboard:home' %}">Dashboard</a></li> 
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}">Django Admin</a></li>
                             </ul>
@@ -79,7 +59,6 @@
                         {% endif %}
                     {% endif %}
                 </ul>
-
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
@@ -99,25 +78,17 @@
             </div>
         </div>
     </nav>
-
     <main class="container my-4">
         {% block content %}{% endblock %}
     </main>
-
     <footer id="site-footer" class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
-            <span class="text-muted">© {% now "Y" %} Scientia App. All rights reserved.</span>
+            <span class="text-muted">&copy; {% now "Y" %} Scientia App. All rights reserved.</span>
         </div>
     </footer>
-
-    {# --- Scripts --- #}
-    {# NEW: jQuery is required by Select2 #}
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    {# NEW: Select2 JavaScript #}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
