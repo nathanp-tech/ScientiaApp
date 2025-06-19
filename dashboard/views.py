@@ -41,22 +41,24 @@ class ChartDataAPIView(APIView):
         else:
             return Response({"error": "Invalid model type specified."}, status=400)
 
-        # Apply status filter if provided and not 'ALL'
-        if status and status.upper() != 'ALL':
-            # Updated to match status values from screenshots
-            valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
-            if status.upper() in valid_statuses:
-                base_queryset = base_queryset.filter(status=status.upper())
-
         # --- Subject Grouping Logic ---
         if group_by == 'subject':
+            # Step 1: Get all possible subjects first, before any filtering.
             all_subject_names = Subject.objects.values_list('name', flat=True).distinct()
             processed_subjects = {}
             for name in all_subject_names:
                 base_name = re.split(r'\s+(HL|SL)$', name, 1)[0].strip()
                 processed_subjects[base_name] = 0
 
-            aggregation = base_queryset.values('subject__name').annotate(count=Count('id'))
+            # Step 2: Now, apply the status filter to the queryset that will be used for counting.
+            filtered_queryset = base_queryset
+            if status and status.upper() != 'ALL':
+                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+                if status.upper() in valid_statuses:
+                    filtered_queryset = base_queryset.filter(status=status.upper())
+            
+            # Step 3: Aggregate counts using the filtered queryset.
+            aggregation = filtered_queryset.values('subject__name').annotate(count=Count('id'))
             
             for item in aggregation:
                 full_name = item['subject__name']
@@ -78,14 +80,18 @@ class ChartDataAPIView(APIView):
             if not subject_name:
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
 
-            # Step 1: Fetch all data in bulk
+            # Apply status filter here as well for topic counts
+            if status and status.upper() != 'ALL':
+                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+                if status.upper() in valid_statuses:
+                    base_queryset = base_queryset.filter(status=status.upper())
+
             all_labels = Label.objects.filter(subject__name__startswith=subject_name).select_related('parent')
             content_counts_qs = base_queryset.filter(subject__name__startswith=subject_name)\
                                               .values('topic_id')\
                                               .annotate(count=Count('id'))
             content_counts = {item['topic_id']: item['count'] for item in content_counts_qs}
 
-            # Step 2: Process data in Python
             labels_by_id = {label.id: label for label in all_labels}
             for label in labels_by_id.values():
                 label.children_list = []
@@ -111,7 +117,6 @@ class ChartDataAPIView(APIView):
             for label in root_nodes:
                 calculate_total_counts(label)
 
-            # Step 3: Filter, Group, and Aggregate
             parent_id_filter = int(topic_id) if topic_id else None
             level_labels = [l for l in labels_by_id.values() if l.parent_id == parent_id_filter]
             
@@ -130,7 +135,6 @@ class ChartDataAPIView(APIView):
                 labels_in_group = [l for l in level_labels if (l.numbering or '').strip().upper() == numbering]
                 data['total_count'] = sum(getattr(l, 'total_count', 0) for l in labels_in_group)
             
-            # Step 4: Format and send the response
             response_data = []
             for numbering, data in grouped_topics.items():
                 label_obj = data['representative_label']
