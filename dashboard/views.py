@@ -21,7 +21,7 @@ def dashboard_home_view(request):
 # API View to provide aggregated data for our chart
 class ChartDataAPIView(APIView):
     """
-    API endpoint for chart data.
+    API endpoint for chart data. All display logic is in English.
     """
     permission_classes = [permissions.IsAdminUser]
 
@@ -48,7 +48,9 @@ class ChartDataAPIView(APIView):
         else:
             return Response({"error": "Invalid model type specified."}, status=400)
 
+        # --- Subject Grouping Logic ---
         if group_by == 'subject':
+            # This logic correctly groups subjects (like Chemistry HL/SL) and shows all of them.
             all_subject_names = Subject.objects.values_list('name', flat=True).distinct()
             processed_subjects = {}
             for name in all_subject_names:
@@ -72,54 +74,69 @@ class ChartDataAPIView(APIView):
 
             return Response({'labels': labels, 'data': data, 'ids': ids})
 
-        # --- MODIFIED Topic Hierarchy Logic ---
+        # --- FINAL REVISED Topic Hierarchy Logic ---
         if group_by == 'topic':
             if not subject_name:
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
 
+            # This queryset is for counting content.
             queryset = base_queryset.filter(subject__name__startswith=subject_name)
-            topic_ids_in_use = queryset.values_list('topic_id', flat=True).distinct()
             
-            # Filter Label model based on whether they are in use and their parent level
-            if topic_id:
-                # Get children of a specific topic
-                labels_queryset = Label.objects.filter(id__in=topic_ids_in_use, parent_id=topic_id)
-            else:
-                # Get top-level topics for the subject
-                all_subject_labels = Label.objects.filter(subject__name__startswith=subject_name)
-                top_level_ids = [label.id for label in all_subject_labels if label.parent is None]
-                labels_queryset = Label.objects.filter(id__in=top_level_ids)
+            # Determine the parent level for the topics we want to display.
+            parent_id_filter = topic_id if topic_id else None
 
+            # Get all potential labels for the subject group (e.g., Chemistry HL & SL) at the current level.
+            # This is the key change: We fetch ALL labels from the curriculum first.
+            potential_labels = Label.objects.filter(
+                subject__name__startswith=subject_name,
+                parent_id=parent_id_filter
+            ).order_by('numbering')
+            
+            # Group these labels by their numbering (e.g., 'S1', '1.1') to merge HL/SL versions.
+            grouped_topics = {}
+            for label in potential_labels:
+                numbering = label.numbering
+                if numbering not in grouped_topics:
+                    # Store the first label we see for this numbering group. It will be our "representative".
+                    grouped_topics[numbering] = {
+                        'representative_label': label,
+                        'total_count': 0
+                    }
+
+            # Now, calculate the total count for each group of topics.
+            for numbering, data in grouped_topics.items():
+                # Find all labels that match this numbering (e.g., 'S1' from both HL and SL).
+                labels_in_group = potential_labels.filter(numbering=numbering)
+                
+                total_count_for_group = 0
+                for label_instance in labels_in_group:
+                    # For each label in the group (e.g., the HL one), get its children recursively.
+                    descendant_ids = self._get_all_children_ids(label_instance)
+                    all_ids_to_count = [label_instance.id] + descendant_ids
+                    # Add the count from this branch (e.g., HL branch) to the group's total.
+                    total_count_for_group += queryset.filter(topic_id__in=all_ids_to_count).count()
+                
+                data['total_count'] = total_count_for_group
+
+            # Format the data for the API response.
             response_data = []
-            for label in labels_queryset.order_by('numbering'):
-                # --- FIX: Aggregate count from self and all children ---
-                descendant_ids = self._get_all_children_ids(label)
-                all_topic_ids_for_count = [label.id] + descendant_ids
-                count = queryset.filter(topic_id__in=all_topic_ids_for_count).count()
+            for numbering, data in grouped_topics.items():
+                # ** FIX ** No longer filtering by count. All topics are included.
+                label_obj = data['representative_label']
                 
-                # --- FIX: Clean up the label description ---
-                # This removes duplicated numbering, e.g., "2.1 2.1:" becomes "2.1:"
-                clean_description = label.description
-                if clean_description.startswith(label.numbering):
-                    clean_description = clean_description[len(label.numbering):].lstrip()
-                    # Also, handle cases like "2.1 : " vs "2.1: "
-                    if clean_description.startswith(':'):
-                        clean_description = clean_description[1:].lstrip()
+                # Clean up the label description to prevent duplicated numbering.
+                clean_description = re.sub(rf'^{re.escape(label_obj.numbering)}\s*[:\s]*', '', label_obj.description)
+                final_label = f"{label_obj.numbering}: {clean_description}"
+                if re.match(r'^S\d+', label_obj.description):
+                    final_label = label_obj.description.strip()
 
-                final_label = f"{label.numbering}: {clean_description}"
-                # Special case: If description already contains "S1", "S2", etc., just use that.
-                if re.match(r'^S\d+', label.description):
-                     final_label = label.description
-                
-                # We add the topic to the list only if it or its children have content.
-                if count > 0:
-                    response_data.append({
-                        'id': label.id,
-                        'label': final_label,
-                        'count': count
-                    })
+                response_data.append({
+                    'id': label_obj.id, # Use the representative ID for the next drill-down.
+                    'label': final_label,
+                    'count': data['total_count']
+                })
             
-            # Sort by the numeric part of the numbering for correct order
+            # Sort by the numeric part of the numbering for correct order.
             response_data.sort(key=lambda x: [int(i) for i in x['label'].split(':')[0].replace('S','').split('.') if i.isdigit()])
 
             labels = [item['label'] for item in response_data]
