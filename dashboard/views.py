@@ -52,10 +52,9 @@ class ChartDataAPIView(APIView):
 
             # Step 2: Create a separate queryset for counting, applying the status filter.
             counting_queryset = base_queryset
-            if status and status.upper() != 'ALL':
-                # CORRECTED: This list now matches the values in your recipes/models.py
-                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
-                # Use exact status value, not upper, as model uses lowercase with underscores
+            if status and status != 'ALL':
+                # CORRECTED: This list now exactly matches the values in your recipes/models.py
+                valid_statuses = ['in_progress', 'pending_review', 'completed']
                 if status in valid_statuses:
                     counting_queryset = base_queryset.filter(status=status)
             
@@ -84,8 +83,8 @@ class ChartDataAPIView(APIView):
 
             # Apply status filter here as well for topic counts
             counting_queryset = base_queryset
-            if status and status.upper() != 'ALL':
-                valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
+            if status and status != 'ALL':
+                valid_statuses = ['in_progress', 'pending_review', 'completed']
                 if status in valid_statuses:
                     counting_queryset = base_queryset.filter(status=status)
 
