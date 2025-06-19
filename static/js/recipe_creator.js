@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeCodeMirror(textareaId, internalBlockId) {
         const textarea = document.getElementById(textareaId);
         if (!textarea) return null;
+        
         const editableTextOverlay = {
             token: function(stream) {
                 if (stream.match("$$")) { stream.skipTo("$$") || stream.skipToEnd(); stream.match("$$"); return "editable-text"; }
@@ -81,11 +82,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 stream.next(); return null;
             }
         };
+        
         const editor = CodeMirror.fromTextArea(textarea, {
             mode: "htmlmixed", lineNumbers: true, theme: "monokai",
             autoCloseTags: true, lineWrapping: true
         });
+        
         editor.addOverlay(editableTextOverlay);
+        
         const previewEl = document.getElementById(`preview-${internalBlockId}`);
         let debounceTimeout;
         editor.on("change", (cm) => {
@@ -214,18 +218,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const wrapper = el.querySelector('.resizable-image-wrapper');
                 const imageEl = wrapper ? wrapper.querySelector('img') : null;
                 if (imageEl) {
-                    // --- FINAL FIX FOR SIZE & CENTERING ---
-                    // 1. Remove the 'img-fluid' class which can override inline styles.
                     imageEl.classList.remove('img-fluid');
-                    
-                    // 2. Apply the wrapper's final width to the image's inline style.
                     imageEl.style.width = wrapper.style.width;
-                    imageEl.style.height = 'auto'; // Always maintain aspect ratio.
-                    imageEl.style.maxWidth = '100%'; // Ensure responsiveness on small screens.
-                    
-                    // 3. Wrap the final image tag in a centered div for display.
+                    imageEl.style.height = 'auto';
+                    imageEl.style.maxWidth = '100%';
                     finalHtml = `<div style="text-align: center;">${imageEl.outerHTML}</div>`;
-                    // --- END OF FIX ---
                 }
                 const fileInput = el.querySelector('input[type="file"]');
                 if (fileInput && fileInput.files[0]) {
@@ -361,11 +358,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     confirmStatusAndSaveBtn.addEventListener('click', executeSave);
+    
     confirmTemplateBtn.addEventListener('click', () => {
         const selected = document.querySelector('#recipeTemplateSelectionModal .template-card.selected');
         if (!selected) return;
         const template = selected.dataset.template;
         let blockData = { order: blocksContainer.children.length, template_name: template, content_html: '' };
+        
         if (template !== 'image') {
             const templates = {
             'statement': `
@@ -413,9 +412,11 @@ $$
         };
             blockData.content_html = templates[template] || '<p>New block.</p>';
         }
+        
         addBlockToUI(blockData);
         recipeTemplateSelectionModal.hide();
     });
+
     curriculumSelect.addEventListener('change', filterSubjects);
     languageSelect.addEventListener('change', filterSubjects);
     subjectSelect.addEventListener('change', updateTopics);
