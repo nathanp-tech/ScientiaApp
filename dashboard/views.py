@@ -55,6 +55,7 @@ class ChartDataAPIView(APIView):
             if status and status.upper() != 'ALL':
                 valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
                 if status.upper() in valid_statuses:
+                    # This was the error. We need to filter the base_queryset, not assign it.
                     filtered_queryset = base_queryset.filter(status=status.upper())
             
             # Step 3: Aggregate counts using the filtered queryset.
