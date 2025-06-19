@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetToTopLevel() {
         const modelName = chartState.model.charAt(0).toUpperCase() + chartState.model.slice(1);
         chartState.drilldownStack = [{
-            label: 'Sujets',
-            title: `Nombre de ${modelName}s par Sujet`,
+            label: 'Subjects',
+            title: `Count of ${modelName}s by Subject`,
             apiParams: { group_by: 'subject' }
         }];
         updateChart();
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- CORRECTED AND ROBUST BUTTON LOGIC ---
+  
     function setActiveModel(model) {
         if (chartState.model === model && myChart) return;
         
