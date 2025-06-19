@@ -43,7 +43,8 @@ class ChartDataAPIView(APIView):
 
         # Apply status filter if provided and not 'ALL'
         if status and status.upper() != 'ALL':
-            valid_statuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED']
+            # Updated to match status values from screenshots
+            valid_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'COMPLETED']
             if status.upper() in valid_statuses:
                 base_queryset = base_queryset.filter(status=status.upper())
 

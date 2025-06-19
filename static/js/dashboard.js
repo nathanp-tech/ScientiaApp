@@ -6,10 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const recipesBtn = document.getElementById('show-recipes-btn');
     const slidesBtn = document.getElementById('show-slides-btn');
     const breadcrumbsEl = document.getElementById('chart-breadcrumbs');
-    const statusFilter = document.getElementById('status-filter'); // The status filter dropdown
+    const statusFilter = document.getElementById('status-filter'); // The new status filter
 
     let myChart;
-    // The central state object for the chart
+    // Chart state now includes the status
     let chartState = {
         model: 'recipe',
         status: 'ALL', // Default status is 'ALL'
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add the status to the API request parameters
         const params = new URLSearchParams({
             model: chartState.model,
-            status: chartState.status,
+            status: chartState.status, // Include the selected status
             ...currentLevel.apiParams
         });
 
