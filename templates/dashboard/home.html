@@ -25,10 +25,10 @@
                         <label for="status-filter" class="form-label form-label-sm mb-0 me-1 fw-bold">Status:</label>
                         <select class="form-select form-select-sm" id="status-filter" style="width: auto; display: inline-block;">
                             <option value="ALL" selected>All</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <!-- CORRECTED VALUE: Changed from PENDING_REVIEW to PENDING -->
-                            <option value="PENDING">Pending Review</option>
-                            <option value="COMPLETED">Completed</option>
+                            <!-- CORRECTED VALUES to match the database model -->
+                            <option value="in_progress">In Progress</option>
+                            <option value="pending_review">Pending Review</option>
+                            <option value="completed">Completed</option>
                         </select>
                     </div>
 
