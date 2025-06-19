@@ -1,27 +1,29 @@
 // static/js/dashboard.js
 document.addEventListener('DOMContentLoaded', function() {
+    // Element definitions
     const ctx = document.getElementById('statsChart').getContext('2d');
     const apiUrl = '/dashboard/api/chart-data/';
-
     const recipesBtn = document.getElementById('show-recipes-btn');
     const slidesBtn = document.getElementById('show-slides-btn');
     const breadcrumbsEl = document.getElementById('chart-breadcrumbs');
+    const statusFilter = document.getElementById('status-filter'); // The status filter dropdown
 
     let myChart;
+    // The central state object for the chart
     let chartState = {
-        model: 'recipe', // Modèle initial
+        model: 'recipe',
+        status: 'ALL', // Default status is 'ALL'
         drilldownStack: []
     };
 
     // --- ENHANCED CHART DESIGN ---
     const chartColors = {
-        primary: '#123456', // Bleu foncé de base.css
-        secondary: '#45b7d1', // Bleu clair/turquoise de creator.css
+        primary: '#123456',
+        secondary: '#45b7d1',
         gridLines: 'rgba(0, 0, 0, 0.08)',
-        tooltipBg: '#050350', // Bleu très foncé de styles.css
+        tooltipBg: '#050350',
         font: '#343a40'
     };
-    
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
     gradient.addColorStop(0, chartColors.secondary);
     gradient.addColorStop(1, chartColors.primary);
@@ -38,8 +40,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 borderWidth: 1,
                 borderRadius: 4,
                 hoverBackgroundColor: chartColors.secondary,
-                hoverBorderColor: chartColors.primary, // Bordure plus visible au survol
-                hoverBorderWidth: 2,
                 ids: []
             }]
         },
@@ -47,15 +47,15 @@ document.addEventListener('DOMContentLoaded', function() {
             responsive: true,
             maintainAspectRatio: false,
             indexAxis: 'y',
-            animation: { // Animation plus douce
+            animation: {
                 duration: 800,
-                easing: 'easeInOutQuart',
+                easing: 'easeInOutQuart'
             },
             scales: {
                 x: {
                     beginAtZero: true,
                     ticks: { precision: 0, color: chartColors.font },
-                    grid: { color: chartColors.gridLines, drawOnChartArea: true }
+                    grid: { color: chartColors.gridLines }
                 },
                 y: {
                     ticks: { color: chartColors.font },
@@ -75,15 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     backgroundColor: chartColors.tooltipBg,
                     titleColor: '#ffffff',
                     bodyColor: '#ffffff',
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 12 },
                     padding: 10,
                     cornerRadius: 5,
                     displayColors: false,
                     callbacks: {
-                        label: function(context) {
-                            return `Total : ${context.parsed.x}`;
-                        }
+                        label: (context) => `Total: ${context.parsed.x}`
                     }
                 }
             },
@@ -91,11 +87,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    /**
+     * Fetches data from the API and updates the chart.
+     */
     async function updateChart() {
         const currentLevel = chartState.drilldownStack[chartState.drilldownStack.length - 1];
         if (!currentLevel) return;
 
-        const params = new URLSearchParams({ model: chartState.model, ...currentLevel.apiParams });
+        // Add the status to the API request parameters
+        const params = new URLSearchParams({
+            model: chartState.model,
+            status: chartState.status,
+            ...currentLevel.apiParams
+        });
 
         try {
             const response = await fetch(`${apiUrl}?${params.toString()}`);
@@ -104,33 +108,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(errorData.error || 'Failed to fetch chart data');
             }
             const result = await response.json();
-
-            if (!myChart) {
-                myChart = new Chart(ctx, chartConfig);
-            }
+            if (!myChart) myChart = new Chart(ctx, chartConfig);
             
             myChart.config.data.datasets[0].ids = result.ids;
             myChart.data.labels = result.labels;
             myChart.data.datasets[0].data = result.data;
             myChart.options.plugins.title.text = currentLevel.title;
             myChart.update();
-            
             updateBreadcrumbs();
         } catch (error) {
             console.error(error);
-            breadcrumbsEl.innerHTML = `<span class="text-danger">Erreur: ${error.message}</span>`;
+            breadcrumbsEl.innerHTML = `<span class="text-danger">Error: ${error.message}</span>`;
         }
     }
 
+    /**
+     * Handles clicks on chart bars to drill down into the data.
+     */
     function handleChartClick(event) {
         const points = myChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
         if (points.length === 0) return;
 
         const index = points[0].index;
-        const clickedLabel = myChart.data.labels[index];
         const clickedId = myChart.config.data.datasets[0].ids[index];
         const currentLevel = chartState.drilldownStack[chartState.drilldownStack.length - 1];
         const modelName = chartState.model.charAt(0).toUpperCase() + chartState.model.slice(1);
+        const clickedLabel = myChart.data.labels[index];
 
         if (currentLevel.apiParams.group_by === 'subject') {
             chartState.drilldownStack.push({
@@ -140,9 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             updateChart();
         } else if (currentLevel.apiParams.group_by === 'topic') {
-            const shortLabel = clickedLabel.split(' ').slice(1).join(' ');
+            const shortLabel = clickedLabel.split(':').slice(1).join(':').trim();
             chartState.drilldownStack.push({
-                label: shortLabel.length > 20 ? shortLabel.substring(0, 20) + '...' : shortLabel,
+                label: shortLabel.substring(0, 20) + (shortLabel.length > 20 ? '...' : ''),
                 title: `Sub-topics for ${shortLabel}`,
                 apiParams: { ...currentLevel.apiParams, topic_id: clickedId }
             });
@@ -150,6 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Resets the view to the top-level subjects, applying current filters.
+     */
     function resetToTopLevel() {
         const modelName = chartState.model.charAt(0).toUpperCase() + chartState.model.slice(1);
         chartState.drilldownStack = [{
@@ -160,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateChart();
     }
 
+    /**
+     * Updates the breadcrumb navigation.
+     */
     function updateBreadcrumbs() {
         breadcrumbsEl.innerHTML = '';
         chartState.drilldownStack.forEach((level, index) => {
@@ -168,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
             breadcrumb.href = '#';
             breadcrumb.className = isLast ? 'fw-bold text-dark' : 'text-primary';
             breadcrumb.textContent = level.label;
-
             if (!isLast) {
                 breadcrumb.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -176,46 +184,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateChart();
                 });
             }
-
             breadcrumbsEl.appendChild(breadcrumb);
-            if (!isLast) {
-                 const separator = document.createElement('span');
-                 separator.className = 'mx-2';
-                 separator.textContent = '>';
-                 breadcrumbsEl.appendChild(separator);
-            }
+            if (!isLast) breadcrumbsEl.append(' / ');
         });
     }
-    
-  
+
+    /**
+     * Sets the active model (Recipes or Slideshows) and refreshes the chart.
+     */
     function setActiveModel(model) {
         if (chartState.model === model && myChart) return;
-        
         chartState.model = model;
-
-        if (model === 'recipe') {
-            // Activer le bouton Recipes
-            recipesBtn.classList.add('btn-primary', 'active');
-            recipesBtn.classList.remove('btn-outline-primary');
-            
-            // Désactiver le bouton Slideshows
-            slidesBtn.classList.add('btn-outline-primary');
-            slidesBtn.classList.remove('btn-primary', 'active');
-        } else { // model === 'slide'
-            // Activer le bouton Slideshows
-            slidesBtn.classList.add('btn-primary', 'active');
-            slidesBtn.classList.remove('btn-outline-primary');
-
-            // Désactiver le bouton Recipes
-            recipesBtn.classList.add('btn-outline-primary');
-            recipesBtn.classList.remove('btn-primary', 'active');
-        }
-        
+        recipesBtn.classList.toggle('btn-primary', model === 'recipe');
+        recipesBtn.classList.toggle('btn-outline-primary', model !== 'recipe');
+        slidesBtn.classList.toggle('btn-primary', model === 'slide');
+        slidesBtn.classList.toggle('btn-outline-primary', model !== 'slide');
         resetToTopLevel();
     }
 
+    // --- Event Listeners ---
     recipesBtn.addEventListener('click', () => setActiveModel('recipe'));
     slidesBtn.addEventListener('click', () => setActiveModel('slide'));
+    statusFilter.addEventListener('change', () => {
+        chartState.status = statusFilter.value;
+        resetToTopLevel(); // Refresh the chart with the new status filter
+    });
 
     // --- Initial Load ---
     setActiveModel('recipe');

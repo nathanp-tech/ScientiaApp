@@ -12,11 +12,30 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-                <div id="chart-breadcrumbs" class="text-muted small"></div>
-                <div class="btn-group" role="group" aria-label="Data model selection">
-                    <button id="show-recipes-btn" type="button" class="btn btn-primary btn-sm active">Recipes</button>
-                    <button id="show-slides-btn" type="button" class="btn btn-outline-primary btn-sm">Slideshows</button>
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                
+                <!-- Breadcrumbs on the left -->
+                <div id="chart-breadcrumbs" class="text-muted small mb-2 mb-md-0"></div>
+
+                <!-- Group of filters on the right -->
+                <div class="d-flex align-items-center">
+                    
+                    <!-- New Status Filter Dropdown -->
+                    <div class="me-3">
+                        <label for="status-filter" class="form-label form-label-sm mb-0 me-1 fw-bold">Statut:</label>
+                        <select class="form-select form-select-sm" id="status-filter" style="width: auto; display: inline-block;">
+                            <option value="ALL" selected>Tous</option>
+                            <option value="PENDING">En attente</option>
+                            <option value="IN_PROGRESS">En cours</option>
+                            <option value="COMPLETED">Terminée</option>
+                        </select>
+                    </div>
+
+                    <!-- Existing Button Group -->
+                    <div class="btn-group" role="group" aria-label="Data model selection">
+                        <button id="show-recipes-btn" type="button" class="btn btn-primary btn-sm">Recipes</button>
+                        <button id="show-slides-btn" type="button" class="btn btn-outline-primary btn-sm">Slideshows</button>
+                    </div>
                 </div>
             </div>
         </div>

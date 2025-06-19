@@ -26,17 +26,26 @@ class ChartDataAPIView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
+        # Get query parameters
         model_type = request.query_params.get('model', 'recipe')
         group_by = request.query_params.get('group_by', 'subject')
         subject_name = request.query_params.get('subject_name')
         topic_id = request.query_params.get('topic_id')
+        status = request.query_params.get('status')
 
+        # Determine the base queryset
         if model_type == 'recipe':
             base_queryset = Recipe.objects.all()
         elif model_type == 'slide':
             base_queryset = Slide.objects.all()
         else:
             return Response({"error": "Invalid model type specified."}, status=400)
+
+        # Apply status filter if provided and not 'ALL'
+        if status and status.upper() != 'ALL':
+            valid_statuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED']
+            if status.upper() in valid_statuses:
+                base_queryset = base_queryset.filter(status=status.upper())
 
         # --- Subject Grouping Logic ---
         if group_by == 'subject':
@@ -68,14 +77,14 @@ class ChartDataAPIView(APIView):
             if not subject_name:
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
 
-            # --- Step 1: Fetch all data in bulk ---
+            # Step 1: Fetch all data in bulk
             all_labels = Label.objects.filter(subject__name__startswith=subject_name).select_related('parent')
             content_counts_qs = base_queryset.filter(subject__name__startswith=subject_name)\
                                               .values('topic_id')\
                                               .annotate(count=Count('id'))
             content_counts = {item['topic_id']: item['count'] for item in content_counts_qs}
 
-            # --- Step 2: Process data in Python ---
+            # Step 2: Process data in Python
             labels_by_id = {label.id: label for label in all_labels}
             for label in labels_by_id.values():
                 label.children_list = []
@@ -101,44 +110,33 @@ class ChartDataAPIView(APIView):
             for label in root_nodes:
                 calculate_total_counts(label)
 
-            # --- Step 3: Filter, Group, and Aggregate ---
+            # Step 3: Filter, Group, and Aggregate
             parent_id_filter = int(topic_id) if topic_id else None
-
-            # Get all direct children for the current level
             level_labels = [l for l in labels_by_id.values() if l.parent_id == parent_id_filter]
             
-            # --- FIX: Filter for 'S' topics if they exist at the top level ---
-            if parent_id_filter is None: # Only apply this filter at the root
+            if parent_id_filter is None:
                 s_topics_exist = any(l.numbering and l.numbering.strip().upper().startswith('S') for l in level_labels)
                 if s_topics_exist:
                     level_labels = [l for l in level_labels if l.numbering and l.numbering.strip().upper().startswith('S')]
             
             grouped_topics = {}
             for label in level_labels:
-                # Normalize numbering for robust grouping
                 numbering = (label.numbering or '').strip().upper()
                 if numbering not in grouped_topics:
-                    grouped_topics[numbering] = {
-                        'representative_label': label,
-                        'total_count': 0
-                    }
+                    grouped_topics[numbering] = { 'representative_label': label, 'total_count': 0 }
             
             for numbering, data in grouped_topics.items():
                 labels_in_group = [l for l in level_labels if (l.numbering or '').strip().upper() == numbering]
                 data['total_count'] = sum(getattr(l, 'total_count', 0) for l in labels_in_group)
             
-            # --- Step 4: Format and send the response ---
+            # Step 4: Format and send the response
             response_data = []
             for numbering, data in grouped_topics.items():
                 label_obj = data['representative_label']
                 clean_description = re.sub(rf'^{re.escape(label_obj.numbering)}\s*[:\s]*', '', label_obj.description) if label_obj.numbering else label_obj.description
                 final_label = f"{label_obj.numbering}: {clean_description}" if label_obj.numbering else clean_description
                 
-                response_data.append({
-                    'id': label_obj.id,
-                    'label': final_label,
-                    'count': data['total_count']
-                })
+                response_data.append({ 'id': label_obj.id, 'label': final_label, 'count': data['total_count'] })
             
             def sort_key(item):
                 label_part = item['label'].split(':')[0]
