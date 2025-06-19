@@ -1,4 +1,4 @@
-# recipes/models.py
+# recipes/models.py (UPDATED)
 
 from django.db import models
 from django.conf import settings
@@ -15,7 +15,6 @@ class Recipe(models.Model):
         ('completed', 'Completed'),
     )
 
-    # --- CHANGE 1: The 'title' field must now be unique across all recipes. ---
     title = models.CharField(max_length=255, unique=True, help_text="The unique title of the recipe.")
 
     author = models.ForeignKey(
@@ -59,8 +58,6 @@ class Recipe(models.Model):
 
     class Meta:
         ordering = ['-updated_at']
-        # --- CHANGE 2: The 'unique_together' constraint has been removed. ---
-        # unique_together = ('language', 'curriculum', 'subject', 'topic') - THIS IS REMOVED
 
     def __str__(self):
         return self.title
@@ -68,7 +65,8 @@ class Recipe(models.Model):
 
 class RecipeBlock(models.Model):
     """
-    A content block within a Recipe. Each block has a specific order.
+    A content block within a Recipe. Each block has a specific order and can contain
+    either HTML content or an image.
     """
     recipe = models.ForeignKey(
         Recipe,
@@ -77,11 +75,17 @@ class RecipeBlock(models.Model):
     )
     order = models.PositiveIntegerField()
     template_name = models.CharField(max_length=100)
-    content_html = models.TextField()
+    
+    # Text content for non-image blocks
+    content_html = models.TextField(blank=True)
+
+    # --- NEW FIELD ---
+    # Image field for image blocks
+    image = models.ImageField(upload_to='recipe_images/', null=True, blank=True)
 
     class Meta:
         ordering = ['order']
         unique_together = ('recipe', 'order')
 
     def __str__(self):
-        return f"{self.recipe.title} - Block {self.order}"
+        return f"{self.recipe.title} - Block {self.order} ({self.template_name})"

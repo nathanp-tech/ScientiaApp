@@ -1,18 +1,16 @@
 <div class="modal fade" id="recipeTemplateSelectionModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg"> <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="templateModalLabel">Choose a Block Type</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="row row-cols-1 row-cols-sm-2 g-3">
-                    <div class="col">
+                <div class="row row-cols-1 row-cols-sm-3 g-3"> <div class="col">
                         <div class="card template-card h-100" data-template="statement">
                             <div class="card-body text-center">
                                 <i class="bi bi-card-heading fs-1 mb-2"></i>
                                 <h6 class="card-title fw-bold">Statement</h6>
-                                <p class="card-text small">Main problem, description, or list of ingredients.</p>
+                                <p class="card-text small">Main problem, description, or introduction.</p>
                             </div>
                         </div>
                     </div>
@@ -22,6 +20,15 @@
                                 <i class="bi bi-list-ol fs-1 mb-2"></i>
                                 <h6 class="card-title fw-bold">Step</h6>
                                 <p class="card-text small">A single step in the recipe or procedure.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card template-card h-100" data-template="image">
+                            <div class="card-body text-center">
+                                <i class="bi bi-image-fill fs-1 mb-2"></i>
+                                <h6 class="card-title fw-bold">Image</h6>
+                                <p class="card-text small">Upload an image from your computer.</p>
                             </div>
                         </div>
                     </div>
@@ -91,9 +98,6 @@
         </div>
     </div>
 </div>
-
-
-
 <div class="modal fade" id="statusSelectionModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -140,7 +144,6 @@
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

@@ -279,3 +279,23 @@ html { min-height: 100%; }
     text-align: center; /* Overrides 'text-align: left' */
     width: 100%;        /* Ensures the element spans the full width, making centering visible */
 }
+
+.resizable-image-wrapper {
+    /* Enables resizing. 'horizontal' is often best to avoid large vertical gaps. */
+    resize: horizontal; 
+    overflow: auto; /* Required for the resize property to work */
+    display: inline-block; /* Allows the element to be resized */
+    border: 2px dashed #0d6efd; /* A blue dashed border to indicate it's an editable wrapper */
+    padding: 5px;
+    /* Set an initial size */
+    width: 50%; 
+    min-width: 100px; /* Prevent it from becoming too small */
+    max-width: 100%; /* Prevent it from overflowing its container */
+}
+
+.resizable-image-wrapper img {
+    /* The image should always fill its resizable container */
+    width: 100%;
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Removes any extra space below the image */
+}

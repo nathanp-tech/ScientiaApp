@@ -1,3 +1,4 @@
+# central/settings.py (UPDATED)
 # File: central/settings.py
 # Version with debug prints to diagnose environment detection.
 
@@ -111,6 +112,13 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# --- NEW MEDIA FILE CONFIGURATION ---
+# Base URL to serve media files
+MEDIA_URL = '/media/'
+# Path where media is stored
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# --- END NEW CONFIGURATION ---
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

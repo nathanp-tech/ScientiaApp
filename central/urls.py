@@ -1,8 +1,10 @@
-# central/urls.py
+# central/urls.py (UPDATED)
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from core import views as core_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -22,9 +24,12 @@ urlpatterns = [
     path('calculator/', include(('calculator.urls', 'calculator'), namespace='calculator')),
     path('videos/', include(('videos.urls', 'videos'), namespace='videos')),
     
-    # --- ADD THE NEW DASHBOARD APP URL ---
     path('dashboard/', include('dashboard.urls', namespace='dashboard')),
 
     # Core URL (Homepage)
     path('', core_views.landing_page_view, name='home'),
 ]
+
+# --- NEW: SERVE MEDIA FILES DURING DEVELOPMENT ---
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

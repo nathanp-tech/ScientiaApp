@@ -4,17 +4,15 @@
 {% block title %}{{ recipe.title }} - Recipe Detail{% endblock %}
 
 {% block extra_css %}
-    {# Link to the CSS file for styling the recipe display page (e.g., creator.css if needed for general display) #}
     <link rel="stylesheet" href="{% static 'css/creator.css' %}"> 
-    {# Link to print-specific styles directly here #}
     <link rel="stylesheet" href="{% static 'css/print_styles.css' %}" media="print">
 {% endblock %}
 
 {% block content %}
-<div class="recipe-display-container my-5 printable-area"> {# Added printable-area class here #}
+<div class="recipe-display-container my-5 printable-area">
     
     <header class="recipe-header text-center mb-4">
-        <div class="d-flex justify-content-center align-items-center mb-2"> {# Container for title and print button #}
+        <div class="d-flex justify-content-center align-items-center mb-2">
             <h1 class="recipe-title display-4 mb-0">{{ recipe.title }}</h1>
             {% if user.is_staff %}
                 <button id="print-content-btn" class="btn btn-outline-secondary ms-3 non-printable">
@@ -23,14 +21,12 @@
             {% endif %}
         </div>
         <p class="recipe-meta text-muted">
-            {# --- MODIFICATION START --- #}
             {% if user.is_staff %}
             <strong>Author:</strong> {{ recipe.author.username|default:"N/A" }} | 
             {% endif %}
             <strong>Subject:</strong> {{ recipe.subject.name|default:"N/A" }} 
-            {% if recipe.topic %}| <strong>Topic:</strong> {{ recipe.topic.name|default:recipe.topic.description|default:"N/A" }}{% endif %} {# Attempt topic.name, fallback to description #}
+            {% if recipe.topic %}| <strong>Topic:</strong> {{ recipe.topic.description|default:"N/A" }}{% endif %}
             <br>
-            {# --- MODIFICATION END --- #}
             <strong>Curriculum:</strong> {{ recipe.curriculum.name|default:"N/a" }} |
             <strong>Language:</strong> {{ recipe.language.name|default:"N/A" }}
             <br>
@@ -39,21 +35,22 @@
     </header>
 
     <div class="recipe-body">
-        {# Loop through each block associated with the recipe #}
-        {# Assumes 'blocks' is the related_name from RecipeBlock to Recipe #}
+        {# --- SIMPLIFIED LOGIC --- #}
+        {# Loop through each block and simply render its saved HTML content. #}
+        {# This now works for both text blocks and image blocks with their inline styles. #}
         {% for block in recipe.blocks.all %}
-            <div class="recipe-block-display card shadow-sm mb-4 avoid-break"> {# Added avoid-break for printing #}
+            <div class="recipe-block-display card shadow-sm mb-4 avoid-break">
                 <div class="card-body">
-                    {# The 'safe' filter is crucial here to render the stored HTML #}
                     {{ block.content_html|safe }}
                 </div>
             </div>
         {% empty %}
             <p class="text-center text-muted">This recipe currently has no content blocks.</p>
         {% endfor %}
+        {# --- END SIMPLIFIED LOGIC --- #}
     </div>
 
-    <div class="text-center mt-4 non-printable"> {# Hide this section when printing #}
+    <div class="text-center mt-4 non-printable">
         <a href="{% url 'recipes:browser' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left-circle"></i> Back to Recipe Browser
         </a>
@@ -69,7 +66,6 @@
 {% endblock %}
 
 {% block extra_js %}
-    {# Script for the Print button #}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const printButton = document.getElementById('print-content-btn');
@@ -81,9 +77,7 @@
         });
     </script>
 
-    {# Script to re-process MathJax content if present #}
-    {# This assumes MathJax is loaded and configured in base.html #}
-    {% if recipe.blocks.all %} {# Only attempt to re-typeset if there are blocks #}
+    {% if recipe.blocks.all %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Check if MathJax is loaded and ready

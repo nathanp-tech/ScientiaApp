@@ -1,13 +1,14 @@
-# recipes/views.py
-
+# recipes/views.py (UPDATED)
+import json
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.middleware.csrf import get_token
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from .models import Recipe
+from .models import Recipe, RecipeBlock
 from .serializers import RecipeListSerializer, RecipeDetailSerializer
 from core.models import Curriculum, Language, Subject, Label
 
@@ -33,6 +34,7 @@ def recipe_browser_view(request):
     context = {
         'initial_data': initial_data,
         'api_urls': api_urls,
+        'user_is_staff': request.user.is_staff
     }
     return render(request, 'recipes/recipe_browser.html', context)
 
@@ -81,6 +83,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     API endpoint that allows recipes to be viewed, created, edited, or deleted.
     """
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -106,72 +109,87 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if topic_id: 
             queryset = queryset.filter(topic_id=topic_id)
 
-        # --- NEW FLEXIBLE SUBJECT FILTERING LOGIC ---
         if subject_id:
             try:
-                # 1. Get the selected subject (e.g., "Maths AA (HL)")
                 selected_subject = Subject.objects.get(pk=subject_id)
-                
-                # 2. Extract the base name (e.g., "Maths AA")
                 base_name = selected_subject.name.split('(')[0].strip()
-                
-                # 3. Find all subjects with that base name (e.g., "Maths AA (SL)" and "Maths AA (HL)")
                 sibling_subjects = Subject.objects.filter(
                     name__startswith=base_name,
                     curriculum_id=selected_subject.curriculum_id
                 )
-                
-                # 4. Get the IDs of all found subjects
                 sibling_subject_ids = list(sibling_subjects.values_list('id', flat=True))
-                
-                # 5. Filter recipes that belong to any of these subjects
                 queryset = queryset.filter(subject_id__in=sibling_subject_ids)
-
             except Subject.DoesNotExist:
-                # If a non-existent subject_id is provided, return an empty list
                 return queryset.none()
         
         return queryset
 
     def create(self, request, *args, **kwargs):
-        """
-        Custom create/update logic based on the presence of an ID in the request data.
-        """
         recipe_id = request.data.get('id')
-
-        # If an ID is provided, this is an UPDATE request.
-        if recipe_id:
-            try:
-                instance = Recipe.objects.get(pk=recipe_id)
-                # Ensure the user is the author or staff, for security
-                if instance.author != request.user and not request.user.is_staff:
-                    return Response({"detail": "You do not have permission to edit this recipe."}, status=status.HTTP_403_FORBIDDEN)
-                
-                serializer = self.get_serializer(instance=instance, data=request.data)
-                serializer.is_valid(raise_exception=True)
-                self.perform_update(serializer)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            except Recipe.DoesNotExist:
-                return Response({"detail": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
         
-        # If no ID is provided, this is a CREATE request.
+        if recipe_id:
+            instance = get_object_or_404(Recipe, pk=recipe_id)
+            if instance.author != request.user and not request.user.is_staff:
+                return Response({"detail": "You do not have permission to edit this recipe."}, status=status.HTTP_403_FORBIDDEN)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
         else:
             serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    def perform_create(self, serializer):
-        """
-        Called during a creation. Ensures the author is correctly set.
-        """
-        serializer.save(author=self.request.user)
+        
+        serializer.is_valid(raise_exception=True)
+        # For a new recipe, set the author. For an update, the author remains.
+        if not recipe_id:
+            recipe = serializer.save(author=request.user)
+        else:
+            recipe = serializer.save()
 
-    def perform_update(self, serializer):
-        """
-        Called during an update. Ensures the author is correctly set.
-        """
-        serializer.save(author=self.request.user)
+        # Process blocks after saving the recipe instance
+        self._process_blocks(request, recipe)
+        
+        # Return the final, serialized recipe with all its blocks
+        final_serializer = self.get_serializer(recipe)
+        status_code = status.HTTP_200_OK if recipe_id else status.HTTP_201_CREATED
+        return Response(final_serializer.data, status=status_code)
+
+    def _process_blocks(self, request, recipe):
+        """Helper function to create/update blocks from request data."""
+        blocks_str = request.data.get('blocks', '[]')
+        try:
+            blocks_data = json.loads(blocks_str)
+        except json.JSONDecodeError:
+            # If blocks data is invalid, we just ignore it.
+            return
+
+        # Clear existing blocks for a clean update
+        recipe.blocks.all().delete()
+
+        for index, block_info in enumerate(blocks_data):
+            image_file = request.FILES.get(f'block_image_{index}')
+            content_html = block_info.get('content_html', '')
+
+            # If a new image is being uploaded, create its initial HTML content.
+            if image_file:
+                # To get a URL, the file must be associated with a saved model instance.
+                # We save it here, then use its URL to create the HTML.
+                block_instance = RecipeBlock.objects.create(
+                    recipe=recipe,
+                    order=index,
+                    template_name=block_info.get('template_name', 'image'),
+                    image=image_file,
+                    content_html='' # Start with empty HTML
+                )
+                # Now that the image is saved, its URL is available.
+                # We update the block's content_html with the image tag.
+                block_instance.content_html = f'<img src="{block_instance.image.url}" alt="Recipe content image" class="img-fluid rounded" style="height: auto; width: 50%;">'
+                block_instance.save()
+            else:
+                # If no new file, just save the block with the HTML from the frontend.
+                RecipeBlock.objects.create(
+                    recipe=recipe,
+                    order=index,
+                    template_name=block_info.get('template_name', ''),
+                    content_html=content_html,
+                    image=None # No new image file
+                )
 
     def destroy(self, request, *args, **kwargs):
         """
