@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from recipes.models import Recipe
 from slides.models import Slide
-from core.models import Label, Subject # Make sure to import Subject
+from core.models import Label, Subject
 
 import re
 
@@ -22,13 +22,18 @@ def dashboard_home_view(request):
 class ChartDataAPIView(APIView):
     """
     API endpoint for chart data.
-    Query Parameters:
-    - `model`: 'recipe' or 'slide'
-    - `group_by`: 'subject' or 'topic'
-    - `subject_name`: (optional) Name of a subject to filter by. Used for drill-down.
-    - `topic_id`: (optional) ID of a parent topic to get its children. Used for drill-down.
     """
     permission_classes = [permissions.IsAdminUser]
+
+    def _get_all_children_ids(self, label):
+        """
+        Recursively fetches all descendant IDs for a given Label object.
+        """
+        children = label.children.all()
+        ids = list(children.values_list('id', flat=True))
+        for child in children:
+            ids.extend(self._get_all_children_ids(child))
+        return ids
 
     def get(self, request, *args, **kwargs):
         model_type = request.query_params.get('model', 'recipe')
@@ -36,7 +41,6 @@ class ChartDataAPIView(APIView):
         subject_name = request.query_params.get('subject_name')
         topic_id = request.query_params.get('topic_id')
 
-        # Determine the model for queryset
         if model_type == 'recipe':
             base_queryset = Recipe.objects.all()
         elif model_type == 'slide':
@@ -44,68 +48,79 @@ class ChartDataAPIView(APIView):
         else:
             return Response({"error": "Invalid model type specified."}, status=400)
 
-        # --- MODIFIED Subject Grouping Logic ---
         if group_by == 'subject':
-            # 1. Get all unique subject names from the Subject model to ensure all are represented.
             all_subject_names = Subject.objects.values_list('name', flat=True).distinct()
-            
-            # 2. Process all names to get a unique set of base names, initialized to 0.
-            # This regex now ONLY groups by HL/SL, leaving others like AA/AI intact.
             processed_subjects = {}
             for name in all_subject_names:
                 base_name = re.split(r'\s+(HL|SL)$', name, 1)[0].strip()
                 processed_subjects[base_name] = 0
 
-            # 3. Get the actual counts from the content models (Recipe/Slide).
             aggregation = base_queryset.values('subject__name').annotate(count=Count('id'))
             
-            # 4. Populate the counts for subjects that have content.
             for item in aggregation:
                 full_name = item['subject__name']
-                if not full_name:
-                    continue
-                # Use the same regex to find the correct base name to aggregate into.
+                if not full_name: continue
                 base_name = re.split(r'\s+(HL|SL)$', full_name, 1)[0].strip()
                 if base_name in processed_subjects:
                     processed_subjects[base_name] += item['count']
 
-            # Sort the grouped subjects by count (desc) and then by name (asc)
             sorted_subjects = sorted(processed_subjects.items(), key=lambda x: (-x[1], x[0]))
             
             labels = [item[0] for item in sorted_subjects]
             data = [item[1] for item in sorted_subjects]
-            ids = labels  # The ID for drill-down is the subject base name
+            ids = labels
 
             return Response({'labels': labels, 'data': data, 'ids': ids})
 
-        # --- Topic Hierarchy Logic (remains the same) ---
+        # --- MODIFIED Topic Hierarchy Logic ---
         if group_by == 'topic':
             if not subject_name:
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
-            
-            # Since subjects are grouped (e.g., Chemistry), we filter using startswith.
-            # For subjects that were not grouped (e.g., Maths AA), this will find the exact match.
-            queryset = base_queryset.filter(subject__name__startswith=subject_name)
-            
-            topic_ids_in_use = queryset.values_list('topic_id', flat=True).distinct()
-            labels_queryset = Label.objects.filter(id__in=topic_ids_in_use)
 
+            queryset = base_queryset.filter(subject__name__startswith=subject_name)
+            topic_ids_in_use = queryset.values_list('topic_id', flat=True).distinct()
+            
+            # Filter Label model based on whether they are in use and their parent level
             if topic_id:
-                labels_queryset = labels_queryset.filter(parent_id=topic_id)
+                # Get children of a specific topic
+                labels_queryset = Label.objects.filter(id__in=topic_ids_in_use, parent_id=topic_id)
             else:
-                labels_queryset = labels_queryset.filter(parent_id__isnull=True)
+                # Get top-level topics for the subject
+                all_subject_labels = Label.objects.filter(subject__name__startswith=subject_name)
+                top_level_ids = [label.id for label in all_subject_labels if label.parent is None]
+                labels_queryset = Label.objects.filter(id__in=top_level_ids)
 
             response_data = []
             for label in labels_queryset.order_by('numbering'):
-                count = queryset.filter(topic=label).count()
+                # --- FIX: Aggregate count from self and all children ---
+                descendant_ids = self._get_all_children_ids(label)
+                all_topic_ids_for_count = [label.id] + descendant_ids
+                count = queryset.filter(topic_id__in=all_topic_ids_for_count).count()
+                
+                # --- FIX: Clean up the label description ---
+                # This removes duplicated numbering, e.g., "2.1 2.1:" becomes "2.1:"
+                clean_description = label.description
+                if clean_description.startswith(label.numbering):
+                    clean_description = clean_description[len(label.numbering):].lstrip()
+                    # Also, handle cases like "2.1 : " vs "2.1: "
+                    if clean_description.startswith(':'):
+                        clean_description = clean_description[1:].lstrip()
+
+                final_label = f"{label.numbering}: {clean_description}"
+                # Special case: If description already contains "S1", "S2", etc., just use that.
+                if re.match(r'^S\d+', label.description):
+                     final_label = label.description
+                
+                # We add the topic to the list only if it or its children have content.
                 if count > 0:
                     response_data.append({
                         'id': label.id,
-                        'label': f"{label.numbering} {label.description}",
+                        'label': final_label,
                         'count': count
                     })
             
-            response_data.sort(key=lambda x: [int(i) for i in x['label'].split(' ')[0].split('.') if i])
+            # Sort by the numeric part of the numbering for correct order
+            response_data.sort(key=lambda x: [int(i) for i in x['label'].split(':')[0].replace('S','').split('.') if i.isdigit()])
 
             labels = [item['label'] for item in response_data]
             ids = [item['id'] for item in response_data]
