@@ -39,6 +39,7 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'recipes:browser' %}">Recipe Browser</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'slides:browser' %}">Slide Browser</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'flashcards:browser' %}">Flashcard Browser</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'calculator:homepage' %}">Calculator Manual</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'videos:video_home' %}">Videos</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'planner:main' %}">Student Planner</a></li>
@@ -50,7 +51,7 @@
                             <ul class="dropdown-menu" aria-labelledby="adminToolsDropdown">
                                 <li><a class="dropdown-item" href="{% url 'recipes:creator' %}">Recipe Creator</a></li>
                                 <li><a class="dropdown-item" href="{% url 'slides:creator' %}">Slide Creator</a></li>
-                                <!-- ADD THE NEW LINK HERE -->
+                                <li><a class="dropdown-item" href="{% url 'flashcards:creator' %}">Flashcard Creator</a></li>
                                 <li><a class="dropdown-item" href="{% url 'dashboard:home' %}">Dashboard</a></li> 
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}">Django Admin</a></li>

@@ -1,0 +1,81 @@
+/* static/css/flashcard_browser.css */
+
+.flashcard-browser-page .browser-header {
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.flashcard-browser-page .filter-section {
+    background-color: #f8f9fa;
+}
+
+.flashcard-browser-page .filter-section .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+#flashcard-list-container .list-group-item-action {
+    cursor: default;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#flashcard-list-container .list-group-item-action .text-muted {
+    font-size: 0.85rem;
+}
+
+#loading-spinner.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: .2em;
+}
+
+/* ======================================================= */
+/* ==   Styles for Admin Action Icons (Edit & Delete)   == */
+/* ======================================================= */
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+}
+
+.admin-actions .edit-flashcard-btn,
+.admin-actions .delete-flashcard-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 0.25rem;
+    margin-left: 0.85rem;
+    text-decoration: none;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+/* Specific colors */
+.admin-actions .edit-flashcard-btn {
+    color: #6c757d; /* Neutral gray */
+}
+
+.admin-actions .delete-flashcard-btn {
+    color: #dc3545; /* Bootstrap danger red */
+}
+
+/* Hover effects */
+.admin-actions .edit-flashcard-btn:hover {
+    color: #0d6efd; /* Bootstrap primary blue */
+}
+
+.admin-actions .delete-flashcard-btn:hover {
+    color: white;
+    background-color: #dc3545;
+}
+
+/* Icon size for both buttons */
+.admin-actions .bi {
+    font-size: 1.3rem; /* Increased icon size */
+    vertical-align: middle;
+}

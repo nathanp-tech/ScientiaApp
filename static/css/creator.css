@@ -299,3 +299,191 @@ html { min-height: 100%; }
     height: auto; /* Maintain aspect ratio */
     display: block; /* Removes any extra space below the image */
 }
+
+/* ======================================================= */
+/* ==   STYLES FOR FLASHCARD PREVIEW CONTENT            == */
+/* ======================================================= */
+.flashcard-content-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 35px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Clean, subtle gradient */
+    border-radius: 8px;
+    color: #212529; /* Darker text for better contrast */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    overflow-y: auto;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+}
+.flashcard-content-wrapper h1,
+.flashcard-content-wrapper h2,
+.flashcard-content-wrapper h3 {
+    color: #343a40;
+    margin-bottom: 20px;
+    font-weight: 300;
+}
+.flashcard-content-wrapper h3 { font-size: 2rem; }
+.flashcard-content-wrapper p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 15px;
+    text-align: left;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.flashcard-content-wrapper ul,
+.flashcard-content-wrapper ol {
+    text-align: left;
+    max-width: 90%;
+    margin: 20px auto;
+    padding-left: 25px;
+}
+.flashcard-content-wrapper li {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+/* Center MathJax block equations within the flashcard */
+.flashcard-content-wrapper mjx-container[display="true"] {
+    display: block !important;
+    margin: 1.5em auto !important;
+}
+
+
+/* --- Editing Interface Styles --- */
+.block-edit-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    position: relative;
+}
+.block-number {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+.editor-preview-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    min-height: 300px; /* Use min-height instead of fixed height */
+    max-height: 70vh;
+}
+.editor-column, .preview-column {
+    height: 100%;
+    overflow-y: auto;
+    display: flex; /* Use flex to make child fill height */
+    flex-direction: column;
+}
+
+/* Styles for CodeMirror */
+.editor-column .CodeMirror {
+    flex-grow: 1; /* Make CodeMirror fill the available space */
+    height: auto;
+    font-size: 14px;
+    line-height: 1.4;
+}
+.flashcard-creator-page .block-edit-section .CodeMirror {
+    min-height: 250px;
+}
+
+/* Preview Pane Styles */
+.block-preview {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    background-color: #e9ecef; /* A neutral background for the preview area */
+    border-radius: 5px;
+}
+
+/* Block Action Buttons (Move, Delete) */
+.block-actions {
+    text-align: right;
+    margin-bottom: 10px;
+    padding-right: 5px;
+}
+.block-actions .btn {
+    margin-left: 5px;
+}
+
+/* --- Modal Styles --- */
+.modal-body .template-card,
+.modal-body .status-card { /* Apply to status cards as well */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 2px solid transparent;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.modal-body .template-card .card-body,
+.modal-body .status-card .card-body {
+    flex-grow: 1;
+}
+.modal-body .template-card:hover,
+.modal-body .status-card:hover { /* Apply to status cards as well */
+    border-color: #0d6efd; /* Bootstrap primary blue */
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Style for selected status cards to fix visibility issue */
+.modal-body .status-card.selected {
+    border-color: #0d6efd;
+    background-color: #e7f1ff; /* A light blue background for selection */
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.4);
+}
+.modal-body .template-card.selected {
+    border-color: #198754; /* Bootstrap success green */
+    background-color: #e9f7ec;
+    box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
+}
+
+/* --- Floating Buttons --- */
+.floating-btn {
+    position: fixed;
+    right: 30px;
+    z-index: 1050;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    border: none;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    font-size: 24px;
+}
+.floating-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+}
+
+/* ======================================================= */
+/* ==   STYLES FOR CODEMIRROR EDITABLE TEXT HIGHLIGHT   == */
+/* ======================================================= */
+.cm-s-monokai .cm-editable-text {
+  color: #A6E22E !important; /* A bright green, easily noticeable */
+  font-style: italic;
+}
+
+.flashcard-creator-page .block-edit-section .CodeMirror {
+    height: 250px; /* Give the editors a fixed initial height */
+}
+

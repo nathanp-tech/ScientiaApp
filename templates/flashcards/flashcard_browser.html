@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Flashcard Browser{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/flashcard_browser.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4 flashcard-browser-page">
+
+    {% csrf_token %}
+
+    <header class="browser-header mb-4 text-center">
+        <h1>Flashcard Browser</h1>
+        <p class="text-muted">Filter and find flashcards for your study sessions.</p>
+    </header>
+
+    <section class="filter-section card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filter Flashcards</h5>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="curriculum-select" class="form-label">Curriculum</label>
+                    <select id="curriculum-select" class="form-select form-select-sm"></select>
+                </div>
+                <div class="col-md-3">
+                    <label for="language-select" class="form-label">Language</label>
+                    <select id="language-select" class="form-select form-select-sm"></select>
+                </div>
+                <div class="col-md-4">
+                    <label for="subject-select" class="form-label">Subject</label>
+                    <select id="subject-select" class="form-select form-select-sm" disabled></select>
+                </div>
+                <div class="col-md-2">
+                    <label for="topic-select" class="form-label">Topic</label>
+                    <select id="topic-select" class="form-select form-select-sm" disabled></select>
+                </div>
+                </div>
+        </div>
+    </section>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Found Flashcards</span>
+            <div id="loading-spinner" class="spinner-border spinner-border-sm" role="status" style="display: none;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="flashcard-list-container" class="list-group list-group-flush">
+            <p class="text-muted p-3">Adjust filters to see flashcards.</p>
+        </div>
+    </div>
+</div>
+
+{% include "flashcards/_modals.html" %}
+
+{{ initial_data|json_script:"initial-data-json" }}
+{{ api_urls|json_script:"api-urls-json" }}
+{{ user.is_staff|json_script:"user-is-staff-json" }}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/flashcards_browser.js' %}"></script>
+{% endblock %}

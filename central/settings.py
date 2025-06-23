@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'planner.apps.PlannerConfig',
     'videos.apps.VideosConfig',
     'dashboard.apps.DashboardConfig',
+    'flashcards.apps.FlashcardsConfig',
 ]
 
 MIDDLEWARE = [
