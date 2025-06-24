@@ -257,8 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         subjectSelect.disabled = !curriculumId || !languageId; 
         if (curriculumId && languageId) { 
             const filteredSubjects = INITIAL_DATA.subjects.filter(s => String(s.curriculum_id) === curriculumId && String(s.language_id) === languageId);
-            filteredSubjects.forEach(s => subjectSelect.add(new Option(`${s.name} (${s.level === 1 ? 'SL' : 'HL'})`, s.id)));
-            subjectSelect.value = currentSubjectId || ''; 
+            filteredSubjects.forEach(s => subjectSelect.add(new Option(`${s.name}${s.level === 1 ? ' (SL)' : (s.level === 2 ? ' (HL)' : '')}`, s.id)));            subjectSelect.value = currentSubjectId || ''; 
         }
         
     }
@@ -317,101 +316,114 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!selected) return; 
             const templateName = selected.dataset.template;
             const templates = { 
-                'front': `
+    'front': `
 <div class="slide front-page">
     <div class="logo"><img src="${logoPath}" alt="Logo"></div>
-    <h1>Slideshow Title</h1>
-    <div class="line"></div>
-    <p class="subtitle">Subtitle or presenter's name</p>
+    <div class="slide-header">
+        <h1>Slideshow Title</h1>
+        <div class="line"></div>
+        <p class="subtitle">Subtitle or presenter's name</p>
+    </div>
+    <div class="slide-content">
+        </div>
 </div>`, 
 
-                'basic': `
+    'basic': `
 <div class="slide basic-slide">
     <div class="logo"><img src="${logoPath}" alt="Logo"></div>
-    <h2>Slide Title</h2>
-    <div class="line"></div>
-    <ul>
-        <li>Point 1</li>
-        <li>Point 2</li>
-        <li>Point 3</li>
-    </ul>
+    <div class="slide-header">
+        <h2>Basic Slide Title</h2>
+        <div class="line"></div>
+    </div>
+    <div class="slide-content">
+        <ul>
+            <li>Point 1</li>
+            <li>Point 2</li>
+            <li>Point 3</li>
+        </ul>
+    </div>
 </div>`, 
 
-                'two-column': `
+    'two-column': `
 <div class="slide two-column-slide">
     <div class="logo"><img src="${logoPath}" alt="Logo"></div>
-    <h2>Two-Column Layout</h2>
-    <div class="line"></div>
-    <div class="columns-container">
-        <div class="column">
-            <h3>Column 1</h3>
-            <p>Content for the first column.</p>
-        </div>
-        <div class="column">
-            <h3>Column 2</h3>
-            <p>Content for the second column.</p>
+    <div class="slide-header">
+        <h2>Two-Column Layout</h2>
+        <div class="line"></div>
+    </div>
+    <div class="slide-content">
+        <div class="columns-container">
+            <div class="column">
+                <h3>Column 1</h3>
+                <p>Content for the first column.</p>
+            </div>
+            <div class="column">
+                <h3>Column 2</h3>
+                <p>Content for the second column.</p>
+            </div>
         </div>
     </div>
 </div>`,
 
-                'cards': `
+    'cards': `
 <div class="slide info-cards-slide">
     <div class="logo"><img src="${logoPath}" alt="Logo"></div>
-    <h2>Information Cards</h2>
-    <div class="line"></div>
-    <div class="grid-container">
-        <div class="grid">
-            <div class="slide-card">
-                <h6>Card 1</h6>
-                <p>Brief info here.</p>
-            </div>
-            <div class="slide-card">
-                <h6>Card 2</h6>
-                <p>Another piece of info.</p>
-            </div>
-            <div class="slide-card">
-                <h6>Card 3</h6>
-                <p>Break down topics.</p>
+    <div class="slide-header">
+        <h2>Information Cards</h2>
+        <div class="line"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-container">
+            <div class="grid">
+                <div class="slide-card"><h6>Card 1</h6><p>Brief info here.</p></div>
+                <div class="slide-card"><h6>Card 2</h6><p>Another piece of info.</p></div>
+                <div class="slide-card"><h6>Card 3</h6><p>Break down topics.</p></div>
             </div>
         </div>
     </div>
 </div>`,
 
-                'math': `
+    'math': `
 <div class="slide math-slide">
     <div class="logo"><img src="${logoPath}" alt="Logo"></div>
-    <h2>Mathematical Equations</h2>
-    <div class="line"></div>
-    <p>The mass-energy equivalence is $E = mc^2$.</p>
-    <div class="math-block">
-        $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+    <div class="slide-header">
+        <h2>Mathematical Equations</h2>
+        <div class="line"></div>
+    </div>
+    <div class="slide-content">
+        <p style="text-align: center;">The mass-energy equivalence is $E = mc^2$.</p>
+        <div class="math-block">
+            $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+        </div>
     </div>
 </div>`,
 
-                'quiz': `
+    'quiz': `
 <div class="slide quiz-slide">
     <div class="logo"><img src="${logoPath}" alt="Logo"></div>
-    <div class="quiz-content-wrapper">
+    <div class="slide-header">
         <h2>Quiz Question</h2>
         <div class="line"></div>
-        <div class="question">
-            Which are object-oriented programming languages? (Select all that apply)
-        </div>
-        <ul class="options">
-            <li class="option" data-correct="true">Java</li>
-            <li class="option" data-correct="false">C</li>
-            <li class="option" data-correct="true">Python</li>
-            <li class="option" data-correct="true">C++</li>
-            <li class="option" data-correct="false">HTML</li>
-        </ul>
-        <div class="feedback"></div>
-        <div class="quiz-buttons">
-            <button class="btn btn-primary submit-quiz-btn">Submit</button>
-            <button class="btn btn-secondary retake-quiz-btn" style="display:none;">Retake</button>
+    </div>
+    <div class="slide-content">
+        <div class="quiz-content-wrapper">
+            <div class="question">Which are object-oriented programming languages? (Select all that apply)</div>
+            <ul class="options">
+                <li class="option" data-correct="true">Java</li>
+                <li class="option" data-correct="false">C</li>
+                <li class="option" data-correct="true">Python</li>
+                <li class="option" data-correct="true">C++</li>
+                <li class="option" data-correct="false">HTML</li>
+            </ul>
+            <div class="feedback"></div>
+            <div class="quiz-buttons">
+                <button class="btn btn-primary submit-quiz-btn">Submit</button>
+                <button class="btn btn-secondary retake-quiz-btn" style="display:none;">Retake</button>
+            </div>
         </div>
     </div>
 </div>`
-            };
+};
             addBlockToUI({ 
                 order: blocksContainer.children.length, 
                 template_name: templateName, 
