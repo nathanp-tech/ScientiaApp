@@ -1,97 +1,131 @@
 /* static/css/slide_styles.css */
-/* Contains all styles related to the appearance of individual slides. */
 
-/* --- Common Styles for .slide --- */
+/* --- 1. Base Theme for ALL Slides --- */
 .slide {
     width: 100%;
-    height: 100%; /* Will be controlled by the aspect ratio of its container */
+    height: 100%;
+    background: #fdfdfa; /* A very light, warm off-white */
+    color: #333;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 20px; /* Reduced padding for better fit */
-    padding-bottom: 60px; /* Space for logo */
-    background: #FFFFF0;
-    color: black;
+    align-items: center; 
+    justify-content: flex-start; 
+    padding: 5vh 6vw;
     text-align: center;
-    overflow: hidden; /* Important: Prevents internal scrollbars on the slide itself */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     position: relative;
     box-sizing: border-box;
-    /* The border is removed here; it will be on the container if needed */
 }
 
-.slide > .container-fluid,
-.slide > .container,
-.slide > div:not(.logo) {
-    max-height: 100%;
-    overflow-y: auto; /* Only if absolutely necessary and design allows */
+.slide .logo {
+    position: absolute;
+    bottom: 25px;
+    right: 30px;
+    z-index: 10;
+}
+
+.slide .logo img {
+    height: 40px;
+    opacity: 0.7;
+}
+
+/* --- 2. Standard Typographic Elements --- */
+
+.slide h1 {
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: #2c3e50;
+    margin-bottom: 25px;
+}
+
+/* --- MODIFICATION APPLIQUÉE ICI --- */
+.slide .line {
+    width: 80px;
+    height: 1px; /* Reduced thickness from 2px to 1px for a finer line */
+    background-color: #123456;
+    margin: 0 auto 30px auto;
+    border: none;
+}
+/* --- FIN DE LA MODIFICATION --- */
+
+.slide .subtitle {
+    font-size: 1.5rem;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.slide h2 {
+    font-size: 2rem;
+    color: #34495e;
+    margin-bottom: 20px;
+}
+
+.slide p, .slide li {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    text-align: left;
+}
+
+.slide ul, .slide ol {
+    list-style-position: inside;
+    padding-left: 0;
+    display: inline-block;
+    text-align: left;
+    margin-top: 20px;
+}
+
+/* --- 3. Specific Layout Styles for Templates --- */
+.columns-container {
+    display: flex;
+    gap: 40px;
     width: 100%;
-    padding: 10px; /* Reduced padding */
-    box-sizing: border-box;
+    text-align: left;
+    margin-top: 20px;
+}
+.columns-container .column {
+    flex: 1;
+}
+.columns-container .column h3 {
+    font-size: 1.5rem;
+    color: #34495e;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
 }
 
-.slide h1 { font-size: 2.2rem; font-weight: 300; margin-bottom: 20px; color: #333; }
-.slide h2 { font-size: 1.6rem; margin-bottom: 15px; color: #444; }
-.slide h3 { font-size: 1.3rem; color: #333; margin-bottom: 10px; }
-.slide p { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; text-align: left; max-width: 90%; margin-left: auto; margin-right: auto; }
-.slide .center-p p { text-align: center; }
-.slide ul, .slide ol { list-style-position: inside; padding-left: 15px; margin: 15px auto; width: 90%; max-width: 750px; text-align: left; }
-.slide ul { list-style-type: disc; }
-.slide ul.no-bullet { list-style-type: none; padding-left: 0; }
-.slide li { margin: 8px 0; font-size: 1rem; }
+.grid-container {
+    width: 100%;
+    margin-top: 20px;
+}
+.grid-container .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+.slide-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    text-align: left;
+}
+.slide-card h6 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
 
-.slide .logo { position: absolute; bottom: 15px; right: 20px; z-index: 10; }
-.slide .logo img { height: 30px; opacity: 0.8; } /* Smaller logo */
-.slide .logo .logo-text { font-size: 9px; font-weight: 300; margin-top: 2px; color: #555; }
-.slide .line { width: 50%; margin: 20px auto; border-top: 1px solid #dee2e6; }
-
-/* Specific template styles for .slide (from creator.css) */
-.slide.front-page h1 { font-size: 3.5rem; }
-.slide.front-page .subtitle { font-size: 1.1rem; letter-spacing: 1px; color: #6c757d; margin-top: 8px; text-transform: uppercase; }
-
-.slide.two-column .columns-container { display: flex; width: 100%; gap: 20px; max-width: 95%; align-items: flex-start; }
-.slide.two-column .column { flex: 1; text-align: left; }
-.slide.two-column .column h3 { border-bottom: 1px solid #007bff; padding-bottom: 4px; margin-bottom: 10px; font-size: 1.2rem; }
-
-.slide.two-column-basic .title-line h1 { font-size: 1.8rem; margin-bottom: 10px; }
-.slide.two-column-basic .title-line .line { margin-top: 0; margin-bottom: 20px; }
-.slide.two-column-basic .row-twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 20px; max-width: 95%; margin-left: auto; margin-right: auto; }
-.slide.two-column-basic .row-twocol .left { font-size: 1rem; line-height: 1.5; text-align: justify; }
-.slide.two-column-basic .row-twocol .right { font-size: 0.95rem; line-height: 1.5; text-align: justify; font-style: italic; color: #555; }
-
-.slide.cards .title-line h1 { font-size: 1.8rem; margin-bottom: 10px; }
-.slide.cards .title-line .line { margin-top: 0; margin-bottom: 20px; }
-.slide.cards .grid-container { width: 100%; max-width: 95%; margin: 15px auto; }
-.slide.cards .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-.slide.cards .slide-card { background-color: #061244; color: #ffffff; padding: 15px; border-radius: 6px; text-align: left; font-size: 0.85rem; line-height: 1.4; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); height: 100%; }
-.slide.cards .slide-card h6 { font-size: 1rem; margin-bottom: 5px; }
-
-
-/* Styles specific to Quiz Slides */
-.slide.quiz-slide { text-align: left; align-items: center; }
-.quiz-slide .quiz-content-wrapper { width: 100%; max-width: 90%; margin: 0 auto; }
-.quiz-slide h1 { font-size: 1.8rem; margin-bottom: 15px; text-align: center; }
-.quiz-slide .question { margin-bottom: 20px; font-size: 1.1rem; font-weight: 500; text-align: center; }
-.quiz-slide .options { width: 100%; max-width: 600px; margin: 0 auto 15px auto; list-style-type: none; padding: 0; }
-.quiz-slide .option { position: relative; padding: 8px 8px 8px 40px; margin-bottom: 8px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease; background-color: #fff; font-size: 0.95rem; }
-.quiz-slide .option:hover { background-color: #f8f9fa; }
-.quiz-slide .option::before { content: ""; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border: 2px solid #ccc; border-radius: 3px; background-color: #fff; transition: all 0.2s ease; }
-.quiz-slide .option.selected::before { background-color: #007bff; border-color: #007bff; content: '✔'; color: white; font-size: 12px; text-align: center; line-height: 16px; } /* Adjusted line-height */
-.quiz-slide.submitted .option { cursor: default; }
-.quiz-slide.submitted .option.correct::before { background-color: #28a745 !important; border-color: #28a745 !important; content: '✔'; color: white; font-size: 12px; text-align: center; line-height: 16px;}
-.quiz-slide.submitted .option.incorrect::before { background-color: #dc3545 !important; border-color: #dc3545 !important; content: '✖'; color: white; font-size: 12px; text-align: center; line-height: 16px;}
-.quiz-slide.submitted .option.selected.incorrect::before { background-color: #dc3545 !important; border-color: #dc3545 !important; content: '✖'; color: white; font-size: 12px; text-align: center; line-height: 16px;}
-.quiz-slide.submitted .option.correct:not(.selected)::before { background-color: #e9f7ec !important; border-color: #28a745 !important; content: '✔'; color: #28a745; font-size: 12px; text-align: center; line-height: 16px;}
-.quiz-slide .feedback { margin-top: 10px; font-weight: bold; min-height: 20px; text-align: center; font-size: 0.9rem; }
-.quiz-slide .feedback.correct { color: #28a745; }
-.quiz-slide .feedback.incorrect { color: #dc3545; }
-.quiz-slide .feedback.partial { color: #fd7e14; }
-.quiz-slide .quiz-buttons { text-align: center; margin-top: 15px; }
-.quiz-slide .submit-quiz-btn { margin-right: 8px; font-size: 0.9rem; padding: 5px 10px; }
-.quiz-slide .retake-quiz-btn { display: none; font-size: 0.9rem; padding: 5px 10px; }
-
-/* MathJax specific styles */
-.slide .math-inline { display: inline-block; margin: 0 2px; }
-.slide .math-block { display: block; margin: 10px auto; text-align: center; overflow-x: auto; padding: 5px 0; }
-.MathJax_Display { display: block !important; text-align: center !important; margin: 0.8em auto !important; overflow-x: auto; overflow-y: hidden; }
-.MathJax { font-size: 100% !important; line-height: normal !important; vertical-align: baseline !important; }
+/* --- 4. Quiz Slide Styles --- */
+.quiz-content-wrapper { width: 100%; max-width: 800px; margin: auto; }
+.quiz-slide .question { font-size: 1.5em; margin-bottom: 1.5rem; font-weight: 500; }
+.quiz-slide ul.options { list-style: none; padding: 0; margin: 0; }
+.quiz-slide li.option { display: flex; align-items: center; text-align: left; padding: 0.75rem 1rem; border: 1px solid #ccc; border-radius: 0.375rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s ease-in-out; background-color: #fff; }
+.quiz-slide li.option::before { content: ''; display: inline-block; width: 1.25em; height: 1.25em; border: 1px solid #adb5bd; border-radius: 0.25em; margin-right: 0.75em; background-color: #fff; flex-shrink: 0; }
+.quiz-slide li.option.selected { border-color: #0d6efd; background-color: #e7f1ff; }
+.quiz-slide li.option.selected::before { background-color: #0d6efd; border-color: #0d6efd; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); }
+.quiz-slide.quiz-submitted li.option { cursor: default; }
+.quiz-slide.quiz-submitted li.option.correct { background-color: #d1e7dd; border-color: #198754; }
+.quiz-slide.quiz-submitted li.option.correct::before { background-color: #198754; border-color: #198754; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); }
+.quiz-slide.quiz-submitted li.option.incorrect { background-color: #f8d7da; border-color: #dc3545; }
+.quiz-slide.quiz-submitted li.option.incorrect::before { background-color: #dc3545; border-color: #dc3545; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e"); }
+.quiz-slide .feedback { margin-top: 1.5rem; font-size: 1.2em; font-weight: bold; }
+.quiz-slide .quiz-buttons { margin-top: 1.5rem; }

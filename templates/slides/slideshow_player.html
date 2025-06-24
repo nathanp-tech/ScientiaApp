@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ slideshow.title }}{% endblock %}
+
+{% block extra_css %}
+    {# CSS pour le style des diapositives elles-mêmes #}
+    <link rel="stylesheet" href="{% static 'css/slide_styles.css' %}">
+    {# CSS pour la mise en page de la visionneuse #}
+    <link rel="stylesheet" href="{% static 'css/slideshow_player.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 slideshow-player-container">
+
+    <header class="player-header">
+        <h1 class="h4 mb-0">{{ slideshow.title }}</h1>
+        <a href="{% url 'slides:browser' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x-lg"></i> Close Player
+        </a>
+    </header>
+
+    <main class="player-main-content">
+        <div id="slide-display-area-wrapper">
+            <div id="slide-display-area">
+                </div>
+        </div>
+    </main>
+
+    <footer class="player-controls">
+        <button id="prev-slide-btn" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Previous
+        </button>
+        <span id="slide-counter" class="mx-3 text-muted">Slide 1 / ?</span>
+        <button id="next-slide-btn" class="btn btn-primary">
+            Next <i class="bi bi-arrow-right"></i>
+        </button>
+    </footer>
+
+</div>
+
+{# Passe toutes les données du diaporama au script JavaScript #}
+{{ slideshow_data_for_js|json_script:"slideshow-data-json" }}
+
+{% endblock %}
+
+{% block extra_js %}
+    {# MathJax est essentiel pour rendre les formules #}
+    <script>
+        MathJax = {
+          tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
+          svg: { fontCache: 'global' }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    
+    {# Le nouveau script pour la logique de la visionneuse #}
+    <script src="{% static 'js/slideshow_player.js' %}"></script>
+{% endblock %}

@@ -1,5 +1,8 @@
+# core/serializers.py
+
 from rest_framework import serializers
-from .models import Curriculum, Language, Subject, Label
+# MODIFIED: Removed 'Slide' and 'SlideBlock' from this import
+from .models import Curriculum, Language, Subject, Label, StudySkill, StudySkillCategory
 
 class CurriculumSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,7 +15,6 @@ class LanguageSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'code']
 
 class SubjectSerializer(serializers.ModelSerializer):
-    # Inclure des informations textuelles pour faciliter l'affichage côté client
     curriculum_name = serializers.CharField(source='curriculum.name', read_only=True)
     language_name = serializers.CharField(source='language.name', read_only=True)
     level_display = serializers.CharField(source='get_level_display', read_only=True)
@@ -28,4 +30,16 @@ class SubjectSerializer(serializers.ModelSerializer):
 class LabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label
-        fields = ['id', 'description', 'subject', 'parent']
+        fields = ['id', 'description', 'subject', 'parent', 'numbering']
+
+class StudySkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudySkill
+        fields = ['id', 'name', 'description', 'order']
+
+class StudySkillCategorySerializer(serializers.ModelSerializer):
+    skills = StudySkillSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = StudySkillCategory
+        fields = ['id', 'name', 'description', 'order', 'skills']

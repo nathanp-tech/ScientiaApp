@@ -1,7 +1,9 @@
-# core/models.py (UPDATED)
+# core/models.py
 
 from django.db import models
 from django.contrib.auth.models import User
+
+# --- Vos modèles existants (inchangés) ---
 
 class Curriculum(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -37,10 +39,7 @@ class Label(models.Model):
     def __str__(self):
         return f"{self.numbering} {self.description}"
 
-# --- NEW MODELS ADDED BELOW ---
-
 class StudySkillCategory(models.Model):
-    """ Represents a high-level category of study skills. e.g., 'I. Content' """
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, help_text="A brief explanation of the category.")
     order = models.PositiveIntegerField(default=0, help_text="Order for display (e.g., 1 for 'Content', 2 for 'Exam Management').")
@@ -53,7 +52,6 @@ class StudySkillCategory(models.Model):
         return self.name
 
 class StudySkill(models.Model):
-    """ Represents a specific study skill within a category. e.g., '1a. Coverage' """
     category = models.ForeignKey(StudySkillCategory, on_delete=models.CASCADE, related_name='skills')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, help_text="A brief explanation of the skill.")
@@ -65,3 +63,23 @@ class StudySkill(models.Model):
 
     def __str__(self):
         return f"{self.category.name} - {self.name}"
+
+
+def get_initial_data_for_filters():
+    """
+    Fetches and structures the initial data needed for filter dropdowns
+    across different creator/browser pages. This avoids repeating the same
+    queries in multiple views.
+    """
+    # Note: We convert querysets to lists to make them JSON serializable
+    # and to execute the database queries only once.
+    data = {
+        'curriculums': list(Curriculum.objects.values('id', 'name')),
+        'languages': list(Language.objects.values('id', 'name')),
+        'subjects': list(Subject.objects.values('id', 'name', 'level', 'curriculum_id', 'language_id')),
+        'labels': list(Label.objects.values('id', 'description', 'subject_id')),
+        'study_skill_categories': list(StudySkillCategory.objects.prefetch_related('skills').values(
+            'name', 'skills__id', 'skills__name'
+        ))
+    }
+    return data

@@ -4,51 +4,29 @@
 {% block title %}Slideshow Browser{% endblock %}
 
 {% block extra_css %}
+    {# Link to all necessary stylesheets for the integrated view #}
+    <link rel="stylesheet" href="{% static 'css/creator.css' %}">
     <link rel="stylesheet" href="{% static 'css/slide_browser.css' %}">
-    <link rel="stylesheet" href="{% static 'css/slide_styles.css' %}"> 
+    <link rel="stylesheet" href="{% static 'css/slide_styles.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4 slide-browser-page">
+<div class="container-fluid mt-4 slide-browser-page">
+
+    {% csrf_token %}
+
     <header class="browser-header mb-4">
         <h1>Slideshow Browser</h1>
-        <p>Filter and select slideshows to view.</p>
+        <p class="text-muted">Filter and select a slideshow to view it on the right.</p>
     </header>
 
     <section class="filter-section card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title">Filter Slideshows</h5>
             <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="curriculum-select" class="form-label">Curriculum</label>
-                    <select id="curriculum-select" class="form-select form-select-sm">
-                        <option value="">All Curriculums</option>
-                        {% for curriculum in initial_data_for_filters.curriculums %}
-                            <option value="{{ curriculum.id }}">{{ curriculum.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="language-select" class="form-label">Language</label>
-                    <select id="language-select" class="form-select form-select-sm">
-                        <option value="">All Languages</option>
-                         {% for lang in initial_data_for_filters.languages %}
-                            <option value="{{ lang.id }}">{{ lang.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="subject-select" class="form-label">Subject</label>
-                    <select id="subject-select" class="form-select form-select-sm" disabled>
-                        <option value="">Choose Curriculum & Language</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="topic-select" class="form-label">Topic</label>
-                    <select id="topic-select" class="form-select form-select-sm" disabled>
-                        <option value="">Choose Subject First</option>
-                    </select>
-                </div>
+                <div class="col-md-3"><label for="curriculum-select" class="form-label">Curriculum</label><select id="curriculum-select" class="form-select form-select-sm"></select></div>
+                <div class="col-md-3"><label for="language-select" class="form-label">Language</label><select id="language-select" class="form-select form-select-sm"></select></div>
+                <div class="col-md-3"><label for="subject-select" class="form-label">Subject</label><select id="subject-select" class="form-select form-select-sm" disabled></select></div>
             </div>
         </div>
     </section>
@@ -56,11 +34,9 @@
     <div class="row">
         <aside class="col-lg-4 slideshow-list-column mb-4">
             <div class="card shadow-sm">
-                <div class="card-header">
-                    Found Slideshows
-                    <span id="loading-spinner-list" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;">
-                        <span class="visually-hidden">Loading...</span>
-                    </span>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Found Slideshows</span>
+                    <span id="loading-spinner-list" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;"></span>
                 </div>
                 <div id="slideshow-list-container" class="list-group list-group-flush">
                     <p class="text-muted p-3">Adjust filters to see slideshows.</p>
@@ -69,53 +45,48 @@
         </aside>
 
         <main class="col-lg-8 slideshow-player-column">
-            {# This entire card will go fullscreen #}
             <div id="slideshow-player-container" class="card shadow-sm"> 
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="slideshow-title-display">Select a slideshow to view</span>
                     <div>
-                        <button id="fullscreen-btn" class="btn btn-sm btn-outline-light me-2" title="Toggle Fullscreen" style="display: none;">
-                            <i class="bi bi-fullscreen"></i>
+                        <button id="fullscreen-btn" class="btn btn-sm btn-outline-secondary me-2" title="Toggle Fullscreen" style="display: none;">
+                            <i class="bi bi-fullscreen" id="fullscreen-enter-icon"></i>
+                            <i class="bi bi-fullscreen-exit" id="fullscreen-exit-icon" style="display: none;"></i>
                         </button>
-                        <span id="loading-spinner-player" class="spinner-border spinner-border-sm" role="status" style="display: none;">
-                            <span class="visually-hidden">Loading...</span>
-                        </span>
+                        <span id="loading-spinner-player" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div id="slide-display-area-wrapper"> 
                         <div id="slide-display-area">
-                            <p class="text-muted text-center p-5">The slideshow will be displayed here.</p>
+                            <p class="text-muted text-center p-5">The selected slideshow will be displayed here.</p>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-center" id="slideshow-controls" style="display: none;">
-                    <button id="prev-slide-btn" class="btn btn-outline-secondary btn-sm me-2">
-                        <i class="bi bi-arrow-left-circle"></i> Previous
-                    </button>
+                    <button id="prev-slide-btn" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-arrow-left-circle"></i> Previous</button>
                     <span id="slide-counter" class="align-middle">Slide 0 of 0</span>
-                    <button id="next-slide-btn" class="btn btn-outline-secondary btn-sm ms-2">
-                        Next <i class="bi bi-arrow-right-circle"></i>
-                    </button>
+                    <button id="next-slide-btn" class="btn btn-outline-secondary btn-sm ms-2">Next <i class="bi bi-arrow-right-circle"></i></button>
                 </div>
             </div>
         </main>
     </div>
 </div>
 
+{% include "slides/_modals.html" %}
+
 {{ initial_data_for_filters|json_script:"initial-data-for-filters-json" }}
 {{ api_urls_for_js|json_script:"api-urls-for-js-json" }}
-
-<script>
-    MathJax = {
-      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
-      svg: { fontCache: 'global' }
-    };
-</script>
-<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-
+{{ user.is_staff|json_script:"user-is-staff-json" }}
 {% endblock %}
 
 {% block extra_js %}
+    <script>
+        MathJax = {
+          tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
+          svg: { fontCache: 'global' }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <script src="{% static 'js/slide_browser.js' %}"></script>
 {% endblock %}

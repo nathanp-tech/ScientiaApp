@@ -1,44 +1,32 @@
 /**
  * @file slide_creator.js
  * @description Logic for the slideshow creator.
+ * @version 3.3 - Unified slide templates for style consistency and added interactive quiz logic.
  */
 document.addEventListener('DOMContentLoaded', function() {
 
     // =========================================================================
     // 1. INITIAL SETUP & CONFIGURATION
     // =========================================================================
-    const apiConfigEl = document.getElementById('api-config-json'); 
-    if (!apiConfigEl) {
-        console.error("Critical error: The API configuration object (#api-config-json) was not found."); 
-        alert("Page configuration error (API Config). Cannot continue."); 
-        return;
-    }
-    const API_CONFIG = JSON.parse(apiConfigEl.textContent); 
-    const API_URLS = API_CONFIG.urls; 
-    const CSRF_TOKEN = API_CONFIG.csrf_token; 
+    const apiConfigEl = document.getElementById('api-config-json');
+    const initialDataEl = document.getElementById('initial-data-json');
 
-    const initialDataEl = document.getElementById('initial-data-json'); 
-    if (!initialDataEl) {
-        console.error("Critical error: The initial data (#initial-data-json) was not found."); 
-        alert("Page configuration error (Initial Data). Cannot continue."); 
+    if (!apiConfigEl || !initialDataEl) {
+        alert("A critical page configuration is missing. The application cannot start.");
         return;
     }
-    const INITIAL_DATA = JSON.parse(initialDataEl.textContent); 
-    const logoPath = INITIAL_DATA.logo_path || '/static/img/logo_black.png'; 
+
+    const API_CONFIG = JSON.parse(apiConfigEl.textContent);
+    const INITIAL_DATA = JSON.parse(initialDataEl.textContent);
+    const logoPath = INITIAL_DATA.logo_path || '/static/img/logo_black.png';
+    const CSRF_TOKEN = API_CONFIG.csrf_token;
 
     // =========================================================================
     // 2. STATE MANAGEMENT
     // =========================================================================
     let slideshowState = { 
-        id: null,
-        title: '',
-        author: null, 
-        subject: null,
-        topic: null,
-        language: null,
-        curriculum: null,
-        status: 'in_progress', // NOUVEAU : Statut par défaut
-        blocks: [], 
+        id: null, title: '', author: null, subject: null, 
+        language: null, curriculum: null, status: 'in_progress', blocks: [], 
     };
     let editors = {}; 
     let nextBlockId = 1; 
@@ -47,42 +35,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. DOM ELEMENT REFERENCES
     // =========================================================================
     const blocksContainer = document.getElementById('blocks-container'); 
-    const saveSlideshowBtn = document.getElementById('save-slideshow-server-btn'); 
-    const loadSlideshowBtn = document.getElementById('load-slideshow-server-btn'); 
+    const saveSlideshowBtn = document.getElementById('save-slideshow-btn'); 
     const addBlockBtn = document.getElementById('add-block-floating-btn'); 
     const metadataBtn = document.getElementById('metadata-btn'); 
+    const helpBtn = document.getElementById('help-btn');
+    const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
+
     const confirmTemplateBtn = document.getElementById('confirm-template-btn'); 
     const saveMetadataBtn = document.getElementById('save-metadata-btn'); 
-    const confirmLoadSlideshowBtn = document.getElementById('confirm-load-slideshow-btn'); 
-    const slideshowSelectorDropdown = document.getElementById('slideshowSelector'); 
+    const confirmStatusAndSaveBtn = document.getElementById('confirm-status-and-save-btn');
+    
     const slideshowTitleInput = document.getElementById('slideshowTitle'); 
     const curriculumSelect = document.getElementById('curriculum'); 
     const languageSelect = document.getElementById('language'); 
     const subjectSelect = document.getElementById('subject'); 
-    const topicsSelect = document.getElementById('topic'); 
 
-    // --- NOUVEAU : Références pour le modal de statut ---
+
+    const slideTemplateSelectionModalEl = document.getElementById('slideTemplateSelectionModal');
     const statusSelectionModalEl = document.getElementById('statusSelectionModal');
-    const statusSelectionModal = new bootstrap.Modal(statusSelectionModalEl);
-    const confirmStatusAndSaveBtn = document.getElementById('confirm-status-and-save-btn');
+    const metadataModalEl = document.getElementById('metadataSelectionModal');
+    const helpModalEl = document.getElementById('helpModal');
 
-    const slideTemplateSelectionModalEl = document.getElementById('slideTemplateSelectionModal'); 
+    const statusSelectionModal = new bootstrap.Modal(statusSelectionModalEl);
     const slideTemplateSelectionModal = new bootstrap.Modal(slideTemplateSelectionModalEl); 
-    const metadataModalEl = document.getElementById('metadataSelectionModal'); 
     const metadataModal = new bootstrap.Modal(metadataModalEl); 
-    const loadSlideshowModalEl = document.getElementById('loadSlideshowModal'); 
-    const loadSlideshowModal = new bootstrap.Modal(loadSlideshowModalEl); 
+    const helpModal = new bootstrap.Modal(helpModalEl);
 
     // =========================================================================
     // 4. CORE UI & EDITOR FUNCTIONS
     // =========================================================================
-    function updateEmptyState() {
-        blocksContainer.classList.toggle('empty', blocksContainer.children.length === 0); 
-    }
-
-    function generateInternalBlockId() {
-        return `client-block-${nextBlockId++}`; 
-    }
+    function updateEmptyState() { blocksContainer.classList.toggle('empty', blocksContainer.children.length === 0); }
+    function generateInternalBlockId() { return `client-block-${nextBlockId++}`; }
 
     function initializeCodeMirror(textareaId, internalBlockId) {
         const textarea = document.getElementById(textareaId);
@@ -107,10 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (window.MathJax && window.MathJax.typesetPromise) {
                     window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax error:', err));
                 }
-                const slideElement = previewEl.querySelector('.slide');
-                if (slideElement && slideElement.classList.contains('quiz-slide')) {
-                    setupQuizInteraction(slideElement);
-                }
             }, 300);
         });
         editors[internalBlockId] = editor;
@@ -118,95 +97,60 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addBlockToUI(block) {
-        const internalBlockId = generateInternalBlockId(); 
-        const editorId = `editor-${internalBlockId}`; 
-        const previewId = `preview-${internalBlockId}`; 
-        const blockWrapper = document.createElement('div'); 
-        blockWrapper.className = 'block-edit-section mb-4'; 
-        blockWrapper.id = internalBlockId; 
-        blockWrapper.dataset.order = block.order; 
-        blockWrapper.dataset.template = block.template_name; 
-
-        blockWrapper.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge bg-secondary block-number">Slide ${parseInt(block.order, 10) + 1}</span>
-                <div class="block-actions">
-                    <button class="btn btn-sm btn-outline-secondary move-block-up" title="Move Up"><i class="bi bi-arrow-up"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary move-block-down" title="Move Down"><i class="bi bi-arrow-down"></i></button>
-                    <button class="btn btn-sm btn-danger delete-block" title="Delete"><i class="bi bi-trash"></i></button>
-                </div>
-            </div>
-            <div class="editor-preview-container">
-                <div class="editor-column"><textarea id="${editorId}"></textarea></div>
-                <div class="preview-column"><div id="${previewId}" class="block-preview"></div></div>
-            </div>`; 
-
-        blocksContainer.appendChild(blockWrapper); 
-        document.getElementById(editorId).value = block.content_html; 
-        initializeCodeMirror(editorId, internalBlockId); 
-
-        const previewEl = document.getElementById(previewId); 
-        previewEl.innerHTML = block.content_html; 
-        
+        const internalBlockId = generateInternalBlockId();
+        const editorId = `editor-${internalBlockId}`;
+        const previewId = `preview-${internalBlockId}`;
+        const blockWrapper = document.createElement('div');
+        blockWrapper.className = 'block-edit-section mb-4';
+        blockWrapper.id = internalBlockId;
+        blockWrapper.dataset.order = block.order;
+        blockWrapper.dataset.template = block.template_name;
+        blockWrapper.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-secondary block-number">Slide ${parseInt(block.order, 10) + 1}</span><div class="block-actions"><button class="btn btn-sm btn-outline-secondary move-block-up" title="Move Up"><i class="bi bi-arrow-up"></i></button><button class="btn btn-sm btn-outline-secondary move-block-down" title="Move Down"><i class="bi bi-arrow-down"></i></button><button class="btn btn-sm btn-danger delete-block" title="Delete"><i class="bi bi-trash"></i></button></div></div><div class="editor-preview-container"><div class="editor-column"><textarea id="${editorId}"></textarea></div><div class="preview-column"><div id="${previewId}" class="block-preview"></div></div></div>`;
+        blocksContainer.appendChild(blockWrapper);
+        document.getElementById(editorId).value = block.content_html;
+        initializeCodeMirror(editorId, internalBlockId);
+        document.getElementById(previewId).innerHTML = block.content_html;
         if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise([previewEl]).catch((err) => console.error('MathJax error:', err));
+            window.MathJax.typesetPromise([document.getElementById(previewId)]).catch(err => console.error('MathJax error:', err));
         }
-
-        const slideElement = previewEl.querySelector('.slide'); 
-        if (slideElement && slideElement.classList.contains('quiz-slide')) { 
-            setupQuizInteraction(slideElement); 
-        }
-        updateEmptyState(); 
-
-        blockWrapper.querySelector('.delete-block').addEventListener('click', () => { 
-            if (confirm("Are you sure you want to delete this slide?")) { 
-                blockWrapper.remove(); 
-                delete editors[internalBlockId]; 
-                updateBlockOrderInUI(); 
-            }
-        });
-        blockWrapper.querySelector('.move-block-up').addEventListener('click', () => moveBlock(blockWrapper, 'up')); 
-        blockWrapper.querySelector('.move-block-down').addEventListener('click', () => moveBlock(blockWrapper, 'down')); 
+        blockWrapper.querySelector('.delete-block').addEventListener('click', () => { if (confirm("Are you sure you want to delete this slide?")) { blockWrapper.remove(); delete editors[internalBlockId]; updateBlockOrderInUI(); } });
+        blockWrapper.querySelector('.move-block-up').addEventListener('click', () => moveBlock(blockWrapper, 'up'));
+        blockWrapper.querySelector('.move-block-down').addEventListener('click', () => moveBlock(blockWrapper, 'down'));
+        updateEmptyState();
     }
 
     function moveBlock(blockElement, direction) {
-        if (direction === 'up' && blockElement.previousElementSibling) { 
-            blocksContainer.insertBefore(blockElement, blockElement.previousElementSibling); 
-        } else if (direction === 'down' && blockElement.nextElementSibling) { 
-            blocksContainer.insertBefore(blockElement, blockElement.nextElementSibling.nextElementSibling); 
-        }
-        updateBlockOrderInUI(); 
+        if (direction === 'up' && blockElement.previousElementSibling) { blocksContainer.insertBefore(blockElement, blockElement.previousElementSibling); }
+        else if (direction === 'down' && blockElement.nextElementSibling) { blocksContainer.insertBefore(blockElement.nextElementSibling, blockElement); }
+        updateBlockOrderInUI();
     }
 
     function updateBlockOrderInUI() {
-        blocksContainer.querySelectorAll('.block-edit-section').forEach((el, index) => { 
-            el.dataset.order = index; 
-            const blockNumberSpan = el.querySelector('.block-number'); 
-            if (blockNumberSpan) blockNumberSpan.textContent = `Slide ${index + 1}`; 
+        document.querySelectorAll('.block-edit-section').forEach((el, index) => {
+            el.dataset.order = index;
+            el.querySelector('.block-number').textContent = `Slide ${index + 1}`;
         });
+        updateEmptyState();
     }
 
-    function renderUIFromState() {
+    function renderUIFromState(state) {
+        slideshowState = { ...state };
+        document.getElementById('slideshow-status').textContent = state.id ? `Editing Slideshow #${state.id}` : 'New Slideshow';
         blocksContainer.innerHTML = ''; 
         editors = {}; 
         nextBlockId = 1; 
-
-        slideshowTitleInput.value = slideshowState.title || ''; 
-        curriculumSelect.value = slideshowState.curriculum || ''; 
-        languageSelect.value = slideshowState.language || ''; 
-
+        slideshowTitleInput.value = state.title || ''; 
+        curriculumSelect.value = state.curriculum || ''; 
+        languageSelect.value = state.language || ''; 
         filterSubjects(); 
-        subjectSelect.value = slideshowState.subject || ''; 
-        
-        updateTopics(); 
-        topicsSelect.value = slideshowState.topic || ''; 
-
-        slideshowState.blocks.sort((a, b) => a.order - b.order); 
-        slideshowState.blocks.forEach((block, index) => { 
-            block.order = index; 
-            addBlockToUI(block); 
-        });
-        updateEmptyState(); 
+        subjectSelect.value = state.subject || ''; 
+        if (state.blocks) {
+            state.blocks.sort((a, b) => a.order - b.order).forEach((block, index) => { 
+                block.order = index; 
+                addBlockToUI(block); 
+            });
+        }
+        updateEmptyState();
     }
 
     function updateStateFromUI() {
@@ -214,10 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
         slideshowState.curriculum = curriculumSelect.value || null; 
         slideshowState.language = languageSelect.value || null; 
         slideshowState.subject = subjectSelect.value || null; 
-        slideshowState.topic = topicsSelect.value || null; 
-        
         const newBlocks = []; 
-        blocksContainer.querySelectorAll('.block-edit-section').forEach((el) => { 
+        blocksContainer.querySelectorAll('.block-edit-section').forEach((el, index) => {
+            el.dataset.order = index;
             const editor = editors[el.id]; 
             if (editor) { 
                 newBlocks.push({ 
@@ -227,19 +170,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
-        slideshowState.blocks = newBlocks.sort((a, b) => a.order - b.order);
+        slideshowState.blocks = newBlocks;
     }
 
     // =========================================================================
-    // 5. API COMMUNICATION (MODIFIED FOR STATUS)
+    // 5. API COMMUNICATION
     // =========================================================================
+    function handleSaveButtonClick() {
+        updateStateFromUI();
+        if (!slideshowState.title) {
+            alert("Please provide a title for the slideshow in the metadata modal.");
+            metadataModal.show();
+            return;
+        }
+        document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
+        confirmStatusAndSaveBtn.disabled = true;
+        statusSelectionModal.show();
+    }
+
     async function executeSave() {
-        const url = API_URLS.slideshows; 
-        const method = 'POST'; 
-        saveSlideshowBtn.disabled = true;
+        const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
+        if (!selectedStatusCard) {
+            alert('Please select a status.');
+            return;
+        }
+        slideshowState.status = selectedStatusCard.dataset.status;
+        const url = slideshowState.id ? `${API_CONFIG.urls.slideshows}${slideshowState.id}/` : API_CONFIG.urls.slideshows;
+        const method = slideshowState.id ? 'PUT' : 'POST';
         confirmStatusAndSaveBtn.disabled = true;
         confirmStatusAndSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
-
         try {
             const response = await fetch(url, {
                 method: method,
@@ -251,103 +210,65 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(errorData.detail || JSON.stringify(errorData));
             }
             const savedSlideshow = await response.json();
-            slideshowState = savedSlideshow; 
-            renderUIFromState(); 
+            renderUIFromState(savedSlideshow);
             alert('Slideshow saved successfully!');
         } catch (error) {
             console.error("Save error:", error);
             alert(`Save error: ${error.message}`);
         } finally {
-            saveSlideshowBtn.disabled = false;
             confirmStatusAndSaveBtn.disabled = false;
             confirmStatusAndSaveBtn.innerHTML = 'Confirm & Save';
             statusSelectionModal.hide();
         }
     }
 
-    function handleSaveButtonClick() {
-        updateStateFromUI();
-        if (!slideshowState.title) {
-            alert("Please give your slideshow a title (via the metadata modal).");
-            metadataModal.show();
-            return;
-        }
-        document.querySelectorAll('#statusSelectionModal .status-card').forEach(c => c.classList.remove('selected'));
-        confirmStatusAndSaveBtn.disabled = true;
-        statusSelectionModal.show();
-    }
-    
-    async function loadSlideshowList() {
+    async function loadSlideshowForEditing(slideshowId) {
+        if (!slideshowId) return;
+        document.getElementById('slideshow-status').textContent = `Loading Slideshow #${slideshowId}...`;
         try {
-            const response = await fetch(API_URLS.slideshows); 
+            const response = await fetch(`${API_CONFIG.urls.slideshows}${slideshowId}/`); 
             if (!response.ok) throw new Error(`HTTP error: ${response.status}`); 
-            const slideshows = await response.json(); 
-            slideshowSelectorDropdown.innerHTML = '<option value="">-- Choose a slideshow --</option>'; 
-            slideshows.forEach(s => slideshowSelectorDropdown.add(new Option(`${s.title} (ID: ${s.id}, Author: ${s.author_name || 'N/A'})`, s.id))); 
-            loadSlideshowModal.show(); 
+            const data = await response.json(); 
+            renderUIFromState(data); 
         } catch (error) {
-            console.error("Error loading list:", error); 
-            alert(`Could not load list: ${error.message}`); 
-        }
-    }
-
-    async function loadSlideshowDetail(slideshowId) {
-        if (!slideshowId) return; 
-        try {
-            const response = await fetch(`${API_URLS.slideshows}${slideshowId}/`); 
-            if (!response.ok) throw new Error(`HTTP error: ${response.status}`); 
-            slideshowState = await response.json(); 
-            renderUIFromState(); 
-            loadSlideshowModal.hide(); 
-        } catch (error) {
-            console.error("Error loading details:", error); 
+            console.error("Error loading slideshow details:", error);
+            document.getElementById('slideshow-status').textContent = 'Error loading slideshow.';
             alert(`Could not load slideshow: ${error.message}`); 
         }
     }
-
+    
     // =========================================================================
     // 6. METADATA & DROPDOWN LOGIC
     // =========================================================================
-    function filterSubjects() {
-        const curriculumId = curriculumSelect.value, languageId = languageSelect.value;
-        const currentId = subjectSelect.value;
-        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>'; 
-        subjectSelect.disabled = !curriculumId || !languageId; 
-        if (curriculumId && languageId) { 
-            INITIAL_DATA.subjects.forEach(s => { 
-                if (String(s.curriculum_id) === curriculumId && String(s.language_id) === languageId) { 
-                    subjectSelect.add(new Option(`${s.name} (${s.level === 1 ? 'SL' : 'HL'})`, s.id)); 
-                }
-            });
-            subjectSelect.value = currentId; 
-        }
-        updateTopics(); 
-    }
-
-    function updateTopics() {
-        const subjectId = subjectSelect.value;
-        const currentId = topicsSelect.value;
-        topicsSelect.innerHTML = '<option value="">-- Select Topic --</option>'; 
-        topicsSelect.disabled = !subjectId; 
-        if (subjectId) { 
-            INITIAL_DATA.labels.forEach(l => { 
-                if (String(l.subject_id) === subjectId) topicsSelect.add(new Option(l.description, l.id)); 
-            });
-            topicsSelect.value = currentId; 
-        }
+    function populateMetadataDropdowns() {
+        const populate = (select, items) => {
+            select.innerHTML = '<option value="">-- Select --</option>';
+            if (items) { items.forEach(item => select.add(new Option(item.name, item.id))); }
+        };
+        populate(curriculumSelect, INITIAL_DATA.curriculums);
+        populate(languageSelect, INITIAL_DATA.languages);
     }
     
-    // =========================================================================
-    // 7. QUIZ LOGIC (No changes needed)
-    // =========================================================================
-    function setupQuizInteraction(quizSlideElement) { /* ... (Logic remains the same) ... */ }
+    function filterSubjects() {
+        const curriculumId = curriculumSelect.value;
+        const languageId = languageSelect.value;
+        const currentSubjectId = slideshowState.subject;
+        subjectSelect.innerHTML = '<option value="">-- Select --</option>'; 
+        subjectSelect.disabled = !curriculumId || !languageId; 
+        if (curriculumId && languageId) { 
+            const filteredSubjects = INITIAL_DATA.subjects.filter(s => String(s.curriculum_id) === curriculumId && String(s.language_id) === languageId);
+            filteredSubjects.forEach(s => subjectSelect.add(new Option(`${s.name} (${s.level === 1 ? 'SL' : 'HL'})`, s.id)));
+            subjectSelect.value = currentSubjectId || ''; 
+        }
+        
+    }
 
+    
+    
     // =========================================================================
-    // 8. EVENT LISTENERS (MODIFIED FOR STATUS)
+    // 7. EVENT LISTENERS
     // =========================================================================
     saveSlideshowBtn.addEventListener('click', handleSaveButtonClick); 
-    loadSlideshowBtn.addEventListener('click', loadSlideshowList); 
-    confirmLoadSlideshowBtn.addEventListener('click', () => loadSlideshowDetail(slideshowSelectorDropdown.value)); 
     metadataBtn.addEventListener('click', () => metadataModal.show()); 
     saveMetadataBtn.addEventListener('click', () => { 
         updateStateFromUI(); 
@@ -358,65 +279,234 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmTemplateBtn.disabled = true; 
         slideTemplateSelectionModal.show(); 
     });
+    helpBtn.addEventListener('click', () => helpModal.show());
 
-    if (slideTemplateSelectionModalEl) { 
+    if (slideTemplateSelectionModalEl) {
         slideTemplateSelectionModalEl.addEventListener('click', (e) => {
             const card = e.target.closest('.template-card');
             if (card) {
-                slideTemplateSelectionModalEl.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected')); 
-                card.classList.add('selected'); 
-                confirmTemplateBtn.disabled = false; 
+                slideTemplateSelectionModalEl.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                if (confirmTemplateBtn) {
+                    confirmTemplateBtn.disabled = false;
+                }
             }
         });
     }
 
-    // --- NOUVEAU : Écouteurs pour le modal de statut ---
     if (statusSelectionModalEl) {
         statusSelectionModalEl.addEventListener('click', (e) => {
             const card = e.target.closest('.status-card');
             if (card) {
                 statusSelectionModalEl.querySelectorAll('.status-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
-                confirmStatusAndSaveBtn.disabled = false;
+                if (confirmStatusAndSaveBtn) {
+                    confirmStatusAndSaveBtn.disabled = false;
+                }
             }
         });
     }
-    confirmStatusAndSaveBtn.addEventListener('click', () => {
-        const selectedStatusCard = document.querySelector('#statusSelectionModal .status-card.selected');
-        if (selectedStatusCard) {
-            slideshowState.status = selectedStatusCard.dataset.status;
-            executeSave();
-        } else {
-            alert('Please select a status.');
-        }
-    });
+    
+    if (confirmStatusAndSaveBtn) {
+        confirmStatusAndSaveBtn.addEventListener('click', executeSave);
+    }
+    
+    if (confirmTemplateBtn) {
+        confirmTemplateBtn.addEventListener('click', () => { 
+            const selected = document.querySelector('#slideTemplateSelectionModal .template-card.selected'); 
+            if (!selected) return; 
+            const templateName = selected.dataset.template;
+            const templates = { 
+                'front': `
+<div class="slide front-page">
+    <div class="logo"><img src="${logoPath}" alt="Logo"></div>
+    <h1>Slideshow Title</h1>
+    <div class="line"></div>
+    <p class="subtitle">Subtitle or presenter's name</p>
+</div>`, 
 
-    confirmTemplateBtn.addEventListener('click', () => { 
-        const selected = document.querySelector('#slideTemplateSelectionModal .template-card.selected'); 
-        if (!selected) return; 
-        const templates = { 
-            'basic': `\n    <div class="slide basic-slide">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <h1>Slide Title</h1>\n            <div class="line"></div>\n            <ul>\n                <li>Point 1</li>\n                <li>Point 2</li>\n                <li>Point 3</li>\n            </ul>\n        </div>\n    </div>`, 
-            'two-column': `\n    <div class="slide two-column">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <h1>Two-Column Layout</h1>\n            <div class="line"></div>\n            <div class="columns-container">\n                <div class="column">\n                    <h3>Column 1 Title</h3>\n                    <p>Content for the first column.</p>\n                    <ul><li>Point A</li><li>Point B</li></ul>\n                </div>\n                <div class="column">\n                    <h3>Column 2 Title</h3>\n                    <p>Content for the second column.</p>\n                </div>\n            </div>\n        </div>\n    </div>`, 
-            'two-column-basic': `\n    <div class="slide two-column-basic">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <div class="title-line">\n                <h1>Concept & Explanation</h1>\n                <div class="line"></div>\n            </div>\n            <div class="row-twocol">\n                <div class="left">This is the main concept.</div>\n                <div class="right"><i>This is an explanation or an example.</i></div>\n            </div>\n            <div class="row-twocol">\n                <div class="left">Another point to develop.</div>\n                <div class="right"><i>Additional details here.</i></div>\n            </div>\n        </div>\n    </div>`, 
-            'quiz': `\n    <div class="slide quiz-slide">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="quiz-content-wrapper">\n            <h1>Quiz Question (Multiple Choice)</h1>\n            <div class="question">\n                Which are object-oriented programming languages? (Select all that apply)\n            </div>\n            <ul class="options">\n                <li class="option" data-correct="true">Java</li>\n                <li class="option" data-correct="false">C</li>\n                <li class="option" data-correct="true">Python</li>\n                <li class="option" data-correct="true">C++</li>\n                <li class="option" data-correct="false">HTML</li>\n            </ul>\n            <div class="feedback"></div>\n            <div class="quiz-buttons">\n                <button class="btn btn-primary submit-quiz-btn">Submit</button>\n                <button class="btn btn-secondary retake-quiz-btn" style="display:none;">Retake</button>\n            </div>\n        </div>\n    </div>`, 
-            'math': `\n    <div class="slide math-slide">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid center-p">\n            <h1>Mathematical Equations</h1>\n            <div class="line"></div>\n            <p>The mass-energy equivalence is $E = mc^2$. The Pythagorean theorem is $a^2 + b^2 = c^2$.</p>\n            <div class="math-block">\n                $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n            </div>\n        </div>\n    </div>`, 
-            'front': `\n    <div class="slide front-page">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n            <h1>Slideshow Title</h1>\n            <div class="line"></div>\n            <div class="subtitle">Subtitle or presenter's name</div>\n        </div>\n    </div>`, 
-            'cards': `\n    <div class="slide cards">\n        <div class="logo">\n            <img src="${logoPath}" alt="Logo">\n        </div>\n        <div class="container-fluid">\n             <div class="title-line">\n                 <h1>Information Cards</h1>\n                 <div class="line"></div>\n             </div>\n            <div class="grid-container">\n                <div class="grid">\n                    <div class="slide-card">\n                        <h6>Card 1 Title</h6>\n                        <p>Brief information here.</p>\n                    </div>\n                    <div class="slide-card">\n                        <h6>Card 2 Title</h6>\n                        <p>Another piece of information.</p>\n                    </div>\n                    <div class="slide-card">\n                         <h6>Card 3 Title</h6>\n                        <p>Use cards to break down topics.</p>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>` 
-        };
-        addBlockToUI({ 
-            order: blocksContainer.children.length, 
-            template_name: selected.dataset.template, 
-            content_html: templates[selected.dataset.template] || '<p>New slide.</p>' 
+                'basic': `
+<div class="slide basic-slide">
+    <div class="logo"><img src="${logoPath}" alt="Logo"></div>
+    <h2>Slide Title</h2>
+    <div class="line"></div>
+    <ul>
+        <li>Point 1</li>
+        <li>Point 2</li>
+        <li>Point 3</li>
+    </ul>
+</div>`, 
+
+                'two-column': `
+<div class="slide two-column-slide">
+    <div class="logo"><img src="${logoPath}" alt="Logo"></div>
+    <h2>Two-Column Layout</h2>
+    <div class="line"></div>
+    <div class="columns-container">
+        <div class="column">
+            <h3>Column 1</h3>
+            <p>Content for the first column.</p>
+        </div>
+        <div class="column">
+            <h3>Column 2</h3>
+            <p>Content for the second column.</p>
+        </div>
+    </div>
+</div>`,
+
+                'cards': `
+<div class="slide info-cards-slide">
+    <div class="logo"><img src="${logoPath}" alt="Logo"></div>
+    <h2>Information Cards</h2>
+    <div class="line"></div>
+    <div class="grid-container">
+        <div class="grid">
+            <div class="slide-card">
+                <h6>Card 1</h6>
+                <p>Brief info here.</p>
+            </div>
+            <div class="slide-card">
+                <h6>Card 2</h6>
+                <p>Another piece of info.</p>
+            </div>
+            <div class="slide-card">
+                <h6>Card 3</h6>
+                <p>Break down topics.</p>
+            </div>
+        </div>
+    </div>
+</div>`,
+
+                'math': `
+<div class="slide math-slide">
+    <div class="logo"><img src="${logoPath}" alt="Logo"></div>
+    <h2>Mathematical Equations</h2>
+    <div class="line"></div>
+    <p>The mass-energy equivalence is $E = mc^2$.</p>
+    <div class="math-block">
+        $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+    </div>
+</div>`,
+
+                'quiz': `
+<div class="slide quiz-slide">
+    <div class="logo"><img src="${logoPath}" alt="Logo"></div>
+    <div class="quiz-content-wrapper">
+        <h2>Quiz Question</h2>
+        <div class="line"></div>
+        <div class="question">
+            Which are object-oriented programming languages? (Select all that apply)
+        </div>
+        <ul class="options">
+            <li class="option" data-correct="true">Java</li>
+            <li class="option" data-correct="false">C</li>
+            <li class="option" data-correct="true">Python</li>
+            <li class="option" data-correct="true">C++</li>
+            <li class="option" data-correct="false">HTML</li>
+        </ul>
+        <div class="feedback"></div>
+        <div class="quiz-buttons">
+            <button class="btn btn-primary submit-quiz-btn">Submit</button>
+            <button class="btn btn-secondary retake-quiz-btn" style="display:none;">Retake</button>
+        </div>
+    </div>
+</div>`
+            };
+            addBlockToUI({ 
+                order: blocksContainer.children.length, 
+                template_name: templateName, 
+                content_html: templates[templateName] || '<div class="slide"><p>New slide.</p></div>' 
+            });
+            slideTemplateSelectionModal.hide(); 
         });
-        slideTemplateSelectionModal.hide(); 
-    });
+    }
 
     curriculumSelect.addEventListener('change', filterSubjects); 
     languageSelect.addEventListener('change', filterSubjects); 
-    subjectSelect.addEventListener('change', updateTopics); 
+    
 
+    window.addEventListener('scroll', () => {
+        scrollToTopBtn.style.display = (window.scrollY > 300) ? 'flex' : 'none';
+    });
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    blocksContainer.addEventListener('click', function(e) {
+        const quizSlide = e.target.closest('.quiz-slide');
+        if (!quizSlide) return;
+
+        if (e.target.classList.contains('option')) {
+            if (!quizSlide.classList.contains('quiz-submitted')) {
+                e.target.classList.toggle('selected');
+            }
+        }
+        if (e.target.classList.contains('submit-quiz-btn')) {
+            handleSubmitQuiz(quizSlide);
+        }
+        if (e.target.classList.contains('retake-quiz-btn')) {
+            handleRetakeQuiz(quizSlide);
+        }
+    });
+
+    // =========================================================================
+    // 8. QUIZ HELPER FUNCTIONS
+    // =========================================================================
+    function handleSubmitQuiz(quizSlide) {
+        quizSlide.classList.add('quiz-submitted');
+        const options = quizSlide.querySelectorAll('.option');
+        const feedbackEl = quizSlide.querySelector('.feedback');
+        const submitBtn = quizSlide.querySelector('.submit-quiz-btn');
+        const retakeBtn = quizSlide.querySelector('.retake-quiz-btn');
+        let score = 0;
+        let totalCorrect = 0;
+
+        options.forEach(option => {
+            const isCorrect = option.dataset.correct === 'true';
+            const isSelected = option.classList.contains('selected');
+            if (isCorrect) {
+                totalCorrect++;
+                option.classList.add('correct');
+                if (isSelected) {
+                    score++;
+                }
+            } else if (isSelected) {
+                option.classList.add('incorrect');
+                score--;
+            }
+        });
+        
+        score = Math.max(0, score);
+        if(feedbackEl) feedbackEl.textContent = `You scored ${score} out of ${totalCorrect}.`;
+        if(submitBtn) submitBtn.style.display = 'none';
+        if(retakeBtn) retakeBtn.style.display = 'inline-block';
+    }
+
+    function handleRetakeQuiz(quizSlide) {
+        quizSlide.classList.remove('quiz-submitted');
+        const options = quizSlide.querySelectorAll('.option');
+        const feedbackEl = quizSlide.querySelector('.feedback');
+        const submitBtn = quizSlide.querySelector('.submit-quiz-btn');
+        const retakeBtn = quizSlide.querySelector('.retake-quiz-btn');
+
+        options.forEach(option => {
+            option.classList.remove('selected', 'correct', 'incorrect');
+        });
+
+        if(feedbackEl) feedbackEl.textContent = '';
+        if(submitBtn) submitBtn.style.display = 'inline-block';
+        if(retakeBtn) retakeBtn.style.display = 'none';
+    }
+    
     // =========================================================================
     // 9. INITIALIZATION
     // =========================================================================
-    renderUIFromState(); 
+    populateMetadataDropdowns();
+    const urlParams = new URLSearchParams(window.location.search);
+    const slideshowIdToEdit = urlParams.get('id');
+    if (slideshowIdToEdit) {
+        loadSlideshowForEditing(slideshowIdToEdit);
+    } else {
+        renderUIFromState(slideshowState); 
+    }
 });
