@@ -1,17 +1,16 @@
 # dashboard/views.py
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from recipes.models import Recipe
 from slides.models import Slide
 from core.models import Label, Subject, Curriculum, Language
-
 import re
+from collections import defaultdict
 
-# View to render the main HTML page for the dashboard
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def dashboard_home_view(request):
@@ -26,7 +25,6 @@ def dashboard_home_view(request):
     }
     return render(request, 'dashboard/home.html', context)
 
-# API View to provide aggregated data for our chart
 class ChartDataAPIView(APIView):
     """
     API endpoint for chart data. All display logic is in English.
@@ -34,181 +32,198 @@ class ChartDataAPIView(APIView):
     Applies filters for curriculum, language, and status.
     """
     permission_classes = [permissions.IsAdminUser]
+    
+    # Memoization caches to speed up recursive calculations within a single request
+    _completion_memo = {}
+    _count_memo = {}
+    _leaf_nodes_memo = {}
 
-    def _get_label_hierarchy(self, subject_name_filter):
+    def _get_all_descendant_leaf_nodes(self, label, labels_by_id):
         """
-        Fetches all labels for a given subject filter and organizes them into a tree-like structure.
+        Recursively finds all leaf nodes (labels with no children) under a given label.
+        Uses memoization to avoid redundant lookups.
         """
-        all_labels = Label.objects.filter(subject__name__startswith=subject_name_filter).select_related('parent')
+        if label.id in self._leaf_nodes_memo:
+            return self._leaf_nodes_memo[label.id]
+
+        leaf_nodes = []
+        if not label.children_list:
+            leaf_nodes.append(label)
+        else:
+            for child in label.children_list:
+                leaf_nodes.extend(self._get_all_descendant_leaf_nodes(child, labels_by_id))
         
-        labels_by_id = {label.id: label for label in all_labels}
-        for label in labels_by_id.values():
-            label.children_list = []
+        self._leaf_nodes_memo[label.id] = leaf_nodes
+        return leaf_nodes
 
-        root_nodes = []
-        for label in labels_by_id.values():
-            if label.parent_id and label.parent_id in labels_by_id:
-                parent = labels_by_id[label.parent_id]
-                parent.children_list.append(label)
-            else:
-                root_nodes.append(label)
+    def _calculate_completion_recursive(self, label, content_topic_ids, labels_by_id):
+        """
+        Calculates completion for a label based on its leaf node descendants.
+        A label's completion is the percentage of its leaf nodes that have content.
+        """
+        if label.id in self._completion_memo:
+            return self._completion_memo[label.id]
+
+        all_leaves = self._get_all_descendant_leaf_nodes(label, labels_by_id)
+        if not all_leaves:
+            # If a label has no leaves (e.g., an empty topic), completion is 0
+            return 0
+
+        completed_leaves = sum(1 for leaf in all_leaves if leaf.id in content_topic_ids)
         
-        return labels_by_id, root_nodes
+        percentage = (completed_leaves / len(all_leaves)) * 100 if all_leaves else 0
+        rounded_percentage = round(percentage)
+        self._completion_memo[label.id] = rounded_percentage
+        return rounded_percentage
 
-    def _calculate_completion_recursive(self, label, content_topic_ids):
+    def _calculate_total_counts_recursive(self, label, content_counts):
         """
-        Recursively calculates the completion percentage for a given label.
+        Recursively calculates the total count of content items for a label and its children.
         """
-        # Memoization to avoid re-calculating for the same label instance.
-        if hasattr(label, 'completion_percentage'):
-            return label.completion_percentage
+        if label.id in self._count_memo:
+            return self._count_memo[label.id]
 
-        # Base case: if a label has no children, its completion depends on whether it has content.
-        if not hasattr(label, 'children_list') or not label.children_list:
-            percentage = 100.0 if label.id in content_topic_ids else 0.0
-            label.completion_percentage = percentage
-            return percentage
-
-        # Recursive step: a parent's completion is the average of its children's.
-        child_percentages = [self._calculate_completion_recursive(child, content_topic_ids) for child in label.children_list]
-        percentage = sum(child_percentages) / len(child_percentages) if child_percentages else 0.0
-        label.completion_percentage = percentage
-        return percentage
+        total = content_counts.get(label.id, 0)
+        for child in label.children_list:
+            total += self._calculate_total_counts_recursive(child, content_counts)
+        
+        self._count_memo[label.id] = total
+        return total
 
     def get(self, request, *args, **kwargs):
+        # Clear memos for each new request
+        self._completion_memo.clear()
+        self._count_memo.clear()
+        self._leaf_nodes_memo.clear()
+
+        # Get all query parameters
         model_type = request.query_params.get('model', 'recipe')
         group_by = request.query_params.get('group_by', 'subject')
         subject_name = request.query_params.get('subject_name')
         topic_id = request.query_params.get('topic_id')
-        
-        # All filters
         status = request.query_params.get('status')
         curriculum_id = request.query_params.get('curriculum')
         language_id = request.query_params.get('language')
 
         ContentModel = Recipe if model_type == 'recipe' else Slide
         
-        # Start with a base queryset and apply filters progressively
-        base_queryset = ContentModel.objects.all()
+        # --- Create a base queryset with filters that apply to ALL queries ---
+        base_content_queryset = ContentModel.objects.all()
         if curriculum_id and curriculum_id != 'ALL':
-            base_queryset = base_queryset.filter(curriculum_id=curriculum_id)
+            base_content_queryset = base_content_queryset.filter(curriculum_id=curriculum_id)
         if language_id and language_id != 'ALL':
-            base_queryset = base_queryset.filter(language_id=language_id)
+            base_content_queryset = base_content_queryset.filter(language_id=language_id)
 
+        # The queryset for counting also respects the status filter
+        counting_queryset = base_content_queryset
+        if status and status != 'ALL':
+            counting_queryset = counting_queryset.filter(status=status)
+
+        # --- SUBJECT-LEVEL VIEW ---
         if group_by == 'subject':
-            # Get a list of subjects that are relevant after filtering
-            subject_names_qs = base_queryset.values_list('subject__name', flat=True).distinct()
-            base_subject_names = sorted(list(set(re.split(r'\s+(HL|SL)$', name, 1)[0].strip() for name in subject_names_qs if name)))
+            # 1. Get ALL subjects first to ensure none are missing from the chart
+            all_subjects_qs = Subject.objects.all()
+            if curriculum_id and curriculum_id != 'ALL':
+                all_subjects_qs = all_subjects_qs.filter(curriculum_id=curriculum_id)
 
-            if model_type == 'recipe':
-                # 1. Completion is calculated on the filtered set (curriculum, language), but ignores 'status'
-                completion_queryset = base_queryset.filter(topic_id__isnull=False)
-                content_topic_ids = set(completion_queryset.values_list('topic_id', flat=True))
-                
-                subject_completion_data = {}
-                for base_name in base_subject_names:
-                    labels_by_id, root_nodes = self._get_label_hierarchy(base_name)
-                    if not root_nodes:
-                        subject_completion_data[base_name] = 0.0
-                        continue
-                    
-                    topic_completions = [self._calculate_completion_recursive(root_topic, content_topic_ids) for root_topic in root_nodes]
-                    overall_completion = sum(topic_completions) / len(topic_completions) if topic_completions else 0.0
-                    subject_completion_data[base_name] = overall_completion
+            # Create a dict of all possible base subject names to ensure we show subjects with 0 recipes
+            all_base_subject_names = sorted(list(set(re.split(r'\s+(HL|SL)$', name, 1)[0].strip() for name in all_subjects_qs.values_list('name', flat=True) if name)))
+            
+            # 2. Get data based on the filtered content
+            content_topic_ids = set(base_content_queryset.filter(topic_id__isnull=False).values_list('topic_id', flat=True))
+            
+            aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
+            subject_counts = defaultdict(int)
+            for item in aggregation:
+                base_name = re.split(r'\s+(HL|SL)$', item['subject__name'], 1)[0].strip()
+                subject_counts[base_name] += item['count']
 
-                # 2. Counts are calculated based on all filters, including 'status'
-                counting_queryset = base_queryset
-                if status and status != 'ALL':
-                    counting_queryset = counting_queryset.filter(status=status)
+            # 3. Build the response data
+            response_data = []
+            for base_name in all_base_subject_names:
+                labels_by_id, root_nodes = self._get_label_hierarchy(base_name)
                 
-                aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
-                subject_counts = {base_name: 0 for base_name in base_subject_names}
-                for item in aggregation:
-                    full_name = item['subject__name']
-                    if not full_name: continue
-                    base_name = re.split(r'\s+(HL|SL)$', full_name, 1)[0].strip()
-                    if base_name in subject_counts:
-                        subject_counts[base_name] += item['count']
+                # Calculate completion
+                topic_completions = [self._calculate_completion_recursive(topic, content_topic_ids, labels_by_id) for topic in root_nodes]
+                overall_completion = round(sum(topic_completions) / len(topic_completions)) if topic_completions else 0
                 
-                # 3. Combine and sort the data for the response
-                labels = base_subject_names
-                percentages = [subject_completion_data.get(name, 0.0) for name in labels]
-                counts = [subject_counts.get(name, 0) for name in labels]
-                
-                zipped_data = sorted(zip(labels, percentages, counts), key=lambda x: (-x[1], x[0]))
-                sorted_labels, sorted_percentages, sorted_counts = zip(*zipped_data) if zipped_data else ([], [], [])
-
-                return Response({
-                    'labels': list(sorted_labels), 'data': list(sorted_percentages), 
-                    'counts': list(sorted_counts), 'ids': list(sorted_labels), 
-                    'dataType': 'percentage_and_count'
+                response_data.append({
+                    'label': base_name,
+                    'percentage': overall_completion,
+                    'count': subject_counts[base_name]
                 })
 
-            else: # For Slides or other models, we only need to calculate counts
-                counting_queryset = base_queryset
-                if status and status != 'ALL':
-                    counting_queryset = counting_queryset.filter(status=status)
+            # Sort by percentage (desc), then by name (asc)
+            response_data.sort(key=lambda x: (-x['percentage'], x['label']))
+            
+            labels = [item['label'] for item in response_data]
+            percentages = [item['percentage'] for item in response_data]
+            counts = [item['count'] for item in response_data]
+            data_type = 'percentage_and_count' if model_type == 'recipe' else 'count'
+            
+            return Response({
+                'labels': labels, 'data': percentages if data_type == 'percentage_and_count' else counts,
+                'counts': counts, 'ids': labels, 'dataType': data_type
+            })
 
-                aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
-                subject_counts = {base_name: 0 for base_name in base_subject_names}
-                for item in aggregation:
-                    full_name = item['subject__name']
-                    if not full_name: continue
-                    base_name = re.split(r'\s+(HL|SL)$', full_name, 1)[0].strip()
-                    if base_name in subject_counts:
-                        subject_counts[base_name] += item['count']
-
-                sorted_subjects = sorted(subject_counts.items(), key=lambda x: (-x[1], x[0]))
-                labels = [item[0] for item in sorted_subjects]
-                data = [item[1] for item in sorted_subjects]
-                return Response({'labels': labels, 'data': data, 'ids': labels, 'dataType': 'count'})
-
-        # Topic Drilldown logic (respects all base filters)
+        # --- TOPIC-LEVEL DRILLDOWN ---
         if group_by == 'topic':
             if not subject_name:
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
-            
-            counting_queryset = base_queryset
-            if status and status != 'ALL':
-                counting_queryset = counting_queryset.filter(status=status)
 
-            # The existing logic for topic drilldown is preserved here but operates on the filtered queryset
-            all_labels = Label.objects.filter(subject__name__startswith=subject_name).select_related('parent')
-            content_counts_qs = counting_queryset.filter(subject__name__startswith=subject_name)\
-                                              .values('topic_id')\
-                                              .annotate(count=Count('id'))
+            # 1. Build the full label hierarchy for the subject
+            labels_by_id, _ = self._get_label_hierarchy(subject_name)
+            
+            # 2. Get the necessary data from our filtered querysets
+            content_topic_ids = set(base_content_queryset.filter(topic_id__isnull=False).values_list('topic_id', flat=True))
+            content_counts_qs = counting_queryset.filter(subject__name__startswith=subject_name).values('topic_id').annotate(count=Count('id'))
             content_counts = {item['topic_id']: item['count'] for item in content_counts_qs}
-            labels_by_id, root_nodes = self._get_label_hierarchy(subject_name)
             
-            for label in labels_by_id.values():
-                label.own_count = content_counts.get(label.id, 0)
-
-            memo = {}
-            def calculate_total_counts(label):
-                if label.id in memo: return memo[label.id]
-                total = label.own_count
-                for child in getattr(label, 'children_list', []):
-                    total += calculate_total_counts(child)
-                memo[label.id] = total
-                label.total_count = total
-                return total
-
-            for label in root_nodes:
-                calculate_total_counts(label)
-
+            # 3. Identify the labels to display at the current drilldown level
             parent_id_filter = int(topic_id) if topic_id else None
             level_labels = [l for l in labels_by_id.values() if l.parent_id == parent_id_filter]
             
-            response_data = []
+            # 4. Group labels by numbering to combine SL/HL variants
+            grouped_level_labels = defaultdict(list)
             for label in level_labels:
-                final_label = f"{label.numbering}: {label.description}" if label.numbering else label.description
-                response_data.append({'id': label.id, 'label': final_label, 'count': getattr(label, 'total_count', 0)})
-            
-            response_data.sort(key=lambda item: [int(n) for n in re.findall(r'\d+', item['label'].split(':')[0])])
-            labels = [item['label'] for item in response_data]
-            ids = [item['id'] for item in response_data]
-            data = [item['count'] for item in response_data]
+                grouped_level_labels[label.numbering or label.description].append(label)
 
-            return Response({'labels': labels, 'data': data, 'ids': ids, 'dataType': 'count'})
+            # 5. Process each group to get combined data
+            response_data = []
+            for _, labels_in_group in grouped_level_labels.items():
+                # Use the first label in the group as the representative for display
+                rep_label = labels_in_group[0]
+                
+                # Calculate combined completion (average of each label's completion in the group)
+                group_percentages = [self._calculate_completion_recursive(l, content_topic_ids, labels_by_id) for l in labels_in_group]
+                combined_percentage = round(sum(group_percentages) / len(group_percentages)) if group_percentages else 0
+                
+                # Calculate combined count (sum of each label's recursive count)
+                combined_count = sum(self._calculate_total_counts_recursive(l, content_counts) for l in labels_in_group)
+                
+                # Clean up the label description for display
+                clean_description = re.sub(rf'^{re.escape(rep_label.numbering)}\s*[:\s]*', '', rep_label.description) if rep_label.numbering else rep_label.description
+                final_label = f"{rep_label.numbering}: {clean_description}" if rep_label.numbering else clean_description
+                
+                response_data.append({
+                    'id': rep_label.id,  # ID is used for the next drilldown level
+                    'label': final_label,
+                    'percentage': combined_percentage,
+                    'count': combined_count
+                })
+
+            # Sort by the numeric parts of the label numbering
+            response_data.sort(key=lambda item: [int(n) for n in re.findall(r'\d+', item['label'].split(':')[0])])
             
+            labels = [item['label'] for item in response_data]
+            percentages = [item['percentage'] for item in response_data]
+            counts = [item['count'] for item in response_data]
+            ids = [item['id'] for item in response_data]
+            data_type = 'percentage_and_count' if model_type == 'recipe' else 'count'
+
+            return Response({
+                'labels': labels, 'data': percentages if data_type == 'percentage_and_count' else counts,
+                'counts': counts, 'ids': ids, 'dataType': data_type
+            })
+
         return Response({"error": "Invalid 'group_by' parameter."}, status=400)
