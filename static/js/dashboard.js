@@ -6,25 +6,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const recipesBtn = document.getElementById('show-recipes-btn');
     const slidesBtn = document.getElementById('show-slides-btn');
     const breadcrumbsEl = document.getElementById('chart-breadcrumbs');
+    
+    // Filter elements
     const statusFilter = document.getElementById('status-filter');
+    const curriculumFilter = document.getElementById('curriculum-filter');
+    const languageFilter = document.getElementById('language-filter');
 
     let myChart;
-    // The central state object for the chart
+    // The central state object for the chart, now with new filters
     let chartState = {
         model: 'recipe',
         status: 'ALL',
+        curriculum: 'ALL',
+        language: 'ALL',
         drilldownStack: []
     };
 
     // --- ENHANCED CHART DESIGN ---
     const chartColors = {
-        primary: '#123456', // A deep blue for primary elements
-        secondary: '#45b7d1', // A lighter, vibrant blue for hover/accents
+        primary: '#123456',
+        secondary: '#45b7d1',
         gridLines: 'rgba(0, 0, 0, 0.08)',
-        tooltipBg: '#050350', // A dark, almost-black blue for tooltips
+        tooltipBg: '#050350',
         font: '#343a40'
     };
-    // Create a gradient for the bar backgrounds
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
     gradient.addColorStop(0, chartColors.secondary);
     gradient.addColorStop(1, chartColors.primary);
@@ -34,21 +39,21 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: [],
             datasets: [{
-                label: 'Count', // This label will be updated dynamically
+                label: 'Count',
                 data: [],
                 backgroundColor: gradient,
                 borderColor: chartColors.primary,
                 borderWidth: 1,
                 borderRadius: 4,
                 hoverBackgroundColor: chartColors.secondary,
-                ids: [], // Custom property to store IDs for drilldown
+                ids: [], 
                 counts: [] // Custom property to store counts for tooltips
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            indexAxis: 'y', // Horizontal bar chart
+            indexAxis: 'y',
             animation: {
                 duration: 800,
                 easing: 'easeInOutQuart'
@@ -99,9 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentLevel = chartState.drilldownStack[chartState.drilldownStack.length - 1];
         if (!currentLevel) return;
 
+        // Add all filter states to the API request
         const params = new URLSearchParams({
             model: chartState.model,
             status: chartState.status,
+            curriculum: chartState.curriculum,
+            language: chartState.language,
             ...currentLevel.apiParams
         });
 
@@ -115,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!myChart) myChart = new Chart(ctx, chartConfig);
             
-            // --- DYNAMIC CHART CONFIGURATION BASED ON DATA TYPE ---
+            // Configure chart based on data type from API
             if (result.dataType === 'percentage_and_count') {
                 myChart.options.scales.x.max = 100;
                 myChart.options.scales.x.ticks.callback = value => value + '%';
@@ -127,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 myChart.config.data.datasets[0].label = 'Completion';
                 currentLevel.title = `Recipe Completion Rate by Subject`;
-            } else { // Default to 'count' for Slideshows or drill-downs
+            } else { // Default to 'count'
                 myChart.options.scales.x.max = undefined;
                 myChart.options.scales.x.ticks.callback = value => Number.isInteger(value) ? value : null;
                 myChart.options.plugins.tooltip.callbacks.label = (context) => `Total: ${context.parsed.x}`;
@@ -239,21 +247,25 @@ document.addEventListener('DOMContentLoaded', function() {
         recipesBtn.classList.toggle('btn-outline-primary', model !== 'recipe');
         slidesBtn.classList.toggle('btn-primary', model === 'slide');
         slidesBtn.classList.toggle('btn-outline-primary', model !== 'slide');
-
-        // The status filter is always enabled now, affecting the count part of recipes.
-        statusFilter.disabled = false;
         
         resetToTopLevel();
     }
 
-    // --- Event Listeners ---
+    // --- Event Listeners for all filters ---
     recipesBtn.addEventListener('click', () => setActiveModel('recipe'));
     slidesBtn.addEventListener('click', () => setActiveModel('slide'));
-    statusFilter.addEventListener('change', () => {
+    
+    // Function to handle any filter change
+    function handleFilterChange() {
         chartState.status = statusFilter.value;
-        // The chart will be refreshed with the new status filter for counts.
+        chartState.curriculum = curriculumFilter.value;
+        chartState.language = languageFilter.value;
         resetToTopLevel();
-    });
+    }
+
+    statusFilter.addEventListener('change', handleFilterChange);
+    curriculumFilter.addEventListener('change', handleFilterChange);
+    languageFilter.addEventListener('change', handleFilterChange);
 
     // --- Initial Load ---
     setActiveModel('recipe');

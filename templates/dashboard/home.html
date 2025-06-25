@@ -18,14 +18,35 @@
                 <div id="chart-breadcrumbs" class="text-muted small mb-2 mb-md-0"></div>
 
                 <!-- Group of filters on the right -->
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center flex-wrap">
                     
-                    <!-- Status Filter Dropdown -->
-                    <div class="me-3">
+                    <!-- Curriculum Filter -->
+                    <div class="me-3 mb-2 mb-md-0">
+                        <label for="curriculum-filter" class="form-label form-label-sm mb-0 me-1 fw-bold">Curriculum:</label>
+                        <select class="form-select form-select-sm" id="curriculum-filter" style="width: auto; display: inline-block;">
+                            <option value="ALL" selected>All</option>
+                            {% for curriculum in curriculums %}
+                                <option value="{{ curriculum.id }}">{{ curriculum.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Language Filter -->
+                    <div class="me-3 mb-2 mb-md-0">
+                        <label for="language-filter" class="form-label form-label-sm mb-0 me-1 fw-bold">Language:</label>
+                        <select class="form-select form-select-sm" id="language-filter" style="width: auto; display: inline-block;">
+                            <option value="ALL" selected>All</option>
+                            {% for language in languages %}
+                                <option value="{{ language.id }}">{{ language.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="me-3 mb-2 mb-md-0">
                         <label for="status-filter" class="form-label form-label-sm mb-0 me-1 fw-bold">Status:</label>
                         <select class="form-select form-select-sm" id="status-filter" style="width: auto; display: inline-block;">
                             <option value="ALL" selected>All</option>
-                            <!-- CORRECTED VALUES to match the database model -->
                             <option value="in_progress">In Progress</option>
                             <option value="pending_review">Pending Review</option>
                             <option value="completed">Completed</option>
