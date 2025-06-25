@@ -22,71 +22,160 @@ def dashboard_home_view(request):
 class ChartDataAPIView(APIView):
     """
     API endpoint for chart data. All display logic is in English.
+    Handles completion percentages and counts for recipes, and counts for other models.
     """
     permission_classes = [permissions.IsAdminUser]
 
+    def _get_label_hierarchy(self, subject_name_filter):
+        """
+        Fetches all labels for a given subject filter and organizes them into a tree-like structure.
+        Returns a dictionary of labels by ID and a list of root nodes (topics).
+        """
+        all_labels = Label.objects.filter(subject__name__startswith=subject_name_filter).select_related('parent')
+        
+        labels_by_id = {label.id: label for label in all_labels}
+        for label in labels_by_id.values():
+            label.children_list = []
+
+        root_nodes = []
+        for label in labels_by_id.values():
+            if label.parent_id and label.parent_id in labels_by_id:
+                parent = labels_by_id[label.parent_id]
+                parent.children_list.append(label)
+            else:
+                root_nodes.append(label)
+        
+        return labels_by_id, root_nodes
+
+    def _calculate_completion_recursive(self, label, labels_by_id, content_topic_ids):
+        """
+        Recursively calculates the completion percentage for a given label.
+        - A label's completion is the average completion of its direct children.
+        - A leaf label (one with no children) is 100% complete if it has content, 0% otherwise.
+        """
+        if hasattr(label, 'completion_percentage'):
+            return label.completion_percentage
+
+        if not label.children_list:
+            percentage = 100.0 if label.id in content_topic_ids else 0.0
+            label.completion_percentage = percentage
+            return percentage
+
+        child_percentages = [
+            self._calculate_completion_recursive(child, labels_by_id, content_topic_ids)
+            for child in label.children_list
+        ]
+
+        if not child_percentages:
+            percentage = 100.0 if label.id in content_topic_ids else 0.0
+        else:
+            percentage = sum(child_percentages) / len(child_percentages)
+        
+        label.completion_percentage = percentage
+        return percentage
+
     def get(self, request, *args, **kwargs):
-        # Get query parameters
         model_type = request.query_params.get('model', 'recipe')
         group_by = request.query_params.get('group_by', 'subject')
         subject_name = request.query_params.get('subject_name')
         topic_id = request.query_params.get('topic_id')
         status = request.query_params.get('status')
 
-        # Determine the base queryset
-        if model_type == 'recipe':
-            base_queryset = Recipe.objects.all()
-        elif model_type == 'slide':
-            base_queryset = Slide.objects.all()
-        else:
-            return Response({"error": "Invalid model type specified."}, status=400)
+        ContentModel = Recipe if model_type == 'recipe' else Slide
 
-        # --- Subject Grouping Logic ---
         if group_by == 'subject':
-            # Step 1: Get all possible subjects first, before any filtering.
-            all_subject_names = Subject.objects.values_list('name', flat=True).distinct()
-            processed_subjects = {}
-            for name in all_subject_names:
-                base_name = re.split(r'\s+(HL|SL)$', name, 1)[0].strip()
-                processed_subjects[base_name] = 0
+            all_subjects_qs = Subject.objects.values_list('name', flat=True).distinct()
+            base_subject_names = sorted(list(set(re.split(r'\s+(HL|SL)$', name, 1)[0].strip() for name in all_subjects_qs)))
 
-            # Step 2: Create a separate queryset for counting, applying the status filter.
-            counting_queryset = base_queryset
-            if status and status != 'ALL':
-                # CORRECTED: This list now exactly matches the values in your recipes/models.py
-                valid_statuses = ['in_progress', 'pending_review', 'completed']
-                if status in valid_statuses:
-                    counting_queryset = base_queryset.filter(status=status)
-            
-            # Step 3: Aggregate counts using the filtered queryset.
-            aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
-            
-            for item in aggregation:
-                full_name = item['subject__name']
-                if not full_name: continue
-                base_name = re.split(r'\s+(HL|SL)$', full_name, 1)[0].strip()
-                if base_name in processed_subjects:
-                    processed_subjects[base_name] += item['count']
+            # --- RECIPE: Percentage and Count Logic ---
+            if model_type == 'recipe':
+                # 1. Calculate status-independent completion percentage
+                content_topic_ids = set(Recipe.objects.filter(topic_id__isnull=False).values_list('topic_id', flat=True))
+                subject_completion_data = {}
+                for base_name in base_subject_names:
+                    labels_by_id, root_nodes = self._get_label_hierarchy(base_name)
+                    
+                    if not root_nodes:
+                        subject_completion_data[base_name] = 0.0
+                        continue
+                    
+                    s_topics_exist = any(l.numbering and l.numbering.strip().upper().startswith('S') for l in root_nodes)
+                    if s_topics_exist:
+                         root_nodes = [l for l in root_nodes if not (l.numbering and l.numbering.strip().upper().startswith('S'))]
 
-            sorted_subjects = sorted(processed_subjects.items(), key=lambda x: (-x[1], x[0]))
-            
-            labels = [item[0] for item in sorted_subjects]
-            data = [item[1] for item in sorted_subjects]
-            ids = labels
+                    topic_completions = [self._calculate_completion_recursive(root_topic, labels_by_id, content_topic_ids) for root_topic in root_nodes]
+                    overall_completion = sum(topic_completions) / len(topic_completions) if topic_completions else 0.0
+                    subject_completion_data[base_name] = overall_completion
 
-            return Response({'labels': labels, 'data': data, 'ids': ids})
+                # 2. Calculate status-dependent recipe counts
+                counting_queryset = Recipe.objects.all()
+                if status and status != 'ALL':
+                    valid_statuses = ['in_progress', 'pending_review', 'completed']
+                    if status in valid_statuses:
+                        counting_queryset = counting_queryset.filter(status=status)
+                
+                aggregation = counting_queryset.values('subject__name').annotate(count=Count('id'))
+                subject_counts = {base_name: 0 for base_name in base_subject_names}
+                for item in aggregation:
+                    full_name = item['subject__name']
+                    if not full_name: continue
+                    base_name = re.split(r'\s+(HL|SL)$', full_name, 1)[0].strip()
+                    if base_name in subject_counts:
+                        subject_counts[base_name] += item['count']
 
-        # --- OPTIMIZED Topic Hierarchy Logic ---
+                # 3. Combine and sort data for response
+                labels = base_subject_names
+                percentages = [subject_completion_data.get(name, 0.0) for name in labels]
+                counts = [subject_counts.get(name, 0) for name in labels]
+
+                # Sort all lists together by percentage (desc), then name (asc)
+                zipped_data = list(zip(labels, percentages, counts))
+                zipped_data.sort(key=lambda x: (-x[1], x[0]))
+                
+                sorted_labels, sorted_percentages, sorted_counts = zip(*zipped_data) if zipped_data else ([], [], [])
+
+                return Response({
+                    'labels': list(sorted_labels),
+                    'data': list(sorted_percentages),
+                    'counts': list(sorted_counts),
+                    'ids': list(sorted_labels),
+                    'dataType': 'percentage_and_count'
+                })
+
+            # --- SLIDES (and other models): Count Logic ---
+            else:
+                base_queryset = ContentModel.objects.all()
+                if status and status != 'ALL':
+                    valid_statuses = ['in_progress', 'pending_review', 'completed']
+                    if status in valid_statuses:
+                        base_queryset = base_queryset.filter(status=status)
+                
+                aggregation = base_queryset.values('subject__name').annotate(count=Count('id'))
+                
+                subject_counts = {base_name: 0 for base_name in base_subject_names}
+                for item in aggregation:
+                    full_name = item['subject__name']
+                    if not full_name: continue
+                    base_name = re.split(r'\s+(HL|SL)$', full_name, 1)[0].strip()
+                    if base_name in subject_counts:
+                        subject_counts[base_name] += item['count']
+
+                sorted_subjects = sorted(subject_counts.items(), key=lambda x: (-x[1], x[0]))
+                labels = [item[0] for item in sorted_subjects]
+                data = [item[1] for item in sorted_subjects]
+                return Response({'labels': labels, 'data': data, 'ids': labels, 'dataType': 'count'})
+
+        # --- Topic Drilldown Logic (remains count-based) ---
         if group_by == 'topic':
+            # This part of the code for drilling down remains as it was, calculating counts.
             if not subject_name:
                 return Response({"error": "A 'subject_name' is required when grouping by topic."}, status=400)
 
-            # Apply status filter here as well for topic counts
-            counting_queryset = base_queryset
+            counting_queryset = ContentModel.objects.all()
             if status and status != 'ALL':
                 valid_statuses = ['in_progress', 'pending_review', 'completed']
                 if status in valid_statuses:
-                    counting_queryset = base_queryset.filter(status=status)
+                    counting_queryset = counting_queryset.filter(status=status)
 
             all_labels = Label.objects.filter(subject__name__startswith=subject_name).select_related('parent')
             content_counts_qs = counting_queryset.filter(subject__name__startswith=subject_name)\
@@ -156,6 +245,6 @@ class ChartDataAPIView(APIView):
             ids = [item['id'] for item in response_data]
             data = [item['count'] for item in response_data]
 
-            return Response({'labels': labels, 'data': data, 'ids': ids})
+            return Response({'labels': labels, 'data': data, 'ids': ids, 'dataType': 'count'})
             
         return Response({"error": "Invalid 'group_by' parameter."}, status=400)

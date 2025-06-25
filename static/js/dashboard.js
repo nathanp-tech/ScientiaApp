@@ -1,29 +1,30 @@
 // static/js/dashboard.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Element definitions
+    // Element definitions from the HTML
     const ctx = document.getElementById('statsChart').getContext('2d');
     const apiUrl = '/dashboard/api/chart-data/';
     const recipesBtn = document.getElementById('show-recipes-btn');
     const slidesBtn = document.getElementById('show-slides-btn');
     const breadcrumbsEl = document.getElementById('chart-breadcrumbs');
-    const statusFilter = document.getElementById('status-filter'); // The status filter dropdown
+    const statusFilter = document.getElementById('status-filter');
 
     let myChart;
     // The central state object for the chart
     let chartState = {
         model: 'recipe',
-        status: 'ALL', // Default status is 'ALL'
+        status: 'ALL',
         drilldownStack: []
     };
 
     // --- ENHANCED CHART DESIGN ---
     const chartColors = {
-        primary: '#123456',
-        secondary: '#45b7d1',
+        primary: '#123456', // A deep blue for primary elements
+        secondary: '#45b7d1', // A lighter, vibrant blue for hover/accents
         gridLines: 'rgba(0, 0, 0, 0.08)',
-        tooltipBg: '#050350',
+        tooltipBg: '#050350', // A dark, almost-black blue for tooltips
         font: '#343a40'
     };
+    // Create a gradient for the bar backgrounds
     const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
     gradient.addColorStop(0, chartColors.secondary);
     gradient.addColorStop(1, chartColors.primary);
@@ -33,20 +34,21 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: [],
             datasets: [{
-                label: 'Count',
+                label: 'Count', // This label will be updated dynamically
                 data: [],
                 backgroundColor: gradient,
                 borderColor: chartColors.primary,
                 borderWidth: 1,
                 borderRadius: 4,
                 hoverBackgroundColor: chartColors.secondary,
-                ids: []
+                ids: [], // Custom property to store IDs for drilldown
+                counts: [] // Custom property to store counts for tooltips
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            indexAxis: 'y',
+            indexAxis: 'y', // Horizontal bar chart
             animation: {
                 duration: 800,
                 easing: 'easeInOutQuart'
@@ -54,8 +56,13 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 x: {
                     beginAtZero: true,
-                    ticks: { precision: 0, color: chartColors.font },
-                    grid: { color: chartColors.gridLines }
+                    ticks: {
+                        precision: 0,
+                        color: chartColors.font,
+                        callback: value => value
+                    },
+                    grid: { color: chartColors.gridLines },
+                    max: undefined
                 },
                 y: {
                     ticks: { color: chartColors.font },
@@ -78,9 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     padding: 10,
                     cornerRadius: 5,
                     displayColors: false,
-                    callbacks: {
-                        label: (context) => `Total: ${context.parsed.x}`
-                    }
+                    callbacks: {}
                 }
             },
             onClick: handleChartClick
@@ -94,7 +99,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentLevel = chartState.drilldownStack[chartState.drilldownStack.length - 1];
         if (!currentLevel) return;
 
-        // Add the status to the API request parameters
         const params = new URLSearchParams({
             model: chartState.model,
             status: chartState.status,
@@ -108,12 +112,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(errorData.error || 'Failed to fetch chart data');
             }
             const result = await response.json();
+            
             if (!myChart) myChart = new Chart(ctx, chartConfig);
             
+            // --- DYNAMIC CHART CONFIGURATION BASED ON DATA TYPE ---
+            if (result.dataType === 'percentage_and_count') {
+                myChart.options.scales.x.max = 100;
+                myChart.options.scales.x.ticks.callback = value => value + '%';
+                myChart.config.data.datasets[0].counts = result.counts; // Store counts for tooltip
+                myChart.options.plugins.tooltip.callbacks.label = (context) => {
+                    const count = context.chart.data.datasets[0].counts[context.dataIndex];
+                    const countLabel = count === 1 ? '1 recipe' : `${count} recipes`;
+                    return `Completion: ${context.parsed.x.toFixed(1)}% (${countLabel})`;
+                };
+                myChart.config.data.datasets[0].label = 'Completion';
+                currentLevel.title = `Recipe Completion Rate by Subject`;
+            } else { // Default to 'count' for Slideshows or drill-downs
+                myChart.options.scales.x.max = undefined;
+                myChart.options.scales.x.ticks.callback = value => Number.isInteger(value) ? value : null;
+                myChart.options.plugins.tooltip.callbacks.label = (context) => `Total: ${context.parsed.x}`;
+                myChart.config.data.datasets[0].label = 'Count';
+            }
+
+            // Update chart data
             myChart.config.data.datasets[0].ids = result.ids;
             myChart.data.labels = result.labels;
             myChart.data.datasets[0].data = result.data;
             myChart.options.plugins.title.text = currentLevel.title;
+            
             myChart.update();
             updateBreadcrumbs();
         } catch (error) {
@@ -124,8 +150,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /**
      * Handles clicks on chart bars to drill down into the data.
+     * Drilldown is disabled for the main percentage view.
      */
     function handleChartClick(event) {
+        if (myChart.config.data.datasets[0].label === 'Completion') {
+            return;
+        }
+
         const points = myChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
         if (points.length === 0) return;
 
@@ -158,9 +189,17 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function resetToTopLevel() {
         const modelName = chartState.model.charAt(0).toUpperCase() + chartState.model.slice(1);
+        let title;
+
+        if (chartState.model === 'recipe') {
+             title = `Recipe Completion Rate by Subject`;
+        } else {
+             title = `Count of ${modelName}s by Subject`;
+        }
+
         chartState.drilldownStack = [{
             label: 'Subjects',
-            title: `Count of ${modelName}s by Subject`,
+            title: title,
             apiParams: { group_by: 'subject' }
         }];
         updateChart();
@@ -195,10 +234,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function setActiveModel(model) {
         if (chartState.model === model && myChart) return;
         chartState.model = model;
+
         recipesBtn.classList.toggle('btn-primary', model === 'recipe');
         recipesBtn.classList.toggle('btn-outline-primary', model !== 'recipe');
         slidesBtn.classList.toggle('btn-primary', model === 'slide');
         slidesBtn.classList.toggle('btn-outline-primary', model !== 'slide');
+
+        // The status filter is always enabled now, affecting the count part of recipes.
+        statusFilter.disabled = false;
+        
         resetToTopLevel();
     }
 
@@ -207,7 +251,8 @@ document.addEventListener('DOMContentLoaded', function() {
     slidesBtn.addEventListener('click', () => setActiveModel('slide'));
     statusFilter.addEventListener('change', () => {
         chartState.status = statusFilter.value;
-        resetToTopLevel(); // Refresh the chart with the new status filter
+        // The chart will be refreshed with the new status filter for counts.
+        resetToTopLevel();
     });
 
     // --- Initial Load ---
