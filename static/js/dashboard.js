@@ -90,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     padding: 10,
                     cornerRadius: 5,
                     displayColors: false,
-                    // Tooltip callbacks are now correctly configured in updateChart
                     callbacks: {}
                 }
             },
@@ -127,21 +126,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // --- DYNAMIC CHART AND TOOLTIP CONFIGURATION ---
             if (result.dataType === 'percentage_and_count') {
                 myChart.options.scales.x.max = 100;
-                myChart.options.scales.x.ticks.callback = value => value + '%'; // Format x-axis as percentage
-                myChart.config.data.datasets[0].counts = result.counts; // Store counts for tooltip
+                myChart.options.scales.x.ticks.callback = value => value + '%';
+                myChart.config.data.datasets[0].counts = result.counts;
                 myChart.options.plugins.tooltip.callbacks.label = (context) => {
                     const percentage = context.parsed.x;
                     const count = context.chart.data.datasets[0].counts[context.dataIndex];
                     const recipeLabel = count === 1 ? 'recipe' : 'recipes';
-                    // Return an array of strings for multi-line tooltip
                     return [
                         `Total : ${percentage}%`,
                         `Total: ${count} ${recipeLabel}`
                     ];
                 };
-            } else { // Default to 'count' for Slideshows
-                myChart.options.scales.x.max = undefined; // Let Chart.js decide the max value
-                myChart.options.scales.x.ticks.callback = value => Number.isInteger(value) ? value : null; // Format x-axis as integer
+            } else { // 'count' dataType for Slideshows
+                myChart.options.scales.x.max = undefined;
+                myChart.options.scales.x.ticks.callback = value => Number.isInteger(value) ? value : null;
                 myChart.options.plugins.tooltip.callbacks.label = (context) => `Total: ${context.parsed.x}`;
             }
 
@@ -170,16 +168,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const clickedId = myChart.config.data.datasets[0].ids[index];
         const currentLevel = chartState.drilldownStack[chartState.drilldownStack.length - 1];
         
-        // Prevent drilldown at the last level of the hierarchy
+        // Disable drilldown on leaf nodes (no more levels to show)
         if (currentLevel.apiParams.topic_id && !myChart.config.data.datasets[0].counts[index] > 0) {
-            // A more sophisticated check might be needed if you have more levels
+            // A more robust check might be to see if there are any children for this topic_id
             return;
         }
 
         if (currentLevel.apiParams.group_by === 'subject') {
             chartState.drilldownStack.push({
                 label: clickedId,
-                title: `Recipes in ${clickedId} by Topic`,
+                title: `${chartState.model.charAt(0).toUpperCase() + chartState.model.slice(1)} in ${clickedId} by Topic`,
                 apiParams: { group_by: 'topic', subject_name: clickedId }
             });
             updateChart();
@@ -239,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * Sets the active model (Recipes or Slideshows) and refreshes the chart.
      */
     function setActiveModel(model) {
-        if (chartState.model === model && myChart) return;
+        if (chartState.model === model) return;
         chartState.model = model;
 
         recipesBtn.classList.toggle('btn-primary', model === 'recipe');
@@ -250,8 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
         resetToTopLevel();
     }
     
-    // --- CORRECTED EVENT LISTENERS ---
-    
     // A single handler for any filter change
     function handleFilterChange() {
         chartState.status = statusFilter.value;
@@ -260,13 +256,13 @@ document.addEventListener('DOMContentLoaded', function() {
         resetToTopLevel();
     }
 
+    // Attach event listeners
     recipesBtn.addEventListener('click', () => setActiveModel('recipe'));
     slidesBtn.addEventListener('click', () => setActiveModel('slide'));
-    
     statusFilter.addEventListener('change', handleFilterChange);
     curriculumFilter.addEventListener('change', handleFilterChange);
     languageFilter.addEventListener('change', handleFilterChange);
 
     // --- Initial Load ---
-    setActiveModel('recipe');
+    resetToTopLevel();
 });
